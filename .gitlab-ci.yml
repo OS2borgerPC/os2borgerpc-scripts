@@ -1,6 +1,10 @@
+# Chronologically specify the pipeline stages to run
 stages:
   - lint
 
+# Common settings for linters to avoid code repetition
+# Needs can be used to specify dependencies
+# Allow failure is whether the pipeline succeeds on failure or not
 .lint-default: &lint-default
   stage: lint
   needs: []
@@ -16,3 +20,16 @@ Lint shell scripts:
     - printf 'Running shellcheck:'
     - printf '%s\n' 'https://github.com/koalaman/shellcheck/wiki/Checks'
     - fd --extension sh --exec shellcheck
+
+#  Keep the python version in sync with what's in production
+#  Consider using black instead?
+Lint python scripts:
+  <<: *lint-default
+  image: python:3.6-alpine
+  before_script:
+    - pip install flake8
+#    - pip install black
+  script:
+    - flake8 --version
+    - flake8
+#    - fd --extension py --exec black --diff
