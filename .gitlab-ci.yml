@@ -1,0 +1,18 @@
+stages:
+  - lint
+
+.lint-default: &lint-default
+  stage: lint
+  needs: []
+  services: []
+  allow_failure: false
+
+Lint shell scripts:
+  <<: *lint-default
+  image: koalaman/shellcheck-alpine:latest
+  before_script:
+    - apk add fd
+  script:
+    - printf 'Running shellcheck:'
+    - printf '%s\n' 'https://github.com/koalaman/shellcheck/wiki/Checks'
+    - fd --extension sh --exec shellcheck
