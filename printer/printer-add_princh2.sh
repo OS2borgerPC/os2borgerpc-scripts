@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
 
-# Replace space with underscore and remove æøå
-printer_name=`echo $1 | tr ' ' '_' | tr -dc '[:print:]'`
+# Replace space with underscore
+printer_name=`echo $1 | tr ' ' '_'`
 printer_id=$2
-# Remove æøå
-printer_descr=`echo $3 | tr -dc '[:print:]'`
+printer_descr=$3
 
 if [ "`which princh`" ]
 then
