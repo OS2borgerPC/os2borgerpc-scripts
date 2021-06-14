@@ -5,7 +5,7 @@
 if [ $# -ne 1 ]
 then
     echo "This job takes exactly one parameter."
-    exit -1
+    exit 1
 fi
 
 
@@ -15,6 +15,7 @@ HAS_AT=$?
 
 if [[ $HAS_AT == 1 ]]
 then
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y at
 fi
@@ -76,5 +77,3 @@ EOF
 chmod +x /home/.skjult/.config/autostart/auto_logout.sh.desktop
 
 exit 0
-
-
