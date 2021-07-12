@@ -27,13 +27,16 @@
 
 set -e
 
+OPTIONS='-o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef -y'
+
 # Stop Debconf from doing anything
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update > /dev/null
 apt-get -yf install # Attempt to fix broken or interrupted installations
-apt-get -y upgrade
-apt-get -y dist-upgrade
+# shellcheck disable=SC2086
+apt-get $OPTIONS upgrade
+# shellcheck disable=SC2086
+apt-get $OPTIONS dist-upgrade
 apt-get -y autoremove
 apt-get -y clean
-
