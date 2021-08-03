@@ -36,7 +36,7 @@ set -x
 
 POLICY="/etc/polkit-1/localauthority/90-mandatory.d/10-os2borgerpc-no-user-shutdown.pkla"
 
-if [ "$1" = "" -o "$1" = "false" -o "$1" = "falsk" ]; then
+if [ "$1" = "" ] || [ "$1" = "false" ] || [ "$1" = "falsk" ]; then
     rm -f "$POLICY"
 else
     if [ ! -d "$(dirname "$POLICY")" ]; then

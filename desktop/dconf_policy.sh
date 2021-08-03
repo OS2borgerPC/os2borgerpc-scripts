@@ -36,7 +36,7 @@ set -x
 POLICY="/etc/dconf/db/os2borgerpc.d/00-accessibility"
 POLICY_LOCK="/etc/dconf/db/os2borgerpc.d/locks/accessibility"
 
-if [ "$1" = "" -o "$1" = "false" ]; then
+if [ "$1" = "" ] || [ "$1" = "false" ]; then
     rm -f "$POLICY"
     rm -f "$POLICY_LOCK"
 else

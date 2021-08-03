@@ -36,7 +36,7 @@ POLICY="/etc/pulse/os2borgerpc/profile.pa"
 
 set -ex
 
-if [ "$1" = "" -o "$1" = "false" -o "$1" = "falsk" ]; then
+if [ "$1" = "" ] || [ "$1" = "false" ] || [ "$1" = "falsk" ]; then
     rm -f "$POLICY"
 else
     # Configure PulseAudio to load OS2borgerPC-specific settings from a special

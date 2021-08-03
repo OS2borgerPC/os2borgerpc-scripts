@@ -37,7 +37,7 @@ mkdir -p /etc/os2borgerpc/pre-checkin.d /etc/os2borgerpc/post-checkin.d
 
 HOOKS="/etc/os2borgerpc/pre-checkin.d/network_up.sh"
 
-if [ "$1" != "" -a "$1" != "false" -a "$1" != "falsk" ]; then
+if [ "$1" != "" ] && [ "$1" != "false" ] && [ "$1" != "falsk" ]; then
     tee $HOOKS <<"END" > /dev/null
 #!/bin/sh
 
