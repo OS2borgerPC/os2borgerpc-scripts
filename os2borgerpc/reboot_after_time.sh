@@ -5,7 +5,7 @@
 if [ $# -ne 1 ]
 then
     echo "This job takes exactly one parameter."
-    exit -1
+    exit 1
 fi
 
 TIME=$1

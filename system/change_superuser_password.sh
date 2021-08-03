@@ -9,7 +9,7 @@ if [ $# -ne 2 ]
 then
     echo "usage: $(basename $0) <password> <confirmation>"
     echo ""
-    exit -1
+    exit 1
 fi
 
 if [ "$1" == "$2" ]
@@ -22,7 +22,7 @@ then
     /usr/sbin/usermod $TARGET_USER -p $CRYPTPASS
 else
     echo "Passwords didn't match!"
-    exit -1
+    exit 1
 fi
 
 exit 0

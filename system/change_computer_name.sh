@@ -6,7 +6,7 @@
 if [ $# -ne 1 ]
 then
     echo "This script takes exactly one argument."
-    exit -1
+    exit 1
 fi
 
 NEW_NAME=$1

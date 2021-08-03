@@ -36,7 +36,7 @@ set -xe
 
 if [ "$1" != "normal" ] && [ "$1" != "right" ] && [ "$1" != "left" ]; then
     echo "Wrong rotation command given: $1"
-    exit -1
+    exit 1
 fi
 
 AUTOSTART_FOLDER=/home/.skjult/.config/autostart/

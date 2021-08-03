@@ -30,7 +30,7 @@
 if [ $# -ne 1 ]
 then
     echo "This job takes exactly one parameter."
-    exit -1
+    exit 1
 fi
 
 INTERVAL=$1
@@ -38,7 +38,7 @@ INTERVAL=$1
 if [ $INTERVAL -gt 59 ]
 then
     echo "Interval cannot be larger than 59."
-    exit -1
+    exit 1
 fi
 
 RANDOM_NUMBER=$((RANDOM%$INTERVAL+0))
