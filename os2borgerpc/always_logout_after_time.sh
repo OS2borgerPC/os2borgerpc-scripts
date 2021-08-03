@@ -10,7 +10,7 @@ fi
 
 
 # Install at
-dpkg -l at 2>1 > /dev/null
+dpkg -l at > /dev/null 2>&1 
 HAS_AT=$?
 
 if [[ $HAS_AT == 1 ]]

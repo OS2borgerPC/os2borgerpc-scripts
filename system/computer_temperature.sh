@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install acpi
-dpkg -l acpi 2>1 > /dev/null
+dpkg -l acpi > /dev/null 2>&1 
 HAS_ACPI=$?
 
 if [[ $HAS_ACPI == 1 ]]
@@ -13,4 +13,3 @@ fi
 # Aflæs temperaturen
 
 acpi -t
-
