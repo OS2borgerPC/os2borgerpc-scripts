@@ -82,12 +82,12 @@ else
         echo "$MINUTES $HOURS * * * /sbin/shutdown -P now" >> $TCRON
         crontab $TCRON
 
-        MINM5P60=$(expr $(expr $MINUTES - 5) + 60)
+        MINM5P60=$(( $(( MINUTES - 5)) + 60))
         # Rounding minutes
-        MINS=$(expr $MINM5P60 % 60)
-        HRCORR=$(expr 1 - $(expr $MINM5P60 / 60))
-        HRS=$(expr $HOURS - $HRCORR)
-        HRS=$(expr $(expr $HRS + 24) % 24)
+        MINS=$((MINM5P60 % 60))
+        HRCORR=$(( 1 - $(( MINM5P60 / 60))))
+        HRS=$(( HOURS - HRCORR))
+        HRS=$(( $(( HRS + 24)) % 24))
         # Now output to user's crontab as well
         echo "$MINS $HRS * * * DISPLAY=:0.0 /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON
         crontab -u user $USERCRON
