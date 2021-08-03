@@ -5,7 +5,7 @@
 lpadmin -x $1
 
 # Test if printer is deleted
-if [ -z `lpc status | grep $1` ]
+if [ -z $(lpc status | grep $1) ]
 then
     echo "$1 er blevet slettet"
 else

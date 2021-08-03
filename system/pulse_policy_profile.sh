@@ -44,7 +44,7 @@ else
     if ! grep "os2borgerpc" /etc/pulse/default.pa ; then
         echo ".include /etc/pulse/os2borgerpc/" >> /etc/pulse/default.pa
     fi
-    mkdir -p "`dirname "$POLICY"`"
+    mkdir -p "$(dirname "$POLICY")"
 
     cat > "$POLICY" <<END
 # Select a custom PulseAudio policy whenever the daemon starts

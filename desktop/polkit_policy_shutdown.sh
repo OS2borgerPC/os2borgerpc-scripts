@@ -39,8 +39,8 @@ POLICY="/etc/polkit-1/localauthority/90-mandatory.d/10-os2borgerpc-no-user-shutd
 if [ "$1" = "" -o "$1" = "false" -o "$1" = "falsk" ]; then
     rm -f "$POLICY"
 else
-    if [ ! -d "`dirname "$POLICY"`" ]; then
-        mkdir "`dirname "$POLICY"`"
+    if [ ! -d "$(dirname "$POLICY")" ]; then
+        mkdir "$(dirname "$POLICY")"
     fi
 
     cat > "$POLICY" <<END
