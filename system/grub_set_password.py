@@ -1,41 +1,41 @@
 #!/usr/bin/env python3
 
-#================================================================
+# ================================================================
 # HEADER
-#================================================================
-#% SYNOPSIS
-#+    grub_set_password.py PASSWORD
-#%
-#% DESCRIPTION
-#%    This script locks all GRUB functionality, apart from booting with the
-#%    default options of an installed Linux-based operating system, behind the
-#%    given password.
-#%
-#%    It takes one mandatory parameter: the password to use. (The GRUB username
-#%    associated with this password will always be "superuser".)
-#%
-#================================================================
-#- IMPLEMENTATION
-#-    version         grub_set_password.py (magenta.dk) 1.0.0
-#-    author          Alexander Faithfull
-#-    copyright       Copyright 2019, Magenta ApS
-#-                    Portions copyright 2015 Ryan Sawhill Aroha
-#-    license         GNU General Public License v3+
-#-    email           af@magenta.dk
-#-
-#================================================================
+# ================================================================
+#  SYNOPSIS
+#     grub_set_password.py PASSWORD
+#
+#  DESCRIPTION
+#     This script locks all GRUB functionality, apart from booting with the
+#     default options of an installed Linux-based operating system, behind the
+#     given password.
+#
+#     It takes one mandatory parameter: the password to use. (The GRUB username
+#     associated with this password will always be "superuser".)
+#
+# ===============================================================
+#  IMPLEMENTATION
+#     version         grub_set_password.py (magenta.dk) 1.0.0
+#     author          Alexander Faithfull
+#     copyright       Copyright 2019, Magenta ApS
+#                     Portions copyright 2015 Ryan Sawhill Aroha
+#     license         GNU General Public License v3+
+#     email           af@magenta.dk
+#
+# ===============================================================
 #  HISTORY
 #     2019/10/28 : af : Script created
 #
-#================================================================
+# ===============================================================
 # END_OF_HEADER
-#================================================================
+# ===============================================================
 
 from os import chmod, rename, urandom
 from sys import argv, exit
 from hashlib import pbkdf2_hmac
 from binascii import hexlify
-from subprocess import run, PIPE, DEVNULL
+from subprocess import run, DEVNULL
 
 # This function was taken from https://github.com/ryran/burg2-mkpasswd-pbkdf2
 # (and lightly tweaked for use here):
@@ -51,16 +51,17 @@ from subprocess import run, PIPE, DEVNULL
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 #    General Public License <gnu.org/licenses/gpl.html> for more details.
-#
+
+
 def grub2_mkpasswd_pbkdf2(passphrase,
-        iterCount=100000, saltLength=64, debug=False):
+                          iterCount=100000, saltLength=64, debug=False):
     algo = "sha512"
 
     binSalt = urandom(saltLength)
     hexSalt = hexlify(binSalt).decode("ascii")
     passHash = hexlify(
             pbkdf2_hmac(algo, passphrase.encode("ascii"),
-            binSalt, iterCount)).decode("ascii")
+                        binSalt, iterCount)).decode("ascii")
 
     if debug:
         print("algo = '{}'".format(algo))
@@ -109,7 +110,7 @@ def main():
     # unapplying it would succeed
     already_applied = run(
             ["patch", "--dry-run", "--reverse", "--silent", "--force",
-                    "/etc/grub.d/10_linux"],
+             "/etc/grub.d/10_linux"],
             input=diff, stdout=DEVNULL, stderr=DEVNULL,
             universal_newlines=True)
     if already_applied.returncode != 0:
@@ -145,11 +146,11 @@ def main():
     with open("/etc/grub.d/40_custom.tmp", "wt") as new:
         with open("/etc/grub.d/40_custom", "r+t") as old:
             for line in old:
-                if not "# OS2borgerPC lockdown" in line:
+                if "# OS2borgerPC lockdown" not in line:
                     new.write(line)
         new.write("set superusers=\"superuser\" # OS2borgerPC lockdown\n")
         new.write("password_pbkdf2 superuser"
-                " {0} # OS2borgerPC lockdown\n".format(encoded))
+                  " {0} # OS2borgerPC lockdown\n".format(encoded))
     chmod("/etc/grub.d/40_custom.tmp", 0o700)
     rename("/etc/grub.d/40_custom.tmp", "/etc/grub.d/40_custom")
 

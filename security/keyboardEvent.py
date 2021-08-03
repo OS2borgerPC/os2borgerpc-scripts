@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 """
-Security Script for finding USB keyboard attachment events happened within the last 300 seconds.
+Security Script for finding USB keyboard attachment events
+which happened within the last 300 seconds.
 """
 
 import sys
@@ -11,7 +12,9 @@ import log_read
 
 __author__ = "Danni Als"
 __copyright__ = "Copyright 2017-2020 Magenta ApS"
-__credits__ = ["Carsten Agger", "Dennis Borup Jakobsens", "Alexander Faithfull"]
+__credits__ = ["Carsten Agger",
+               "Dennis Borup Jakobsens",
+               "Alexander Faithfull"]
 __license__ = "GPL"
 __version__ = "0.1.5"
 __maintainer__ = "Danni Als"
@@ -44,8 +47,9 @@ if lines.partition('Power Button')[2] != "":
     sys.exit()
 
 # Ignore if not a keyboard event
-if lines.partition('keyboard')[2] == "" and lines.partition('Keyboard')[2] == "":
-            sys.exit()
+if (lines.partition('keyboard')[2] == ""
+   and lines.partition('Keyboard')[2] == ""):
+    sys.exit()
 
 # securityEventCode, Tec sum, Raw data
 csv_data = []
