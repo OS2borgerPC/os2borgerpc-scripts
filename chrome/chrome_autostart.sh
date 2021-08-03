@@ -45,5 +45,5 @@ fi
 
 echo "Adding chrome to autostart"
 mkdir /home/.skjult/.config/autostart
-printf  "$autostart_text" > "$desktop_file"
+printf "%s" "$autostart_text" > "$desktop_file"
 echo "Done."
