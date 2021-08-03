@@ -41,13 +41,13 @@ then
     exit 1
 fi
 
-RANDOM_NUMBER=$((RANDOM%$INTERVAL+0))
+RANDOM_NUMBER=$((RANDOM%INTERVAL+0))
 CRON_COMMAND="$RANDOM_NUMBER,"
 
-while [ $(($RANDOM_NUMBER+$INTERVAL)) -lt 60 ]
+while [ $((RANDOM_NUMBER+INTERVAL)) -lt 60 ]
 do
-    RANDOM_NUMBER=$(($RANDOM_NUMBER+$INTERVAL))
-    if [ $(($RANDOM_NUMBER+$INTERVAL)) -ge 60 ]
+    RANDOM_NUMBER=$((RANDOM_NUMBER+INTERVAL))
+    if [ $((RANDOM_NUMBER+INTERVAL)) -ge 60 ]
     then
         CRON_COMMAND="$CRON_COMMAND$RANDOM_NUMBER * * * * root /usr/local/bin/jobmanager"
     else
