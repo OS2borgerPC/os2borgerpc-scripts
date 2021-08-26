@@ -40,6 +40,7 @@ HOOKS="/etc/os2borgerpc/pre-checkin.d/protect_config_files.sh
 /etc/os2borgerpc/post-checkin.d/protect_config_files.sh"
 
 if [ "$1" != "" ] && [ "$1" != "false" ] && [ "$1" != "falsk" ]; then
+    # shellcheck disable=SC2086 # Two files, so we actually want word splitting
     tee $HOOKS <<"END" > /dev/null
 protected_files="/etc/bibos/bibos.conf /etc/os2borgerpc/os2borgerpc.conf"
 
@@ -62,7 +63,9 @@ case "$1" in
         echo "$0: unknown or missing hook: $1" 1>&2 ;;
 esac
 END
+    # shellcheck disable=SC2086 # Two files, so we actually want word splitting
     chmod +x $HOOKS
 else
+    # shellcheck disable=SC2086 # Two files, so we actually want word splitting
     rm -f $HOOKS
 fi

@@ -13,7 +13,7 @@ NEW_NAME=$1
 PREFS_FILE=/etc/hosts
 OLD_NAME=$(hostname)
 
-hostname $NEW_NAME
+hostname "$NEW_NAME"
 # Replace old line with new
 sed -i "s/$OLD_NAME/$NEW_NAME/g" $PREFS_FILE
-echo $NEW_NAME > /etc/hostname
+echo "$NEW_NAME" > /etc/hostname

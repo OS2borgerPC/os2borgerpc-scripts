@@ -28,50 +28,50 @@ then
     QUEUED_JOBS=$(atq)
     if [[ $QUEUED_JOBS ]]
     then
+        # shellcheck disable=SC2046 # Possibly multiple jobs, so we actually want word splitting
         atrm $(atq | awk '{ print $1; }')
     fi
     exit 0
 
 fi
 
-cat << EOF > /usr/share/os2borgerpc/bin/auto_logout.sh
-#!/usr/bin/env bash
-
-atrm \$(atq | awk '{ print \$1; } ')
-
-TIME=$1
-
-if [ \$TIME -ge 5 ]
-then
-    TM5=\$(expr \$TIME - 5)
-    echo 'DISPLAY=:0.0 XAUTHORITY=/home/user/.Xauthority /usr/bin/zenity --warning --text="Du vil blive logget ud om fem minutter"' > /tmp/notify
-     at -f /tmp/notify now + \$TM5 min 
-fi
-
-echo 'kill -9 -1' > /tmp/quit
-
-at -f /tmp/quit now + \$TIME min
-
-exit 0
-
+cat <<- EOF > /usr/share/os2borgerpc/bin/auto_logout.sh
+	#!/usr/bin/env bash
+	
+	atrm \$(atq | awk '{ print \$1; } ')
+	
+	TIME=$1
+	
+	if [ \$TIME -ge 5 ]
+	then
+	    TM5=\$(expr \$TIME - 5)
+	    echo 'DISPLAY=:0.0 XAUTHORITY=/home/user/.Xauthority /usr/bin/zenity --warning --text="Du vil blive logget ud om fem minutter"' > /tmp/notify
+	     at -f /tmp/notify now + \$TM5 min 
+	fi
+	
+	echo 'kill -9 -1' > /tmp/quit
+	
+	at -f /tmp/quit now + \$TIME min
+	
+	exit 0
 EOF
 
 chmod +x /usr/share/os2borgerpc/bin/auto_logout.sh
 
 mkdir -p /home/.skjult/.config/autostart
 
-cat << EOF > /home/.skjult/.config/autostart/auto_logout.sh.desktop
-
-[Desktop Entry]
-Type=Application
-Exec=/usr/share/os2borgerpc/bin/auto_logout.sh
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name[da_DK]=Autologud
-Name=Autologud
-Comment[da_DK]=
-Comment=
+cat <<- EOF > /home/.skjult/.config/autostart/auto_logout.sh.desktop
+	
+	[Desktop Entry]
+	Type=Application
+	Exec=/usr/share/os2borgerpc/bin/auto_logout.sh
+	Hidden=false
+	NoDisplay=false
+	X-GNOME-Autostart-enabled=true
+	Name[da_DK]=Autologud
+	Name=Autologud
+	Comment[da_DK]=
+	Comment=
 EOF
 
 chmod +x /home/.skjult/.config/autostart/auto_logout.sh.desktop

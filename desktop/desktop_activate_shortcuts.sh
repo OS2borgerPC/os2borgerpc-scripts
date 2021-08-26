@@ -6,7 +6,7 @@ AUTOSTART_DESKTOP_FILE_PATH=/home/$SHADOW/.config/autostart/gio-fix-desktop-file
 SCRIPT_PATH=/usr/share/os2borgerpc/bin/gio-fix-desktop-file-permissions.sh
 
 # Create the autostart directory, in case it doesn't exist
-mkdir -p $(dirname $AUTOSTART_DESKTOP_FILE_PATH)
+mkdir -p "$(dirname $AUTOSTART_DESKTOP_FILE_PATH)"
 
 # Autorun file that simply launches the script below it after startup
 cat << EOF > "$AUTOSTART_DESKTOP_FILE_PATH"

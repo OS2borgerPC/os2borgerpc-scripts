@@ -35,7 +35,7 @@ fi
 
 INTERVAL=$1
 
-if [ $INTERVAL -gt 59 ]
+if [ "$INTERVAL" -gt 59 ]
 then
     echo "Interval cannot be larger than 59."
     exit 1
