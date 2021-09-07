@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-curl https://ipinfo.io/ip
+curl --silent https://ipinfo.io/ip
+printf "\n"
 exit 0
