@@ -6,10 +6,9 @@ HAS_ACPI=$?
 
 if [[ $HAS_ACPI == 1 ]]
 then
-    apt-get update
-    apt-get install -y acpi
+    apt-get update -q
+    apt-get install -q -y acpi
 fi
 
 # Aflæs temperaturen
-
 acpi -t
