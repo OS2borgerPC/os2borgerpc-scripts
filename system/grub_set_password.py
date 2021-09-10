@@ -74,7 +74,7 @@ def grub2_mkpasswd_pbkdf2(passphrase,
 # This patch tweaks the behaviour of update-grub(1) very slightly so that the
 # default launch entry for the installed operating system can be used even if
 # GRUB's other functions are password-protected
-diff = """\
+diff = r"""\
 diff --git a/10_linux b/10_linux
 old mode 100644
 new mode 100755
@@ -90,7 +90,7 @@ index 68700d9..b8ef18d
    fi      
    if [ "$quick_boot" = 1 ]; then
        echo "   recordfail" | sed "s/^/$submenu_indentation/"
-"""
+""" # noqa W291,E501
 
 
 def main():
