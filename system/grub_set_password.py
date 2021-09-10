@@ -1,35 +1,37 @@
 #!/usr/bin/env python3
 
-# ================================================================
-# HEADER
-# ================================================================
-#  SYNOPSIS
-#     grub_set_password.py PASSWORD
-#
-#  DESCRIPTION
-#     This script locks all GRUB functionality, apart from booting with the
-#     default options of an installed Linux-based operating system, behind the
-#     given password.
-#
-#     It takes one mandatory parameter: the password to use. (The GRUB username
-#     associated with this password will always be "superuser".)
-#
-# ===============================================================
-#  IMPLEMENTATION
-#     version         grub_set_password.py (magenta.dk) 1.0.0
-#     author          Alexander Faithfull
-#     copyright       Copyright 2019, Magenta ApS
-#                     Portions copyright 2015 Ryan Sawhill Aroha
-#     license         GNU General Public License v3+
-#     email           af@magenta.dk
-#
-# ===============================================================
-#  HISTORY
-#     2019/10/28 : af : Script created
-#
-# ===============================================================
-# END_OF_HEADER
-# ===============================================================
+"""
+================================================================
+ HEADER
+================================================================
+% SYNOPSIS
++    grub_set_password.py PASSWORD
+%
+% DESCRIPTION
+%    This script locks all GRUB functionality, apart from booting with the
+%    default options of an installed Linux-based operating system, behind the
+%    given password.
+%
+%    It takes one mandatory parameter: the password to use. (The GRUB username
+%    associated with this password will always be "superuser".)
+%
+================================================================
+- IMPLEMENTATION
+-    version         grub_set_password.py (magenta.dk) 1.0.0
+-    author          Alexander Faithfull
+-    copyright       Copyright 2019, Magenta ApS
+-                    Portions copyright 2015 Ryan Sawhill Aroha
+-    license         GNU General Public License v3+
+-    email           af@magenta.dk
+-
+================================================================
+  HISTORY
+     2019/10/28 : af : Script created
+
+================================================================
+ END_OF_HEADER
+================================================================
+"""
 
 from os import chmod, rename, urandom
 from sys import argv, exit
