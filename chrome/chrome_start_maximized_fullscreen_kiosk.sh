@@ -60,33 +60,33 @@ case "$SETTING" in
   0) # Disable all three
     # shellcheck disable=SC2086 # We want to split the files back into separate arguments
     remove_from_desktop_files "--start-maximized" $FILES
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     remove_from_desktop_files "--start-fullscreen" $FILES
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     remove_from_desktop_files "--kiosk" $FILES
     ;;
   1) # MAXIMIZE
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     add_to_desktop_files "--start-maximized" $FILES
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     remove_from_desktop_files "--start-fullscreen" $FILES
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     remove_from_desktop_files "--kiosk" $FILES
     ;;
   2) # FULLSCREEN
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     remove_from_desktop_files "--start-maximized" $FILES
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     add_to_desktop_files "--start-fullscreen" $FILES
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     remove_from_desktop_files "--kiosk" $FILES
     ;;
   3) # KIOSK
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     remove_from_desktop_files "--start-maximized" $FILES
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     remove_from_desktop_files "--start-fullscreen" $FILES
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
+    # shellcheck disable=SC2086
     add_to_desktop_files "--kiosk" $FILES
     ;;
   *)
