@@ -11,7 +11,9 @@ import log_read
 
 __author__ = "Danni Als"
 __copyright__ = "Copyright 2017-2020 Magenta ApS"
-__credits__ = ["Carsten Agger", "Dennis Borup Jakobsens", "Alexander Faithfull"]
+__credits__ = ["Carsten Agger",
+               "Dennis Borup Jakobsens",
+               "Alexander Faithfull"]
 __license__ = "GPL"
 __version__ = "0.0.6"
 __maintainer__ = "Danni Als"
