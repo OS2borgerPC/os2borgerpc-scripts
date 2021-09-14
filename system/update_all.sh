@@ -27,16 +27,20 @@
 
 set -e
 
-OPTIONS='-o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef -y'
+# Fix dpkg settings to avoid interactivity.
+cat <<- EOF > /etc/apt/apt.conf.d/local
+	Dpkg::Options {
+	   "--force-confdef";
+	   "--force-confold";
+	}
+EOF
 
 # Stop Debconf from doing anything
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update > /dev/null
 apt-get -yf install # Attempt to fix broken or interrupted installations
-# shellcheck disable=SC2086
-apt-get $OPTIONS upgrade
-# shellcheck disable=SC2086
-apt-get $OPTIONS dist-upgrade
+apt-get -y upgrade
+apt-get -y dist-upgrade
 apt-get -y autoremove
 apt-get -y clean
