@@ -39,7 +39,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 CONF="/etc/apt/apt.conf.d/90os2borgerpc-automatic-upgrades"
 
-if [ "$1" != "" -a "$1" != "false" -a "$1" != "falsk" ]; then
+if [ "$1" != "" ] && [ "$1" != "false" ] && [ "$1" != "falsk" ]; then
     # Check (quietly) that the unattended-upgrades package is installed, and
     # install it if it isn't
     if ! dpkg -s unattended-upgrades > /dev/null 2>&1; then
@@ -66,7 +66,7 @@ END
 
     # Unless we've been explicitly told we should only add security-related
     # entries, then also add everything else
-    if [ "$1" != "security" -a "$1" != "sikkerhed" ]; then
+    if [ "$1" != "security" ] && [ "$1" != "sikkerhed" ]; then
         cat >> "$CONF" <<END
     ; "\${distro_id}:\${distro_codename}"
 END

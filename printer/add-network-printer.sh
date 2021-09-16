@@ -14,4 +14,4 @@ printer_conn="socket://"
 
 
 # Execute command with user defined vars
-lpadmin -p $printer_name -v $printer_conn$printer_loc -D "$printer_descr" -E -P $printer_driver
+lpadmin -p "$printer_name" -v "$printer_conn$printer_loc" -D "$printer_descr" -E -P "$printer_driver"

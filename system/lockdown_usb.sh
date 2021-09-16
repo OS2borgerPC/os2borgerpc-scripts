@@ -41,11 +41,12 @@ lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
 }
 
-activate="`lower "$1"`"
+activate="$(lower "$1")"
 
-if [ "$activate" != "" \
-        -a "$activate" != "false" -a "$activate" != "falsk" \
-        -a "$activate" != "no" -a "$activate" != "nej" ]; then
+if [ "$activate" != "" ] \
+        && [ "$activate" != "false" ] && [ "$activate" != "falsk" ] \
+        && [ "$activate" != "no" ] && [ "$activate" != "nej" ]; then
+
     mkdir -p /usr/local/lib/os2borgerpc
 
     cat <<"END" > /usr/local/lib/os2borgerpc/usb-monitor
@@ -92,6 +93,7 @@ def main():
 if __name__ == "__main__":
     main()
 END
+
     chmod 700 /usr/local/lib/os2borgerpc/usb-monitor
 
     cat <<"END" > /etc/systemd/system/os2borgerpc-usb-monitor.service
@@ -108,6 +110,7 @@ KillSignal=SIGINT
 [Install]
 WantedBy=display-manager.service
 END
+
     systemctl enable --now os2borgerpc-usb-monitor.service
 
     cat <<"END" > /usr/local/lib/os2borgerpc/on-usb-event
@@ -120,11 +123,13 @@ if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
             of=/var/lib/os2borgerpc/usb-event status=none
 fi
 END
+
     chmod 700 /usr/local/lib/os2borgerpc/on-usb-event
 
     cat <<"END" > /etc/udev/rules.d/99-os2borgerpc-usb-event.rules
 SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="/usr/local/lib/os2borgerpc/on-usb-event '%E{ACTION}' '$sys$devpath'"
 END
+
 else
     systemctl disable --now os2borgerpc-usb-monitor.service
     rm -f /usr/local/lib/os2borgerpc/on-usb-event \

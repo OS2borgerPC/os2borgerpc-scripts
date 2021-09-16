@@ -5,7 +5,7 @@ set -e
 
 
 # If Princh is not installed, install
-if [ ! "`which princh`" ]
+if [ ! "$(which princh)" ]
 then	
     add-apt-repository -y ppa:princh/stable
     apt-get update

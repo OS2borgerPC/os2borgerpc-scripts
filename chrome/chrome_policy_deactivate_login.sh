@@ -35,8 +35,8 @@ set -x
 
 POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-login.json"
 
-if [ ! -d "`dirname "$POLICY"`" ]; then
-    mkdir -p "`dirname "$POLICY"`"
+if [ ! -d "$(dirname "$POLICY")" ]; then
+    mkdir -p "$(dirname "$POLICY")"
 fi
 
 cat > "$POLICY" <<END

@@ -7,4 +7,4 @@ then
     exit 1
 fi
 
-lpadmin -d $1 && lpstat -d
+lpadmin -d "$1" && lpstat -d

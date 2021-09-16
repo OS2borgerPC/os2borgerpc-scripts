@@ -36,15 +36,15 @@ set -x
 POLICY="/etc/dconf/db/os2borgerpc.d/00-accessibility"
 POLICY_LOCK="/etc/dconf/db/os2borgerpc.d/locks/accessibility"
 
-if [ "$1" = "" -o "$1" = "false" ]; then
+if [ "$1" = "" ] || [ "$1" = "false" ]; then
     rm -f "$POLICY"
     rm -f "$POLICY_LOCK"
 else
-    if [ ! -d "`dirname "$POLICY"`" ]; then
-        mkdir "`dirname "$POLICY"`"
+    if [ ! -d "$(dirname "$POLICY")" ]; then
+        mkdir "$(dirname "$POLICY")"
     fi
-    if [ ! -d "`dirname "$POLICY_LOCK"`" ]; then
-        mkdir "`dirname "$POLICY_LOCK"`"
+    if [ ! -d "$(dirname "$POLICY_LOCK")" ]; then
+        mkdir "$(dirname "$POLICY_LOCK")"
     fi
 
     # dconf does not, by default, require the use of a system database, so
@@ -61,7 +61,7 @@ END
     # "dconf update" will only act if the content of the keyfile folder has
     # changed: individual files changing are of no consequence. Force an update
     # by changing the folder's modification timestamp
-    touch "`dirname "$POLICY"`"
+    touch "$(dirname "$POLICY")"
 
     # Tell the system that the values of the dconf keys we've just set can no
     # longer be overridden by the user

@@ -5,12 +5,12 @@
 if [ $# -ne 1 ]
 then
     echo "This job takes exactly one parameter."
-    exit -1
+    exit 1
 fi
 
 TIME=$1
 
-dpkg -l at 2>1 > /dev/null
+dpkg -l at > /dev/null 2>&1 
 HAS_AT=$?
 
 if [[ $HAS_AT == 1 ]]
@@ -20,17 +20,15 @@ then
 fi
 
 
-if [ $TIME -ge 5 ]
+if [ "$TIME" -ge 5 ]
 then
-    TM5=$(expr $TIME - 5)
-    echo 'DISPLAY=:0.0 XAUTHORITY=/home/user/.Xauthority /usr/bin/zenity --warning --text="Computeren lukkes ned om fem minutter"' > /tmp/notify
-     at -f /tmp/notify now + $TM5 min 
+  TM5=$(( TIME - 5))
+  echo 'DISPLAY=:0.0 XAUTHORITY=/home/user/.Xauthority /usr/bin/zenity --warning --text="Computeren lukkes ned om fem minutter"' > /tmp/notify
+  at -f /tmp/notify now + $TM5 min 
 fi
 
 echo '/sbin/reboot' > /tmp/quit
 
-at -f /tmp/quit now + $TIME min
+at -f /tmp/quit now + "$TIME" min
 
 exit 0
-
-

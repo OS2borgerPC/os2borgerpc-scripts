@@ -36,7 +36,7 @@ POLICY="/etc/pulse/os2borgerpc/profile.pa"
 
 set -ex
 
-if [ "$1" = "" -o "$1" = "false" -o "$1" = "falsk" ]; then
+if [ "$1" = "" ] || [ "$1" = "false" ] || [ "$1" = "falsk" ]; then
     rm -f "$POLICY"
 else
     # Configure PulseAudio to load OS2borgerPC-specific settings from a special
@@ -44,7 +44,7 @@ else
     if ! grep "os2borgerpc" /etc/pulse/default.pa ; then
         echo ".include /etc/pulse/os2borgerpc/" >> /etc/pulse/default.pa
     fi
-    mkdir -p "`dirname "$POLICY"`"
+    mkdir -p "$(dirname "$POLICY")"
 
     cat > "$POLICY" <<END
 # Select a custom PulseAudio policy whenever the daemon starts

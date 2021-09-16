@@ -30,24 +30,24 @@
 if [ $# -ne 1 ]
 then
     echo "This job takes exactly one parameter."
-    exit -1
+    exit 1
 fi
 
 INTERVAL=$1
 
-if [ $INTERVAL -gt 59 ]
+if [ "$INTERVAL" -gt 59 ]
 then
     echo "Interval cannot be larger than 59."
-    exit -1
+    exit 1
 fi
 
-RANDOM_NUMBER=$((RANDOM%$INTERVAL+0))
+RANDOM_NUMBER=$((RANDOM%INTERVAL+0))
 CRON_COMMAND="$RANDOM_NUMBER,"
 
-while [ $(($RANDOM_NUMBER+$INTERVAL)) -lt 60 ]
+while [ $((RANDOM_NUMBER+INTERVAL)) -lt 60 ]
 do
-    RANDOM_NUMBER=$(($RANDOM_NUMBER+$INTERVAL))
-    if [ $(($RANDOM_NUMBER+$INTERVAL)) -ge 60 ]
+    RANDOM_NUMBER=$((RANDOM_NUMBER+INTERVAL))
+    if [ $((RANDOM_NUMBER+INTERVAL)) -ge 60 ]
     then
         CRON_COMMAND="$CRON_COMMAND$RANDOM_NUMBER * * * * root /usr/local/bin/jobmanager"
     else

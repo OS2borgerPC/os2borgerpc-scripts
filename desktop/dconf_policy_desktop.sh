@@ -37,11 +37,11 @@ if [ "$1" = "" ]; then
     rm -f "$POLICY"
     rm -f "$POLICY_LOCK"
 else
-    if [ ! -d "`dirname "$POLICY"`" ]; then
-        mkdir "`dirname "$POLICY"`"
+    if [ ! -d "$(dirname "$POLICY")" ]; then
+        mkdir "$(dirname "$POLICY")"
     fi
-    if [ ! -d "`dirname "$POLICY_LOCK"`" ]; then
-        mkdir "`dirname "$POLICY_LOCK"`"
+    if [ ! -d "$(dirname "$POLICY_LOCK")" ]; then
+        mkdir "$(dirname "$POLICY_LOCK")"
     fi
 
     # dconf does not, by default, require the use of a system database, so
@@ -52,7 +52,7 @@ system-db:os2borgerpc
 END
 
     # Copy the new desktop background into the appropriate folder
-    LOCAL_PATH="/usr/share/backgrounds/`basename "$1"`"
+    LOCAL_PATH="/usr/share/backgrounds/$(basename "$1")"
     cp "$1" "$LOCAL_PATH"
 
     cat > "$POLICY" <<END
@@ -63,7 +63,7 @@ END
     # "dconf update" will only act if the content of the keyfile folder has
     # changed: individual files changing are of no consequence. Force an update
     # by changing the folder's modification timestamp
-    touch "`dirname "$POLICY"`"
+    touch "$(dirname "$POLICY")"
 
     # Tell the system that the values of the dconf keys we've just set can no
     # longer be overridden by the user
