@@ -42,8 +42,8 @@ DIALOG_TIME_MS=$(( DIALOG_TIME * 60 * 1000 ))
 # Install xprintidle
 # Stop Debconf from doing anything
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y xprintidle
+apt-get update --assume-yes
+apt-get install --assume-yes xprintidle
 
 # if line already added to crontab skip
 TEMP=$(crontab -l | grep "inactive_logout.sh")
@@ -60,6 +60,10 @@ cat <<- EOF > /usr/share/os2borgerpc/bin/inactive_logout.sh
 
 	# If the user is inactive for too long, a dialog will appear, warning the user that the session will end.
 	# If the user do not touch the mouse or press any keyboard key the session will end.
+  # Only have one dialog at a time, so remove preexisting ones.
+  # Create a new message every time, in case someone didn't close it but
+  # just put e.g. a browser in front, to ensure they or someone else gets a
+  # new warning when/if inactivity is reached again
 
 	# DEV NOTE: It appears this way of obtaining the DISPLAY doesn't work in
 	# Ubuntu 21:04, so possibly not in future versions either
@@ -68,7 +72,7 @@ cat <<- EOF > /usr/share/os2borgerpc/bin/inactive_logout.sh
 	# These are used by xprintidle
 	export XAUTHORITY=/home/user/.Xauthority
 	export DISPLAY=\$USER_DISPLAY
-	su - user -c 'DISPLAY=\$USER_DIPLAY xhost +localhost'
+	su - user -c "DISPLAY=\$USER_DISPLAY xhost +localhost"
 
 	LOG_DIR=/usr/share/os2borgerpc/bin/inactive_logout.log
 	echo $LOGOUT_TIME_MS \$(xprintidle) >> \$LOG_DIR
@@ -82,13 +86,15 @@ cat <<- EOF > /usr/share/os2borgerpc/bin/inactive_logout.sh
 	# if idle time is past the dialog time: show the dialog
 	if [ \$(xprintidle) -ge $DIALOG_TIME_MS ]
 	then
-	  # ...but only create a dialog if one doesn't already exist
-	  if ! pgrep --full 'Inaktivitet' > /dev/null
-	  then
-	    # echo 'Running zenity...' >> \$LOG_DIR
-	    # We use the --title to match against above
-	    zenity --warning --text="$DIALOG_TEXT" --ok-label="$BUTTON_TEXT" --no-wrap --display=\$USER_DISPLAY --title "Inaktivitet"
-	  fi
+    # Do spare the poor lives of potential other zenity windows.
+    PID_ZENITY="\$(pgrep --full 'Inaktivitet')"
+    if [ -n \$PID_ZENITY ];
+    then
+      kill \$PID_ZENITY
+    fi
+	  # echo 'Running zenity...' >> \$LOG_DIR
+	  # We use the --title to match against above
+	  zenity --warning --text="$DIALOG_TEXT" --ok-label="$BUTTON_TEXT" --no-wrap --display=\$USER_DISPLAY --title "Inaktivitet"
 	fi
 
 	exit 0
