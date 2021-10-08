@@ -1,5 +1,9 @@
 #! /usr/bin/env sh
 
+# apt-get install could fail due to debian frontend lock being unavailable
+# during automatic updates
+set -e
+
 DIALOG_TIME=$1 # Time before dialog appears, defined in minutes
 LOGOUT_TIME=$2 # Time before user is logged out, defined in minutes
 DIALOG_TEXT=$3 # Text to be shown in the dialog
