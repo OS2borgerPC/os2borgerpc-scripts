@@ -11,24 +11,28 @@
 #%    user session whenever an action is detected on a USB port, and configures
 #%    udev to forward all USB events to this service.
 #%
-#%    Logins are disabled with the nologin(5) mechanism. By default, Ubuntu
-#%    20.04 clears this file whenever the system is restarted.
+#%    Logins are disabled with the user account expiry mechanism.
 #%
 #%    It takes one optional parameter: whether or not to enforce this policy.
 #%    If this parameter is missing, empty, "false", "falsk", "no" or "nej"
 #%    (not case-sensitive), the policy will be removed; otherwise, it will be
 #%    enforced.
 #%
+#%    For use with the "unexpire_user.sh" and
+#%    "detect_user_expired_event.py" script
+#%
+#%
 #================================================================
 #- IMPLEMENTATION
 #-    version         lockdown_usb.sh (magenta.dk) 1.0.0
-#-    author          Alexander Faithfull
+#-    author          Alexander Faithfull, Søren Howe Gersager
 #-    copyright       Copyright 2021 Magenta ApS
 #-    license         GNU General Public License
-#-    email           af@magenta.dk
+#-    email           af@magenta.dk, shg@magenta.dk
 #-
 #================================================================
 #  HISTORY
+#     2021/08/30 : shg: Modified to user account expiration
 #     2021/04/12 : af : Script created
 #
 #================================================================
@@ -41,12 +45,9 @@ lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
 }
 
-activate="$(lower "$1")"
+ACTIVATE="$(lower "$1")"
 
-if [ "$activate" != "" ] \
-        && [ "$activate" != "false" ] && [ "$activate" != "falsk" ] \
-        && [ "$activate" != "no" ] && [ "$activate" != "nej" ]; then
-
+if [ "$ACTIVATE" != "" ] && [ "$ACTIVATE" != "false" ] && [ "$ACTIVATE" != "falsk" ] && [ "$ACTIVATE" != "no" ] && [ "$ACTIVATE" != "nej" ]; then
     mkdir -p /usr/local/lib/os2borgerpc
 
     cat <<"END" > /usr/local/lib/os2borgerpc/usb-monitor
@@ -59,15 +60,10 @@ import subprocess
 PIPE = "/var/lib/os2borgerpc/usb-event"
 
 
-def lockdown(message):
-    """Creates the /etc/nologin file with the specified message and shuts the
-    user's session manager down, forcing a logout.
-
-    This function does nothing if /etc/nologin already exists."""
-    if not exists("/etc/nologin"):
-        with open("/etc/nologin", "wt") as fp:
-            fp.write(message)
-        subprocess.run(["su", "-c", "systemctl --user exit 1", "alec"])
+def lockdown():
+    """Disable the user account."""
+    subprocess.run(["usermod", "-e", "1", "user"])
+    subprocess.run(["loginctl", "terminate-user", "user"])
 
 
 def main():
@@ -85,7 +81,7 @@ def main():
                 # gives us a signal. Lock the system immediately when that
                 # happens
                 content = fp.read()
-                lockdown("Systemet er låst -- kontakt venligst personalet")
+                lockdown()
     finally:
         unlink(PIPE)
 
@@ -93,7 +89,6 @@ def main():
 if __name__ == "__main__":
     main()
 END
-
     chmod 700 /usr/local/lib/os2borgerpc/usb-monitor
 
     cat <<"END" > /etc/systemd/system/os2borgerpc-usb-monitor.service
@@ -110,7 +105,6 @@ KillSignal=SIGINT
 [Install]
 WantedBy=display-manager.service
 END
-
     systemctl enable --now os2borgerpc-usb-monitor.service
 
     cat <<"END" > /usr/local/lib/os2borgerpc/on-usb-event
@@ -123,13 +117,11 @@ if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
             of=/var/lib/os2borgerpc/usb-event status=none
 fi
 END
-
     chmod 700 /usr/local/lib/os2borgerpc/on-usb-event
 
     cat <<"END" > /etc/udev/rules.d/99-os2borgerpc-usb-event.rules
 SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="/usr/local/lib/os2borgerpc/on-usb-event '%E{ACTION}' '$sys$devpath'"
 END
-
 else
     systemctl disable --now os2borgerpc-usb-monitor.service
     rm -f /usr/local/lib/os2borgerpc/on-usb-event \
