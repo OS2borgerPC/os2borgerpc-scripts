@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
 
 # HEADER
-#================================================================
-#% SYNOPSIS
-#+    detect_user_expired_event.py
-#%
-#% DESCRIPTION
-#%    Security Script for finding user expired events that happened
-#%    within the last 300 seconds.
-#%
-#%
-#%    For use with the "lockdown_usb.sh" and "unexpire_user.sh"
-#%    script.
-#%
-#================================================================
-#- IMPLEMENTATION
-#-    version         unexpire_user.sh (magenta.dk) 1.0.0
-#-    author          Søren Howe Gersager
-#-    copyright       Copyright 2021 Magenta ApS
-#-    license         GNU General Public License
-#-    email           shg@magenta.dk
-#-
-#================================================================
+# ================================================================
+# SYNOPSIS
+#    detect_user_expired_event.py
+#
+# DESCRIPTION
+#    Security Script for finding user expired events that happened
+#    within the last 300 seconds.
+#
+#
+#    For use with the "lockdown_usb.sh" and "unexpire_user.sh"
+#    script.
+#
+# ================================================================
+# IMPLEMENTATION
+#    version         unexpire_user.sh (magenta.dk) 1.0.0
+#    author          Søren Howe Gersager
+#    copyright       Copyright 2021 Magenta ApS
+#    license         GNU General Public License
+#    email           shg@magenta.dk
+#
+# ================================================================
 #  HISTORY
 #     2021/08/30 : shg: Creation
-#================================================================
+# ================================================================
 # END_OF_HEADER
-#================================================================
+# ================================================================
 
 import sys
 from datetime import datetime, timedelta
@@ -71,7 +71,10 @@ if delta_sec <= 86400:
 else:
     raise ValueError("No security check in the last 24 hours.")
 
-usermod_regex = r"(usermod\[[0-9]+\]: change user 'user' expiration from 'never' to '1970-01-02')"
+usermod_regex = (
+    r"(usermod\[[0-9]+\]: change user 'user'"
+    " expiration from 'never' to '1970-01-02')"
+)
 splitted = re.split(usermod_regex, lines, maxsplit=1)
 
 # Ignore if not a usermod event

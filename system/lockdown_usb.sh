@@ -41,15 +41,7 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-activate="`lower "$1"`"
-
-if [ "$activate" != "" \
-        -a "$activate" != "false" -a "$activate" != "falsk" \
-        -a "$activate" != "no" -a "$activate" != "nej" ]; then
+if [ "$1" != "" ] && [ "$1" != "false" ] && [ "$1" != "falsk" ] && [ "$1" != "no" ] && [ "$1" != "nej" ]; then
     mkdir -p /usr/local/lib/os2borgerpc
 
     cat <<"END" > /usr/local/lib/os2borgerpc/usb-monitor
