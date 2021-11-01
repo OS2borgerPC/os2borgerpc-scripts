@@ -8,7 +8,7 @@
 #    - disables the remember password prompt feature.
 #    - disable automatic updates including checks for them
 #
-# Author: Carsten Agger
+# Author: Carsten Agger, Marcus Funch Mogensen
 
 set -x
 
@@ -41,7 +41,6 @@ cat > "$POLICY" <<- END
 		    "DefaultBrowserSettingEnabled": true,
 		    "MetricsReportingEnabled": false,
 		    "BrowserSignin": 0,
-		    "PasswordManagerEnabled": false,
-		    "DeviceAutoUpdateDisabled": true
+		    "PasswordManagerEnabled": false
 		}
 END
