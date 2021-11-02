@@ -40,7 +40,7 @@ fi
 # https://support.google.com/chrome/a/answer/187202?hl=en
 cat > "$POLICY" <<- END
 		{
-		    "DefaultBrowserSettingEnabled": true,
+		    "DefaultBrowserSettingEnabled": false,
 		    "MetricsReportingEnabled": false,
 		    "BrowserSignin": 0,
 		    "PasswordManagerEnabled": false
