@@ -1,9 +1,5 @@
 #! /usr/bin/env sh
 
-# apt-get install could fail due to debian frontend lock being unavailable
-# during automatic updates
-set -e
-
 DIALOG_TIME=$1 # Time before dialog appears, defined in minutes
 LOGOUT_TIME=$2 # Time before user is logged out, defined in minutes
 DIALOG_TEXT=$3 # Text to be shown in the dialog
@@ -47,9 +43,18 @@ DIALOG_TIME_MS=$(( DIALOG_TIME * 60 * 1000 ))
 # Stop Debconf from doing anything
 export DEBIAN_FRONTEND=noninteractive
 apt-get update --assume-yes
-apt-get install --assume-yes xprintidle
 
-# if line already added to crontab skip
+# Only try installing if it isn't already as otherwise it will exit with nonzero and stop the script
+if ! dpkg --get-selections | grep -v deinstall | grep --quiet xprintidle; then
+  if ! apt-get install --assume-yes xprintidle; then
+    # apt-get install could fail due to debian frontend lock being unavailable
+    # during automatic updates
+    printf "apt-get failed to install xprintidle"
+    exit 1
+  fi
+fi
+
+# if line already added to crontab: skip
 TEMP=$(crontab -l | grep "inactive_logout.sh")
 if [ -z "$TEMP" ]
 then
