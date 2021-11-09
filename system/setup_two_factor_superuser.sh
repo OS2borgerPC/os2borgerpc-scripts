@@ -21,7 +21,7 @@ lower() {
 ACTIVATE="$(lower "$1")"
 SECRET="$2"
 
-[ "$#" -lt 1 ] && printf "The script needs at least one argument" && exit 1
+[ "$#" -lt 1 ] && printf "The script needs at least one argument. Exiting." && exit 1
 
 USER=superuser
 AUTHENTICATOR_CONFIG=/home/superuser/.google_authenticator
@@ -39,15 +39,14 @@ if [ "$ACTIVATE" = 'kode' ]; then
   install_ga --quiet
   printf "Sikkerhedsnøgle"
   # All these parameters are basically random, they're just to ensure that it's
-  # noninteractive so we immediately get a secret key and don't have to use
-  # e.g. expect.
+  # noninteractive so we immediately get a secret key and don't have to use e.g. expect.
   google-authenticator --time-based --window-size 5 --force --disallow-reuse --rate-limit 3 \
   --rate-time 30 --emergency-codes 1 2>/dev/null \
   | grep "secret key" | awk 'NF{ print $NF }'
   # Somehow saving this file to /dev/null (--secret /dev/null) means google-authenticator
-  # starks looking for the key there?! So instead we create it at the normal location
-  # and then delete it afterwards. It must have another config file then? Maybe the pam module is
-  # updated with the non-standard config location?
+  # starts looking for the key there?! So instead we create it its normal location
+  # and then delete it afterwards. It must have another config file then? Maybe the pam module
+  # config is updated with the non-standard config location?
   rm /root/.google_authenticator
   # Another possible way we could generate this
   #printf '%s\n' "$(openssl rand -hex 26 | tr "[:lower:]" "[:upper:]")"
@@ -69,7 +68,8 @@ elif [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
   # WINDOW_SIZE       | Allow using the two previous, current and two next
   #                     codes in case of time synchronisation issues
   # The following lines are emergency codes. The interactive mode defaults to
-  # 5, and 1-10 are valid values it claims
+  # 5, and 1-10 are valid values it claims.
+  # However authentication works just fine with zero.
   # Most values here are simply the defaults from its interactive mode
   # Confusingly lines prefixed with " are NOT comments?!
 	cat <<- EOF > $AUTHENTICATOR_CONFIG
@@ -78,9 +78,7 @@ elif [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 		" WINDOW_SIZE 5
 		" DISALLOW_REUSE
 		" TOTP_AUTH
-		51460423
 	EOF
-  # TODO!: ^ Generate this recovery code!!
 
   # Fixing the permissions to what the google-authenticator command generates,
   # as it appears to be particular about this
@@ -93,7 +91,8 @@ elif [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
   printf "%s\n" "QR-koden er:" "$CODE"
 
   # For debugging uncomment this to get a link to a QR with it:
-  printf "%s\n" "https://www.google.com/chart?chs=200x200&chld=M|0&cht=qr&chl=$CODE"
+  # printf "%s\n" "https://www.google.com/chart?chs=200x200&chld=M|0&cht=qr&chl=$CODE"
+  # TODO: Maybe add link to our admin site's 2FA page here.
 else
 
   # Remove the two factor authenticator's config
