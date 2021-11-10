@@ -71,7 +71,7 @@ elif [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
   # 5, and 1-10 are valid values it claims.
   # However authentication works just fine with zero.
   # Most values here are simply the defaults from its interactive mode
-  # Confusingly lines prefixed with " are NOT comments?!
+  # Confusingly, lines prefixed with " are NOT comments.
 	cat <<- EOF > $AUTHENTICATOR_CONFIG
 		$SECRET
 		" RATE_LIMIT 3 30
