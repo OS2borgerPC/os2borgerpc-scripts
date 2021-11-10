@@ -50,7 +50,7 @@ if [ "$ACTIVATE" = 'kode' ]; then
   rm /root/.google_authenticator
   # Another possible way we could generate this
   #printf '%s\n' "$(openssl rand -hex 26 | tr "[:lower:]" "[:upper:]")"
-elif [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
+elif [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
    [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
 
   install_ga
@@ -98,8 +98,7 @@ else
   # Remove the two factor authenticator's config
   rm $AUTHENTICATOR_CONFIG
 
-  # Wish there was a builtin way to pass in a literal string so escaping
-  # wouldn't be necessary
+  # Wish there was a builtin way to pass in a literal string so escaping wouldn't be necessary
   # https://stackoverflow.com/a/29613573/1172409
   PAM_TEXT1_ESCAPED=$(echo "$PAM_TEXT1" | sed 's/[^^]/[&]/g; s/\^/\\^/g') # escape it.
   sed --in-place "/$PAM_TEXT1_ESCAPED/d" $PAM_CONFIG
