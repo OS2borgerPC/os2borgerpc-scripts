@@ -38,15 +38,13 @@ install_ga() {
 if [ "$ACTIVATE" = 'kode' ]; then
   install_ga --quiet
   printf "Sikkerhedsnøgle"
-  # All these parameters are basically random, they're just to ensure that it's
-  # noninteractive so we immediately get a secret key and don't have to use e.g. expect.
+  # All the parameters are specified as otherwise it starts interactively asking for them.
   google-authenticator --time-based --window-size 5 --force --disallow-reuse --rate-limit 3 \
   --rate-time 30 --emergency-codes 1 2>/dev/null \
   | grep "secret key" | awk 'NF{ print $NF }'
-  # Somehow saving this file to /dev/null (--secret /dev/null) means google-authenticator
-  # starts looking for the key there?! So instead we create it its normal location
-  # and then delete it afterwards. It must have another config file then? Maybe the pam module
-  # config is updated with the non-standard config location?
+  # Saving this file to /dev/null (--secret /dev/null) means google-authenticator
+  # starts looking for the key there. So instead we create it its normal location
+  # and then delete it afterwards.
   rm /root/.google_authenticator
   # Another possible way we could generate this
   #printf '%s\n' "$(openssl rand -hex 26 | tr "[:lower:]" "[:upper:]")"
@@ -98,7 +96,7 @@ else
   # Remove the two factor authenticator's config
   rm $AUTHENTICATOR_CONFIG
 
-  # Wish there was a builtin way to pass in a literal string so escaping wouldn't be necessary
+  # Ideally there was a builtin way to pass in a literal string so escaping wouldn't be necessary
   # https://stackoverflow.com/a/29613573/1172409
   PAM_TEXT1_ESCAPED=$(echo "$PAM_TEXT1" | sed 's/[^^]/[&]/g; s/\^/\\^/g') # escape it.
   sed --in-place "/$PAM_TEXT1_ESCAPED/d" $PAM_CONFIG
