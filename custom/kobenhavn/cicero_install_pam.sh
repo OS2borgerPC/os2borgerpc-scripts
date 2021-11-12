@@ -60,23 +60,25 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 
       site = check_output(['get_os2borgerpc_config','site'])
 
+      # Values it can return - see cicero_login here:
+      # https://github.com/OS2borgerPC/admin-site/blob/master/admin_site/system/rpc.py
+      # -1: Unable to authenticate.
+      #  0: No time remaining, i.e. user is quarantined.
+      # >0: The number of minutes the user is allowed.
       # time = cicero_login(cicero_user, cicero_pass, site)
 
-		  if cicero_user == "allan" or cicero_user == "123456781234":
+      if time > 0:
+        with open('/usr/share/os2borgerpc/logout_timer.conf', 'w') as f:
+            f.write(f"TIME_SECONDS={time}")
 		    return pamh.PAM_SUCCESS
-		  else:
+      elif time == 0:
 		    msg3 = pamh.Message(pamh.PAM_ERROR_MSG, "Du har karantaene.")
 		    pamh.conversation(msg3)
 		    return pamh.PAM_AUTH_ERR
-
-		  # From pam_permit python-pam example. Do we need it?:
-		  try:
-		    user = pamh.get_user(None)
-		  except pamh.exception as e:
-		    return e.pam_result
-		  if user == None:
-		    pam.user = DEFAULT_USER
-
+      elif time == -1:
+		    msg3 = pamh.Message(pamh.PAM_ERROR_MSG, "Din bruger kan ikke genkendes. Spørg personalet.")
+		    pamh.conversation(msg3)
+		    return pamh.PAM_AUTH_ERR
 
 		# TODO: Maybe these other functions could be removed?
 		def pam_sm_setcred(pamh, flags, argv):
