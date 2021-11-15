@@ -19,6 +19,7 @@ LIGHTDM_PAM=/etc/pam.d/lightdm
 # Put our module where PAM modules normally are
 PAM_PYTHON_MODULE=/usr/lib/x86_64-linux-gnu/security/os2borgerpc-cicero-pam-module.py
 LOGOUT_TIMER_CONF=/usr/share/os2borgerpc/logout_timer.conf
+CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
 if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
    [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
@@ -37,19 +38,53 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 
     # The one immediately below resulted in lightdm ubuntu errors
 	  #sed -i '/include common-account/i# OS2borgerPC Cicero\nauth sufficient pam_succeed_if.so user != user\nauth required pam_python.so' $LIGHTDM_PAM
-	  sed -i '/include common-account/i# OS2borgerPC Cicero\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so' $LIGHTDM_PAM
+	  sed -i "/include common-account/i# OS2borgerPC Cicero\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
   fi
 
-	cat <<- EOF > $PAM_PYTHON_MODULE
-		import os2borgerpc.client.admin_client as admin_client
+  # Separated out because pam_python is python2 while our client is python3
+	cat <<- EOF > $CICERO_INTERFACE_PYTHON3
+		#! /usr/bin/env python3
+
+		import sys
 		from subprocess import check_output
+		import os2borgerpc.client.admin_client as admin_client
 
-		# From pam_permit python-pam example. Do we need it?:
+		def cicero_validate(cicero_user, cicero_pass):
 
-		def pam_sm_authenticate(pamh, flags, argv):
 		  #host_address="https://os2borgerpc-admin.magenta.dk"
 		  #host_address="http://172.16.120.66:9999/admin-xml/"
 		  host_address="http://10.0.2.2:9999/admin-xml/"
+
+		  # Obtain the site and convert from bytes to regular string and remove the trailing newline
+		  site = check_output(['get_os2borgerpc_config', 'site']).decode().replace('\n', '')
+
+		  # Values it can return - see cicero_login here:
+		  # https://github.com/OS2borgerPC/admin-site/blob/master/admin_site/system/rpc.py
+		  # -1: Unable to authenticate.
+		  #  0: No time remaining, i.e. user is quarantined.
+		  # >0: The number of minutes the user is allowed.
+		  admin = admin_client.OS2borgerPCAdmin(host_address)
+		  #time = admin.citizen_login('1111111111', '1234', 'magenta')
+		  #time = admin.citizen_login(cicero_user, cicero_pass, site)
+		  time = admin.citizen_login(cicero_user, cicero_pass, site)
+		  # DEBUG:
+		  with open('/home/superuser/log.txt', 'w') as f:
+		    f.write(f"User: {cicero_user}, Password: {cicero_pass}, Site: {site}, Time: {time}")
+
+		  # Time is received in minutes, turn into seconds
+		  return time * 60
+
+		if __name__ == "__main__":
+		  print(cicero_validate(sys.argv[1], sys.argv[2]))
+	EOF
+
+  chmod u+x $CICERO_INTERFACE_PYTHON3
+
+  # Note: pam_python currently runs on python 2.7.18, not python3!
+	cat <<- EOF > $PAM_PYTHON_MODULE
+		from subprocess import check_output
+
+		def pam_sm_authenticate(pamh, flags, argv):
 
 		  #print(pamh.fail_delay)
 		  # http://pam-python.sourceforge.net/doc/html/
@@ -60,19 +95,13 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 		  cicero_user = resp1.resp
 		  cicero_pass = resp2.resp
 
-		  site = check_output(['get_os2borgerpc_config','site'])
-
-		  # Values it can return - see cicero_login here:
-		  # https://github.com/OS2borgerPC/admin-site/blob/master/admin_site/system/rpc.py
-		  # -1: Unable to authenticate.
-		  #  0: No time remaining, i.e. user is quarantined.
-		  # >0: The number of minutes the user is allowed.
-		  admin = admin_client.OS2borgerPCAdmin(host_address)
-		  time = admin.citizen_login('1111111111', '1234', 'magenta')
+		  # Test values:
+		  #time = admin.citizen_login('1111111111', '1234', 'magenta')
+		  time = int(check_output(["$CICERO_INTERFACE_PYTHON3", cicero_user, cicero_pass]))
 
 		  if time > 0:
 		    with open('$LOGOUT_TIMER_CONF', 'w') as f:
-		      f.write(f"TIME_SECONDS={time}")
+		      f.write("TIME_SECONDS=" + str(time))
 		    return pamh.PAM_SUCCESS
 		  elif time == 0:
 		    msg3 = pamh.Message(pamh.PAM_ERROR_MSG, "Du har karantaene.")
@@ -109,6 +138,8 @@ else # Cleanup and remove the Cicero integration
   sed -i '/# OS2borgerPC Cicero/d' $LIGHTDM_PAM
   sed -i '/pam_succeed_if.so user != user/d' $LIGHTDM_PAM
   sed -i "\@auth required pam_python.so@d" $LIGHTDM_PAM
+
+  rm $CICERO_INTERFACE_PYTHON3 $PAM_PYTHON_MODULE
 
   # Possibly remove libpam-python as we don't need it anymore
   # - at least this functionality no longer does
