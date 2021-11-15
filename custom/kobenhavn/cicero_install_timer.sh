@@ -1,5 +1,12 @@
 #! /usr/bin/env sh
 
+# TODO: It appears as if four timer processes are started?!
+#user        1635  0.0  0.0   2616   604 ?        S    13:52   0:00 /bin/sh /usr/share/os2borgerpc/bin/logout_timer_user.sh
+#root        1643  0.0  0.1  14852  4736 ?        S    13:52   0:00 sudo /usr/share/os2borgerpc/bin/logout_timer.sh
+#user        1650  0.0  0.0   2616  1048 ?        S    13:52   0:00 /bin/sh /usr/share/os2borgerpc/bin/logout_timer_user.sh
+#root        1701  0.0  0.0   2616  1580 ?        S    13:52   0:00 sh /usr/share/os2borgerpc/bin/logout_timer.sh
+
+
 # TODO: these timers should only run for "user"!
 # TODO: We need to run this program only AFTER login, so not graphical.target or whatever, if that
 # includes the login manager which also runs in X.
@@ -26,111 +33,115 @@ lower() {
 ACTIVATE="$(lower "$1")"
 SECONDS_TO_LOGOUT=$2
 
-export DEBIAN_FRONTEND=noninteractive
+# export DEBIAN_FRONTEND=noninteractive # Do we need to install zenity?
 
 SHADOW=".skjult"
 TIMER_LOGOUT_PROGRAM="/usr/share/os2borgerpc/bin/logout_timer.sh"
-TIMER_LOGOUT_SYSTEMD_UNIT="/etc/systemd/system/os2borgerpc-logout-timer.service"
 TIMER_USER_PROGRAM="/usr/share/os2borgerpc/bin/logout_timer_user.sh"
-TIMER_USER_DESKTOP_FILE="/home/$SHADOW.config/autostart/logout-timer_user.desktop"
+TIMER_LAUNCHER="/usr/share/os2borgerpc/bin/timer_launcher.sh"
+TIMERS_DESKTOP_FILE="/home/$SHADOW/.config/autostart/logout-timer_user.desktop"
+SUDOERS_CUSTOM=/etc/sudoers.d/os2borgerpc-cicero
+LOGOUT_TIMER_CONF=/usr/share/os2borgerpc/logout_timer.conf
+
+
+[ $# -lt 1 ] && printf "The script takes at least one argument: Whether to enable or disable the timer" && exit 1
 
 if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
    [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
   # TODO: Do we need to install zenity?
 
   # The default time before logout
-  printf "TIME_SECONDS=%s" "$SECONDS_TO_LOGOUT" > /usr/share/os2borgerpc/logout_timer.conf
+  printf "TIME_SECONDS=%s" "$SECONDS_TO_LOGOUT" > $LOGOUT_TIMER_CONF
 
   # This timer handles the actual logout and thus runs as root so the user can't kill the process
 	cat <<- EOF > $TIMER_LOGOUT_PROGRAM
 		#! /usr/bin/env sh
 
-		# Remember to not run this script as the regular user as otherwise they can just kill the process
+		# Remember to NOT run this script as the regular user as otherwise they can just kill the process
 
-    # Quite hacky way to disable this for all others besides 'user'
-    [ whoami != "user" ] && exit 0
+		. $LOGOUT_TIMER_CONF
 
-    . /usr/share/os2borgerpc/logout_timer.conf
+		COUNT=\$TIME_SECONDS
 
-    COUNT=$TIME_SECONDS
-
-		until [ "$COUNT" -eq "0" ]; do                              # Countdown loop.
-		    COUNT=$((COUNT-1))                                      # Decrement seconds.
+		until [ "\$COUNT" -eq "0" ]; do                              # Countdown loop.
+		    COUNT=\$((COUNT-1))                                      # Decrement seconds.
 		    sleep 1
 		done
 
-    su --login user --command "DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u user)/bus" gnome-session-quit --logout --no-prompt"
-    # Alternate approach:
-    # who -u    #to obtain the ID of the session?
-    # kill $idFoundAbove
-    # Alternate approach:
-    # killall lightdm
-    # Alternate approach:
-    # killall gnome-session
+		su --login user --command "DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/\$(id -u user)/bus" gnome-session-quit --logout --no-prompt"
+		# Alternate approach:
+		# who -u    #to obtain the ID of the session?
+		# kill <idFoundAbove>
+		# Alternate approach:
+		# killall lightdm
+		# Alternate approach:
+		# killall gnome-session
 	EOF
 
-
-	cat <<- EOF > $TIMER_LOGOUT_SYSTEMD_UNIT
-		[Unit]
-		Description=Run the logout timer after user login
-		DefaultDependencies=no
-		After=network.target
-
-		[Service]
-		Type=simple
-		ExecStart=$TIMER_LOGOUT_PROGRAM
-		TimeoutStartSec=0
-		RemainAfterExit=yes
-
-		[Install]
-		WantedBy=default.target
-	EOF
+# The newline below is crucial, otherwise it's not a valid sudoers file
+printf "user ALL = NOPASSWD: %s\n" $TIMER_LOGOUT_PROGRAM > $SUDOERS_CUSTOM
+chmod 0440 $SUDOERS_CUSTOM
 
   # This timer is for visually displaying how long they have left only.
 	cat <<- EOF > $TIMER_USER_PROGRAM
+    #! /usr/bin/env sh
+
 		# Credits: https://handybashscripts.blogspot.com/2012/01/simple-timer-with-progress-bar.html
 
-    . /usr/share/os2borgerpc/logout_timer.conf
+    . $LOGOUT_TIMER_CONF
 
+    GRACE_PERIOD_SECONDS=15
     # Subtracting a little from this as we need this to run at least a bit before they're logged out
-    COUNT=$((TIME_SECONDS - 15))
+    COUNT=\$((TIME_SECONDS - GRACE_PERIOD_SECONDS))
 
 		#ICON=/usr/share/icons/Yaru/48x48/apps/clock-app.png
 		ICON=clock-app
 
-		COUNT=$1
-		START=$COUNT                                                # Set a starting point.
+		START=\$COUNT                                                # Set a starting point.
 
-		until [ "$COUNT" -eq "0" ]; do                              # Countdown loop.
-		    COUNT=$((COUNT-1))                                      # Decrement seconds.
-		    PERCENT=$((100-100*COUNT/START))                        # Calc percentage.
-		    echo "#Tid tilbage: $(echo "obase=60;$COUNT" | bc)"     # Convert to H:M:S.
-		    echo $PERCENT                                           # Output for progbar.
-		    #echo $COUNT | xsel -i -p
+		until [ "\$COUNT" -eq "0" ]; do                              # Countdown loop.
+		    COUNT=\$((COUNT-1))                                      # Decrement seconds.
+		    PERCENT=\$((100-100*COUNT/START))                        # Calc percentage.
+		    echo "#Tid tilbage: \$(echo "obase=60;\$COUNT" | bc)"    # Convert to H:M:S.
+		    echo \$PERCENT                                           # Output for progbar.
+		    #echo \$COUNT | xsel -i -p
 		    sleep 1
 		done | zenity --title "Logintid" --progress --percentage=0 --text="" \
-		    --window-icon $ICON --icon-name $ICON --auto-close --no-cancel # Progbar/time left.
+		    --window-icon \$ICON --icon-name \$ICON --auto-close --no-cancel                # Progbar/time left.
 
 		#xsel -o -p
 
-		#notify-send -i $ICON "## Tiden er udløbet: Du logges af. ##"        # Attention finish!
-		zenity --notification --window-icon $ICON --icon-name $ICON \
-		    --text "## Tiden er udløbet: Du logges af. ##"                   # Indicate finished!
+		#notify-send -i \$ICON "## Tiden er udløbet: Du logges af om få sekunder. ##"       # Attention finish!
+		zenity --notification --window-icon \$ICON --icon-name \$ICON \
+		    --text "## Tiden er udløbet: Du logges af om få sekunder. ##"                   # Indicate finished!
 	EOF
 
+  # Simply a small script to launch from the desktop file which starts both timers
+	cat <<- EOF > $TIMER_LAUNCHER
+		#! /usr/bin/env bash
+
+		# Using bash because disown is undefined in POSIX sh
+
+		$TIMER_USER_PROGRAM &
+		disown
+		sudo $TIMER_LOGOUT_PROGRAM &
+		disown
+	EOF
+
+  mkdir --parents /home/$SHADOW/.config/autostart
+
 	# Autorun file that simply launches the script above after startup
-	cat <<- EOF > "$TIMER_USER_DESKTOP_FILE"
+	cat <<- EOF > "$TIMERS_DESKTOP_FILE"
 		[Desktop Entry]
 		Type=Application
 		Name=Automatically allow launching of .desktop files on the desktop
-		Exec=$TIMER_USER_PROGRAM
+		Exec=$TIMER_LAUNCHER
 		Icon=system-run
 		X-GNOME-Autostart-enabled=true
 	EOF
 
-  systemd enable "$(basename $TIMER_LOGOUT_SYSTEMD_UNIT)"
+  chmod +x $TIMER_LOGOUT_PROGRAM $TIMER_USER_PROGRAM $TIMER_LAUNCHER $TIMERS_DESKTOP_FILE
 
 else # Delete the timer
-  systemd disable "$(basename $TIMER_LOGOUT_SYSTEMD_UNIT)"
-  rm $TIMER_LOGOUT_SYSTEMD_UNIT $TIMER_LOGOUT_PROGRAM $TIMER_USER_PROGRAM
+  rm $TIMER_LOGOUT_PROGRAM $TIMER_USER_PROGRAM $TIMER_LAUNCHER $TIMERS_DESKTOP_FILE
 fi
