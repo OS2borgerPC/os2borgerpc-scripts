@@ -1,17 +1,17 @@
 #! /usr/bin/env sh
 
 # Chrome launch maximized, fullscreen or kiosk by default
-# Applies to both the general .desktop file, 
+# Applies to both the general .desktop file,
 # the .desktop file that may have been added to the desktop
 # and the .desktop file that may be used to autostart chrome.
 #
 # Arguments:
-# 1: 
+# 1:
 #   0: Disable all three (default for Chrome)
 #   1: Maximized
 #   2: Full screen
 #   3: Kiosk
-# 
+#
 #
 # Takes effect after logout / restart.
 #
@@ -22,12 +22,14 @@ set -x
 SETTING="$1"
 
 USER=".skjult"
-DESKTOP_FILE_PATH=/usr/share/applications/google-chrome.desktop
+DESKTOP_FILE_1=/usr/share/applications/google-chrome.desktop
 # In case they've also added Chrome to their desktop
-DESKTOP_FILE_PATH2=/home/$USER/Skrivebord/google-chrome.desktop
-# In case they've run chrome_autostart.sh
-DESKTOP_FILE_PATH3=/home/$USER/.config/autostart/chrome.desktop
-FILES="$DESKTOP_FILE_PATH $DESKTOP_FILE_PATH2 $DESKTOP_FILE_PATH3"
+DESKTOP_FILE_2=/home/$USER/Skrivebord/google-chrome.desktop
+# In case they've run chrome_autostart.sh.
+# The name is no mistake, that one is not called google-chrome.desktop
+DESKTOP_FILE_3=/home/$USER/.config/autostart/chrome.desktop
+DESKTOP_FILE_4=/home/$USER/.local/share/applications/google-chrome.desktop
+FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3 $DESKTOP_FILE_4"
 
 # Takes a parameter to add to Chrome and a list of .desktop files to add it to
 add_to_desktop_files() {
