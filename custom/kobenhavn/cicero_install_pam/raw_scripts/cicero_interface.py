@@ -1,0 +1,38 @@
+#! /usr/bin/env python3
+
+import sys
+from subprocess import check_output
+import os2borgerpc.client.admin_client as admin_client
+
+
+def cicero_validate(cicero_user, cicero_pass):
+
+    # host_address="https://os2borgerpc-admin.magenta.dk"
+    # host_address="http://172.16.120.66:9999/admin-xml/"
+    host_address = "http://10.0.2.2:9999/admin-xml/"
+
+    # Obtain the site and convert from bytes to regular string
+    # and remove the trailing newline
+    site = check_output(["get_os2borgerpc_config", "site"]).decode().replace("\n", "")
+
+    # Values it can return - see cicero_login here:
+    # https://github.com/OS2borgerPC/admin-site/blob/master/admin_site/system/rpc.py
+    # For reference:
+    #   r < 0: User is quarantined and may login in -r minutes
+    #   r = 0: Unable to authenticate.
+    #   r > 0: The user is allowed r minutes of login time.
+    admin = admin_client.OS2borgerPCAdmin(host_address)
+    time = admin.citizen_login(cicero_user, cicero_pass, site)
+    # DEBUG:
+    # with open('/home/superuser/log.txt', 'w') as f:
+    #  f.write(
+    #   f"User: {cicero_user}, Password: {cicero_pass}, "
+    #   f"Site: {site}, Time: {time}")
+    #  )
+
+    # Time is received in minutes
+    return time
+
+
+if __name__ == "__main__":
+    print(cicero_validate(sys.argv[1], sys.argv[2]))

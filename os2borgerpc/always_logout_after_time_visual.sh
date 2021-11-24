@@ -32,8 +32,10 @@ lower() {
 
 ACTIVATE="$(lower "$1")"
 SECONDS_TO_LOGOUT=$2
+X_POSITION=$3
+Y_POSITION=$4
 
-# export DEBIAN_FRONTEND=noninteractive # Do we need to install zenity?
+export DEBIAN_FRONTEND=noninteractive
 
 SHADOW=".skjult"
 TIMER_LOGOUT_PROGRAM="/usr/share/os2borgerpc/bin/logout_timer.sh"
@@ -49,6 +51,7 @@ LOGOUT_TIMER_CONF=/usr/share/os2borgerpc/logout_timer.conf
 if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
    [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
   # TODO: Do we need to install zenity?
+  apt-get install --assume-yes xdotool
 
   # The default time before logout
   printf "TIME_SECONDS=%s" "$SECONDS_TO_LOGOUT" > $LOGOUT_TIMER_CONF
@@ -86,7 +89,12 @@ chmod 0440 $SUDOERS_CUSTOM
 	cat <<- EOF > $TIMER_USER_PROGRAM
     #! /usr/bin/env sh
 
+    # We need job control to move the window but then suspend until zenity closes
+    set -m
+
 		# Credits: https://handybashscripts.blogspot.com/2012/01/simple-timer-with-progress-bar.html
+
+    TITLE="Logintid"
 
     . $LOGOUT_TIMER_CONF
 
@@ -106,8 +114,12 @@ chmod 0440 $SUDOERS_CUSTOM
 		    echo \$PERCENT                                           # Output for progbar.
 		    #echo \$COUNT | xsel -i -p
 		    sleep 1
-		done | zenity --title "Logintid" --progress --percentage=0 --text="" \
-		    --window-icon \$ICON --icon-name \$ICON --auto-close --no-cancel                # Progbar/time left.
+		done | zenity --title "$TITLE" --progress --percentage=0 --text="" \
+		    --window-icon \$ICON --icon-name \$ICON --auto-close --no-cancel &               # Progbar/time left.
+
+    # xdotool would not work in Wayland
+    xdotool windowmove "$(xdotool search "$TITLE")" $X_POSITION $Y_POSITION
+    fg
 
 		#xsel -o -p
 
