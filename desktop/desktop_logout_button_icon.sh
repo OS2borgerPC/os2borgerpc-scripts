@@ -21,8 +21,8 @@ NAME=$1
 PROMPT="$(lower "$2")"
 ICON_UPLOAD=$3
 
-SHADOW=".skjult"
-FILE_PATH=/home/$SHADOW/Skrivebord/Logout.desktop
+FILE_PATH=/home/.skjult/Skrivebord/Logout.desktop
+mkdir --parents "$(dirname $FILE_PATH)"
 
 TO_PROMPT_OR_NOT=--no-prompt
 
@@ -33,16 +33,16 @@ if [ "$PROMPT" != 'false' ] && [ "$PROMPT" != 'falsk' ] &&
 fi
 
 # HANDLE ICON HERE
-if ! echo "$ICON_UPLOAD" | grep --quiet '.png\|.svg'; then
-	printf "Fejl: Kun .svg og .png understøttes som ikon-formater."
+if ! echo "$ICON_UPLOAD" | grep --quiet '.png\|.svg\|.jpg'; then
+	printf "Fejl: Kun .svg, .png og .jpg understøttes som ikon-formater."
 	exit 1
 else
 	ICON_BASE_PATH=/usr/local/share/icons/
-	mkdir --parents "$ICON_BASE_PATH" "$(dirname $FILE_PATH)"
+	mkdir --parents "$ICON_BASE_PATH"
 	# Copy icon from the default destination to where it should actually be
 	cp "$ICON_UPLOAD" $ICON_BASE_PATH
 	# A .desktop file apparently expects an icon without an extension
-	ICON_NAME="$(basename "$ICON_UPLOAD" | sed -e 's/.png|.svg//')"
+	ICON_NAME="$(basename "$ICON_UPLOAD" | sed -e 's/.png|.svg|.jpg//')"
 
 	update-icon-caches $ICON_BASE_PATH
 fi
