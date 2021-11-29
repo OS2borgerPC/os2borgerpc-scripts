@@ -47,6 +47,7 @@ cat << EOF > $CICERO_INTERFACE_PYTHON3
 import sys
 from subprocess import check_output
 import os2borgerpc.client.admin_client as admin_client
+import socket
 
 
 def cicero_validate(cicero_user, cicero_pass):
@@ -54,6 +55,7 @@ def cicero_validate(cicero_user, cicero_pass):
     host_address = (
         check_output(["get_os2borgerpc_config", "admin_url"]).decode().replace("\n", "")
     )
+    # Example URL:
     # host_address = "https://os2borgerpc-admin.magenta.dk/admin-xml/"
 
     # For local testing with VirtualBox
@@ -70,13 +72,10 @@ def cicero_validate(cicero_user, cicero_pass):
     #   r = 0: Unable to authenticate.
     #   r > 0: The user is allowed r minutes of login time.
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
-    time = admin.citizen_login(cicero_user, cicero_pass, site)
-    # DEBUG:
-    # with open('/home/superuser/log.txt', 'w') as f:
-    #  f.write(
-    #   f"User: {cicero_user}, Password: {cicero_pass}, "
-    #   f"Site: {site}, Time: {time}")
-    #  )
+    try:
+        time = admin.citizen_login(cicero_user, cicero_pass, site)
+    except (socket.gaierror, TimeoutError):
+        time = ""
 
     # Time is received in minutes
     return time
@@ -90,6 +89,8 @@ EOF
 
   # Note: pam_python currently runs on python 2.7.18, not python3!
 cat << EOF > $PAM_PYTHON_MODULE
+#! /usr/bin/env python2
+
 from subprocess import check_output
 
 
@@ -97,14 +98,26 @@ def pam_sm_authenticate(pamh, flags, argv):
 
     # print(pamh.fail_delay)
     # http://pam-python.sourceforge.net/doc/html/
-    msg1 = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Laanernummer eller CPR")
-    msg2 = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Kodeord")
-    resp1 = pamh.conversation(msg1)  # Reponse object also contains a ret_code
-    resp2 = pamh.conversation(msg2)
-    cicero_user = resp1.resp
-    cicero_pass = resp2.resp
+    username_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Laanernummer eller CPR")
+    password_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Kodeord")
+    # Note: Response object also contains a ret_code
+    username_response = pamh.conversation(username_msg)
+    password_response = pamh.conversation(password_msg)
+    cicero_user = username_response.resp
+    cicero_pass = password_response.resp
 
-    time = int(check_output(["$CICERO_INTERFACE_PYTHON3", cicero_user, cicero_pass]))
+    cicero_response = check_output(
+        ["$CICERO_INTERFACE_PYTHON3", cicero_user, cicero_pass]
+    )
+
+    if not cicero_response:
+        result_msg = pamh.Message(
+            pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Proev igen senere."
+        )
+        pamh.conversation(result_msg)
+        return pamh.PAM_AUTH_ERR
+
+    time = int(cicero_response)
 
     if time > 0:
         with open('$LOGOUT_TIMER_CONF', 'w') as f:
@@ -112,20 +125,15 @@ def pam_sm_authenticate(pamh, flags, argv):
             f.write("TIME_SECONDS=" + str(time * 60))
         return pamh.PAM_SUCCESS
     elif time == 0:
-        msg3 = pamh.Message(pamh.PAM_ERROR_MSG, "Login mislykkedes.")
-        pamh.conversation(msg3)
+        result_msg = pamh.Message(pamh.PAM_ERROR_MSG, "Login mislykkedes.")
+        pamh.conversation(result_msg)
         return pamh.PAM_AUTH_ERR
     elif time < 0:
-        msg3 = pamh.Message(
+        result_msg = pamh.Message(
             pamh.PAM_ERROR_MSG,
             "Du kan logge ind igen om " + str(abs(time)) + " minutter."
         )
-        pamh.conversation(msg3)
-        return pamh.PAM_AUTH_ERR
-    else:
-        msg3 = pamh.Message(
-            pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Proev igen senere."
-        )
+        pamh.conversation(result_msg)
         return pamh.PAM_AUTH_ERR
 
 

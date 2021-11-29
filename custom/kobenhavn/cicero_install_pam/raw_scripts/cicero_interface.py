@@ -3,6 +3,7 @@
 import sys
 from subprocess import check_output
 import os2borgerpc.client.admin_client as admin_client
+import socket
 
 
 def cicero_validate(cicero_user, cicero_pass):
@@ -10,6 +11,7 @@ def cicero_validate(cicero_user, cicero_pass):
     host_address = (
         check_output(["get_os2borgerpc_config", "admin_url"]).decode().replace("\n", "")
     )
+    # Example URL:
     # host_address = "https://os2borgerpc-admin.magenta.dk/admin-xml/"
 
     # For local testing with VirtualBox
@@ -26,13 +28,10 @@ def cicero_validate(cicero_user, cicero_pass):
     #   r = 0: Unable to authenticate.
     #   r > 0: The user is allowed r minutes of login time.
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
-    time = admin.citizen_login(cicero_user, cicero_pass, site)
-    # DEBUG:
-    # with open('/home/superuser/log.txt', 'w') as f:
-    #  f.write(
-    #   f"User: {cicero_user}, Password: {cicero_pass}, "
-    #   f"Site: {site}, Time: {time}")
-    #  )
+    try:
+        time = admin.citizen_login(cicero_user, cicero_pass, site)
+    except (socket.gaierror, TimeoutError):
+        time = ""
 
     # Time is received in minutes
     return time
