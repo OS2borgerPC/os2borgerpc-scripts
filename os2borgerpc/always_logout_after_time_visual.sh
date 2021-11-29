@@ -17,7 +17,7 @@ lower() {
 
 # Argument handling
 ACTIVATE="$(lower "$1")"
-SECONDS_TO_LOGOUT=$2
+MINUTES_TO_LOGOUT=$2
 X_POSITION=$3
 Y_POSITION=$4
 
@@ -46,7 +46,7 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
   apt-get install --assume-yes xdotool
 
   # The default time before logout
-  printf "TIME_SECONDS=%s" "$SECONDS_TO_LOGOUT" > $LOGOUT_TIMERS_CONF
+  printf "TIME_MINUTES=%s" "$MINUTES_TO_LOGOUT" > $LOGOUT_TIMERS_CONF
 
   # This timer handles the actual logout and thus runs as root so the user can't kill the process
 	cat <<- EOF > $LOGOUT_TIMER_ACTUAL
@@ -54,9 +54,9 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 
 		. $LOGOUT_TIMERS_CONF
 
-		GRACE_PERIOD_SECONDS=20
+		GRACE_PERIOD_SECONDS=30
 		# Adding a little to this so they're warned a bit before they're actually logged out
-		COUNT=\$((TIME_SECONDS + GRACE_PERIOD_SECONDS))
+		COUNT=\$((TIME_MINUTES * 60 + GRACE_PERIOD_SECONDS))
 
 		until [ "\$COUNT" -eq "0" ]; do                              # Countdown loop.
 		    COUNT=\$((COUNT-1))                                      # Decrement seconds.
@@ -83,12 +83,13 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 		# We need job control to move the window but then suspend until the countdown finishes
 		set -m
 
-		# Load TIME_SECONDS from the config
+		# Load TIME_MINUTES from the config
 		. $LOGOUT_TIMERS_CONF
 
 		TITLE="Logintid"
+		TIME_SECONDS=\$((TIME_MINUTES * 60))                                         # Set a starting point.
 
-		COUNT=\$TIME_SECONDS                                         # Set a starting point.
+		COUNT=\$TIME_SECONDS
 
 		until [ "\$COUNT" -eq "0" ]; do                              # Countdown loop.
 		    COUNT=\$((COUNT-1))                                      # Decrement seconds.
@@ -108,7 +109,7 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 		#xsel -o -p
 
 		zenity --notification --window-icon \$ICON --icon-name \$ICON \
-		    --text "Tiden er udløbet: Du logges af om få sekunder."  # Indicate finished!
+		    --text "Tiden er udløbet: Du logges snart af."  # Indicate finished!
 	EOF
 
   # Simply a small script that launches the timer in the background and immediately exits

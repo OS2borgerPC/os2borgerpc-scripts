@@ -9,7 +9,7 @@ import socket
 def cicero_validate(cicero_user, cicero_pass):
 
     host_address = (
-        check_output(["get_os2borgerpc_config", "admin_url"]).decode().replace("\n", "")
+        check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
     )
     # Example URL:
     # host_address = "https://os2borgerpc-admin.magenta.dk/admin-xml/"
@@ -19,7 +19,7 @@ def cicero_validate(cicero_user, cicero_pass):
 
     # Obtain the site and convert from bytes to regular string
     # and remove the trailing newline
-    site = check_output(["get_os2borgerpc_config", "site"]).decode().replace("\n", "")
+    site = check_output(["get_os2borgerpc_config", "site"]).decode().strip()
 
     # Values it can return - see cicero_login here:
     # https://github.com/OS2borgerPC/admin-site/blob/master/admin_site/system/rpc.py
