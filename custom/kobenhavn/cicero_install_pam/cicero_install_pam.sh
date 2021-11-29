@@ -18,6 +18,7 @@ export DEBIAN_FRONTEND=noninteractive
 LIGHTDM_PAM=/etc/pam.d/lightdm
 # Put our module where PAM modules normally are
 PAM_PYTHON_MODULE=/usr/lib/x86_64-linux-gnu/security/os2borgerpc-cicero-pam-module.py
+# shellcheck disable=SC2034   # It exists in the included file
 LOGOUT_TIMER_CONF=/usr/share/os2borgerpc/logout_timer.conf
 CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
@@ -30,15 +31,13 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
   fi
 
   # Two blocks to ensure:
-  # 1. User skips regular login and only uses Cicero.
-  # 2. All other users use regular login and conversely skip Cicero
   # Idempotency: Don't add it multiple times if run multiple times
   if ! grep -q "pam_python" "$LIGHTDM_PAM"; then
+    # 1. User skips regular login and only uses Cicero.
     sed -i '/common-auth/i# OS2borgerPC Cicero\nauth [success=4 default=ignore] pam_succeed_if.so user = user' $LIGHTDM_PAM
 
-    # The one immediately below resulted in lightdm ubuntu errors
-	  #sed -i '/include common-account/i# OS2borgerPC Cicero\nauth sufficient pam_succeed_if.so user != user\nauth required pam_python.so' $LIGHTDM_PAM
-	  sed -i "/include common-account/i# OS2borgerPC Cicero\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
+    # 2. All other users use regular login and conversely skip Cicero
+    sed -i "/include common-account/i# OS2borgerPC Cicero\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
   fi
 
   # Separated out because pam_python is python2 while our client is python3
@@ -52,13 +51,17 @@ import os2borgerpc.client.admin_client as admin_client
 
 def cicero_validate(cicero_user, cicero_pass):
 
-    # host_address="https://os2borgerpc-admin.magenta.dk"
-    # host_address="http://172.16.120.66:9999/admin-xml/"
-    host_address = "http://10.0.2.2:9999/admin-xml/"
+    host_address = (
+        check_output(["get_os2borgerpc_config", "admin_url"]).decode().replace("\n", "")
+    )
+    # host_address = "https://os2borgerpc-admin.magenta.dk/admin-xml/"
+
+    # For local testing with VirtualBox
+    # host_address = "http://10.0.2.2:9999/admin-xml/"
 
     # Obtain the site and convert from bytes to regular string
     # and remove the trailing newline
-    site = check_output(['get_os2borgerpc_config', 'site']).decode().replace('\n', '')
+    site = check_output(["get_os2borgerpc_config", "site"]).decode().replace("\n", "")
 
     # Values it can return - see cicero_login here:
     # https://github.com/OS2borgerPC/admin-site/blob/master/admin_site/system/rpc.py
@@ -66,11 +69,14 @@ def cicero_validate(cicero_user, cicero_pass):
     #   r < 0: User is quarantined and may login in -r minutes
     #   r = 0: Unable to authenticate.
     #   r > 0: The user is allowed r minutes of login time.
-    admin = admin_client.OS2borgerPCAdmin(host_address)
+    admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     time = admin.citizen_login(cicero_user, cicero_pass, site)
     # DEBUG:
     # with open('/home/superuser/log.txt', 'w') as f:
-    #  f.write(f"User: {cicero_user}, Password: {cicero_pass}, Site: {site}, Time: {time}")
+    #  f.write(
+    #   f"User: {cicero_user}, Password: {cicero_pass}, "
+    #   f"Site: {site}, Time: {time}")
+    #  )
 
     # Time is received in minutes
     return time
@@ -117,7 +123,9 @@ def pam_sm_authenticate(pamh, flags, argv):
         pamh.conversation(msg3)
         return pamh.PAM_AUTH_ERR
     else:
-        msg3 = pamh.Message(pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Proev igen senere.")
+        msg3 = pamh.Message(
+            pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Proev igen senere."
+        )
         return pamh.PAM_AUTH_ERR
 
 

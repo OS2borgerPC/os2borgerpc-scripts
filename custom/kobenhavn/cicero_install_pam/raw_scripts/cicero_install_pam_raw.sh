@@ -31,15 +31,13 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
   fi
 
   # Two blocks to ensure:
-  # 1. User skips regular login and only uses Cicero.
-  # 2. All other users use regular login and conversely skip Cicero
   # Idempotency: Don't add it multiple times if run multiple times
   if ! grep -q "pam_python" "$LIGHTDM_PAM"; then
+    # 1. User skips regular login and only uses Cicero.
     sed -i '/common-auth/i# OS2borgerPC Cicero\nauth [success=4 default=ignore] pam_succeed_if.so user = user' $LIGHTDM_PAM
 
-    # The one immediately below resulted in lightdm ubuntu errors
-	  #sed -i '/include common-account/i# OS2borgerPC Cicero\nauth sufficient pam_succeed_if.so user != user\nauth required pam_python.so' $LIGHTDM_PAM
-	  sed -i "/include common-account/i# OS2borgerPC Cicero\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
+    # 2. All other users use regular login and conversely skip Cicero
+    sed -i "/include common-account/i# OS2borgerPC Cicero\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
   fi
 
   # Separated out because pam_python is python2 while our client is python3
