@@ -30,7 +30,7 @@ def cicero_validate(cicero_user, cicero_pass):
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     try:
         time = admin.citizen_login(cicero_user, cicero_pass, site)
-    except (socket.gaierror, TimeoutError):
+    except (socket.gaierror, TimeoutError, ConnectionError):
         time = ""
 
     # Time is received in minutes

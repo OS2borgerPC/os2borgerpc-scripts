@@ -74,7 +74,7 @@ def cicero_validate(cicero_user, cicero_pass):
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     try:
         time = admin.citizen_login(cicero_user, cicero_pass, site)
-    except (socket.gaierror, TimeoutError):
+    except (socket.gaierror, TimeoutError, ConnectionError):
         time = ""
 
     # Time is received in minutes
@@ -113,7 +113,7 @@ def pam_sm_authenticate(pamh, flags, argv):
 
     if not cicero_response:
         result_msg = pamh.Message(
-            pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Proev igen senere."
+            pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Prøv senere."
         )
         pamh.conversation(result_msg)
         return pamh.PAM_AUTH_ERR
@@ -134,7 +134,7 @@ def pam_sm_authenticate(pamh, flags, argv):
         minutes = str(time_pos % 60)
         result_msg = pamh.Message(
             pamh.PAM_ERROR_MSG,
-            "Du kan logge ind igen om " + hours + ":" + minutes
+            "Du kan først logge ind igen om " + hours + "t " + minutes + "m.",
         )
         pamh.conversation(result_msg)
         return pamh.PAM_AUTH_ERR
