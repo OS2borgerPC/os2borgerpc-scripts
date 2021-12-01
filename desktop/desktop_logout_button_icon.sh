@@ -17,7 +17,7 @@ lower() {
 	echo "$@" | tr '[:upper:]' '[:lower:]'
 }
 
-NAME=$1
+NAME="$1"
 PROMPT="$(lower "$2")"
 ICON_UPLOAD=$3
 
