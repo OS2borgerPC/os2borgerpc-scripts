@@ -14,7 +14,7 @@ lower() {
 }
 
 ACTIVATE="$(lower "$1")"
-NAME=$2
+NAME="$2"
 
 FILE_PATH=/home/.skjult/Skrivebord/Logout.desktop
 
