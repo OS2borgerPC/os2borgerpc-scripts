@@ -7,7 +7,6 @@
 
 # Arguments
 # 1: Whether to enable or disable two factor authentication for the user
-#    Alternately "kode" generates a secret for you and prints it to screen
 # 2: The secret to use, as we need the same secret across multiple machines.
 #    A valid value is 26 characters consisting of A-Z 0-9
 #   (at least that's the format /usr/bin/google-authenticator generates)
@@ -30,28 +29,14 @@ PAM_TEXT1="auth [default=1 success=ignore] pam_succeed_if.so quiet user ingroup 
 PAM_TEXT2="auth required pam_google_authenticator.so"
 export DEBIAN_FRONTEND=noninteractive
 
-install_ga() {
-  apt-get update --assume-yes "$1"
-  apt-get install --assume-yes libpam-google-authenticator "$1"
-}
-
-if [ "$ACTIVATE" = 'kode' ]; then
-  install_ga --quiet
-  printf "Sikkerhedsnøgle"
-  # All the parameters are specified as otherwise it starts interactively asking for them.
-  google-authenticator --time-based --window-size 5 --force --disallow-reuse --rate-limit 3 \
-  --rate-time 30 --emergency-codes 1 2>/dev/null \
-  | grep "secret key" | awk 'NF{ print $NF }'
-  # Saving this file to /dev/null (--secret /dev/null) means google-authenticator
-  # starts looking for the key there. So instead we create it its normal location
-  # and then delete it afterwards.
-  rm /root/.google_authenticator
-  # Another possible way we could generate this
-  #printf '%s\n' "$(openssl rand -hex 26 | tr "[:lower:]" "[:upper:]")"
-elif [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
+# If you want to generate a code with google-authenticator to see what format the config should be:
+#  google-authenticator --time-based --window-size 5 --force --disallow-reuse --rate-limit 3 \
+#  --rate-time 30 --emergency-codes 1 2>/dev/null
+if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
    [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
 
-  install_ga
+  apt-get update --assume-yes
+  apt-get install --assume-yes libpam-google-authenticator
 
   # Make PAM require two factor for the superuser, both for direct login and su
   if ! grep -q "pam_google_authenticator" $PAM_CONFIG; then
@@ -83,14 +68,18 @@ elif [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
   chown $USER:$USER $AUTHENTICATOR_CONFIG
   chmod 400 $AUTHENTICATOR_CONFIG
 
-  #CODE="otpauth://totp/$USER@$(hostname)?secret=$SECRET&issuer=$(hostname)"
-  CODE="otpauth://totp/$USER@$(hostname)%3Fsecret%3D$SECRET%26issuer%3D$(hostname)"
+  # FOR DEBUGGING:
 
-  printf "%s\n" "QR-koden er:" "$CODE"
+  # This is the format of the QR code:
 
-  # For debugging uncomment this to get a link to a QR with it:
+  # Normally any below is the hostname, but we're setting it up on multiple machines with different
+  # hostnames, but fortunately it's not important
+  # CODE="otpauth://totp/$USER@$(hostname)%3Fsecret%3D$SECRET%26issuer%3D$(hostname)"
+  #CODE="otpauth://totp/$USER@any%3Fsecret%3D$SECRET%26issuer%3Dany"
+  # printf "%s\n" "QR-koden er:" "$CODE"
+
+  # Google itself has a page that generates a qr for you
   # printf "%s\n" "https://www.google.com/chart?chs=200x200&chld=M|0&cht=qr&chl=$CODE"
-  # TODO: Maybe add link to our admin site's 2FA page here.
 else
 
   # Remove the two factor authenticator's config
