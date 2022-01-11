@@ -18,14 +18,12 @@ FILE="/usr/share/applications/defaults.list"
 
 if [ "$BROWSER" = "firefox" ]; then
   DESKTOP_FILE=firefox.desktop
-elif [ "$BROWSER" = "chrome" ]; then
-  DESKTOP_FILE=google-chrome.desktop
 else
-  printf "%s\n" "Ugyldigt input. Gyldige valgmuligheder er 'firefox' eller 'chrome'."
-  exit 1
+  DESKTOP_FILE=google-chrome.desktop
 fi
 
-# We cleanup the defaults.list as sometimes it seems to be populated with multiple lines for the same type, which messes things up!
+# We cleanup the defaults.list as sometimes it seems to be populated
+# with multiple lines for the same MIME type, which messes things up!
 sed -i "\@text/html\|application/xhtml+xml\|application/xml\|x-scheme-handler/http\|x-scheme-handler/https@d" $FILE
 
 # Now set the new default:
