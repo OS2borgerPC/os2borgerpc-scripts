@@ -40,24 +40,24 @@ export DEBIAN_FRONTEND=noninteractive
 CONF="/etc/apt/apt.conf.d/90os2borgerpc-automatic-upgrades"
 
 if [ "$1" != "" ] && [ "$1" != "false" ] && [ "$1" != "falsk" ]; then
-    # Check (quietly) that the unattended-upgrades package is installed, and
-    # install it if it isn't
-    if ! dpkg -s unattended-upgrades > /dev/null 2>&1; then
-        apt-get -y install unattended-upgrades
-    fi
+		# Check (quietly) that the unattended-upgrades package is installed, and
+		# install it if it isn't
+		if ! dpkg -s unattended-upgrades > /dev/null 2>&1; then
+			apt-get -y install unattended-upgrades
+		fi
 
-    # Start building the configuration file with two settings, one for
-    # switching unattended upgrades on and one for automatically downloading
-    # updated package indexes
-    cat > "$CONF" <<-END
+		# Start building the configuration file with two settings, one for
+		# switching unattended upgrades on and one for automatically downloading
+		# updated package indexes
+		cat > "$CONF" <<-END
 			APT::Periodic::Enable "1";
 			APT::Periodic::Unattended-Upgrade "1";
 			APT::Periodic::Update-Package-Lists "1";
 		END
 
-    # Now empty the list of allowed origins and start by populating it with
-    # only security-related entries
-    cat >> "$CONF" <<-END
+		# Now empty the list of allowed origins and start by populating it with
+		# only security-related entries
+		cat >> "$CONF" <<-END
 			#clear Unattended-Upgrade::Allowed-Origins;
 			Unattended-Upgrade::Allowed-Origins {
 			    "\${distro_id}:\${distro_codename}-security"
@@ -65,21 +65,21 @@ if [ "$1" != "" ] && [ "$1" != "false" ] && [ "$1" != "falsk" ]; then
 			    ; "Google LLC:stable"
 		END
 
-    # Unless we've been explicitly told we should only add security-related
-    # entries, then also add everything else
-    if [ "$1" != "security" ] && [ "$1" != "sikkerhed" ]; then
-        cat >> "$CONF" <<-END
+		# Unless we've been explicitly told we should only add security-related
+		# entries, then also add everything else
+		if [ "$1" != "security" ] && [ "$1" != "sikkerhed" ]; then
+			cat >> "$CONF" <<-END
 			    ; "\${distro_id}:\${distro_codename}"
-				END
-    fi
+			END
+		fi
 
-    # Finally, close this scope and conclude the configuration file
-    cat >> "$CONF" <<-END
+		# Finally, close this scope and conclude the configuration file
+		cat >> "$CONF" <<-END
 			};
 		END
 else
-    # Switch automatic upgrades off entirely
-    cat > "$CONF" <<-END
+		# Switch automatic upgrades off entirely
+		cat > "$CONF" <<-END
 			APT::Periodic::Enable "0";
 			APT::Periodic::Unattended-Upgrade "0";
 			APT::Periodic::Update-Package-Lists "0";
