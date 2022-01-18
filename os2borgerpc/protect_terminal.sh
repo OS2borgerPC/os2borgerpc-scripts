@@ -24,4 +24,4 @@ EOF
 
 chmod +x /usr/bin/gnome-terminal
 
-apt remove nautilus-extension-gnome-terminal
+apt-get remove --assume-yes nautilus-extension-gnome-terminal
