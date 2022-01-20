@@ -6,15 +6,12 @@
 # After the script has run log out or restart the computer for the changes to
 # take effect.
 #
-# Dev note: If wanting to globally change the icon used look into
-# shellscripts.png and application-x-shellscript.png
-# within /usr/share/icons/Yaru/
-#
 # Arguments:
 # 1: ACTIVATE: Use a boolean to decide whether to add or not. A checked box will
 # add the shortcut and an unchecked will remove it
 # 2: URL: The URL to visit when clicked
-# 3: NAME: The name the shortcut should have - it needs to be a valid filename!
+# 3: SHORTCUT_NAME: The name the shortcut should have - it needs to be a valid filename!
+# 4: ICON_UPLOAD: The path to an icon. If empty preferences-system-network from the current theme is used
 #
 # Author: mfm@magenta.dk
 
@@ -22,21 +19,52 @@ set -x
 
 ACTIVATE=$1
 URL=$2
-NAME=$3
+SHORTCUT_NAME="$3"
+ICON_UPLOAD=$4
 
 SHADOW=".skjult"
-FILE="/home/$SHADOW/Skrivebord/$NAME"
+DESKTOP_FILE="/home/$SHADOW/Skrivebord/$SHORTCUT_NAME.desktop"
 
 if [ "$ACTIVATE" = 'True' ]; then
 
-	mkdir --parents /home/$SHADOW/Skrivebord
+  if [ -z "$ICON_UPLOAD" ]; then
+    ICON_NAME="preferences-system-network"
+  else
+    # HANDLE ICON HERE
+    if ! echo "$ICON_UPLOAD" | grep --quiet '.png\|.svg\|.jpg\|.jpeg'; then
+      printf "Error: Only .svg, .png, .jpg and .jpeg are supported as icon-formats."
+      exit 1
+    else
+      ICON_BASE_PATH=/usr/local/share/icons
+      mkdir --parents "$ICON_BASE_PATH"
+      # Copy icon from the default destination to where it should actually be
+      cp "$ICON_UPLOAD" $ICON_BASE_PATH/
+      # A .desktop file apparently expects an icon without an extension
+      ICON_NAME="$(basename "$ICON_UPLOAD" | sed -e 's/.png|.svg|.jpg|.jpeg//')"
 
-	cat <<- EOF > "$FILE"
-		#! /usr/bin/env sh
-		xdg-open "$URL"
+      update-icon-caches $ICON_BASE_PATH
+    fi
+  fi
+
+  mkdir --parents /home/$SHADOW/Skrivebord
+
+	#	Originally used: Type=Link and URL=$URL and no Exec line, but seemingly that doesn't work in 20.04
+	cat <<- EOF > "$DESKTOP_FILE"
+		[Desktop Entry]
+		Encoding=UTF-8
+		Name=$SHORTCUT_NAME
+		Type=Application
+		Exec=xdg-open $URL
+		Icon=$ICON_BASE_PATH/$ICON_NAME
 	EOF
 
-	chmod +x "$FILE"
+	chmod +x "$DESKTOP_FILE"
 else
-	rm "$FILE"
+	rm "$DESKTOP_FILE"
+	# Backwards compatibility:
+	# In case they have an URL shortcut made with the previous version of this script,
+	# this version should still allow them to remove that (it was an extensionless shell script)
+  # Don't add recursive here, as otherwise with an empty argument it could delete the Skrivebord
+  # directory itself
+	rm --force "$(dirname "$DESKTOP_FILE")/$(basename -s ".desktop" "$DESKTOP_FILE")"
 fi
