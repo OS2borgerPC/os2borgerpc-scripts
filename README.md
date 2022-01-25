@@ -1,6 +1,6 @@
 # OS2borgerPC Scripts
 
-Scripts for OS2borgerPC, OS2displayPC scripts excluded.
+Scripts for OS2borgerPC - OS2borgerPC Kiosk specific scripts excluded.
 
 The categories are as follows:
 
@@ -12,8 +12,8 @@ The categories are as follows:
 | desktop       | Desktop related scripts for OS2borgerPC                                    |
 | hooks         | Scripts that add hooks to jobmanager                                       |
 | libreoffice   | Related to LibreOffice                                                     |
-| os2borgerpc   | Uncategorized scripts that only work on BorgerPC                           |
+| os2borgerpc   | Uncategorized scripts that only work on OS2BorgerPC                        |
 | printer       | Related to printing                                                        |
 | scanner       | Related to scanning                                                        |
 | security      | Security scripts                                                           |
-| system        | Scripts that work on Ubuntu generally (BorgerPC and DisplayPC)             |
+| system        | Scripts that work on Ubuntu generally (OS2borgerPC and OS2borgerPC Kiosk)  |
