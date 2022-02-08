@@ -19,9 +19,8 @@
 #%    Logins are disabled with the user account expiry mechanism.
 #%
 #%    It takes one optional parameter: whether or not to enforce this policy.
-#%    If this parameter is missing, empty, "false", "falsk", "no" or "nej"
-#%    (not case-sensitive), the policy will be removed; otherwise, it will be
-#%    enforced.
+#%    Use a boolean to decide whether or not to enforce the policy. A checked
+#%    box will enable the script, an unchecked box will remove the policy
 #%
 #%    For use with the "unexpire_user.sh" and
 #%    "detect_user_expired_event.py" script
@@ -45,13 +44,9 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
+ACTIVATE=$1
 
-ACTIVATE="$(lower "$1")"
-
-if [ "$ACTIVATE" != "" ] && [ "$ACTIVATE" != "false" ] && [ "$ACTIVATE" != "falsk" ] && [ "$ACTIVATE" != "no" ] && [ "$ACTIVATE" != "nej" ]; then
+if [ "$ACTIVATE" = "True" ]; then
     mkdir -p /usr/local/lib/os2borgerpc
 
     cat <<"END" > /usr/local/lib/os2borgerpc/create_shutdown_lockfile.sh

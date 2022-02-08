@@ -10,6 +10,9 @@
 #%    This script installs or removes pre- and post-checkin hooks that
 #%    together prevent OS2borgerPC configuration files from being modified.
 #%
+#%    It takes one boolean as a parameter, a checked box protects the config files
+#%    an unchecked removes the safeguarding
+#%
 #%    It is only useful as an extra safeguard during certain remote upgrades.
 #%
 #================================================================
@@ -39,7 +42,7 @@ mkdir -p /etc/os2borgerpc/pre-checkin.d /etc/os2borgerpc/post-checkin.d
 HOOKS="/etc/os2borgerpc/pre-checkin.d/protect_config_files.sh
 /etc/os2borgerpc/post-checkin.d/protect_config_files.sh"
 
-if [ "$1" != "" ] && [ "$1" != "false" ] && [ "$1" != "falsk" ]; then
+if [ "$1" = "True" ]; then
     # shellcheck disable=SC2086 # Two files, so we actually want word splitting
     tee $HOOKS <<"END" > /dev/null
 protected_files="/etc/bibos/bibos.conf /etc/os2borgerpc/os2borgerpc.conf"

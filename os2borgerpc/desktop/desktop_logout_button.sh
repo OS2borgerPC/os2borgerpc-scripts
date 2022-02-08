@@ -4,22 +4,16 @@
 # Credits: Vordingborg Kommune
 #
 # Arguments:
-# 1: Whether to add or delete the shortcut from the desktop.
-#    'nej' or 'falsk' removes it.
+# 1: Use a boolean to decide whether to add or remove the button
 # 2: The name the button should have on the desktop.
 #    If you choose deletion, the contents of the name argument does not matter.
 
-lower() {
-	echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 NAME="$2"
 
 FILE_PATH=/home/.skjult/Skrivebord/Logout.desktop
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
 	mkdir --parents "$(dirname $FILE_PATH)"
 
 	cat <<- EOF > $FILE_PATH
