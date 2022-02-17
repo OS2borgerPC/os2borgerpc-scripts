@@ -8,8 +8,9 @@
 #% DESCRIPTION
 #%    This script "migrates" a computer to a new admin site.
 #%    
-#%    This involves changing the admin site url and site uid in
-#%    in the os2borgerpc config file and re-registering. 
+#%    This involves changing the admin site url and (optionally)
+#%    the site uid in the os2borgerpc config file and
+#%    re-registering.
 #%
 #================================================================
 #- IMPLEMENTATION
