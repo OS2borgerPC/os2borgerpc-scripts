@@ -32,10 +32,10 @@ SITE_UID=$2
 
 [ "$#" -lt 1 ] && printf "The script needs at least one argument. Exiting." && exit 1
 
-set_os2borgerpc_config admin_url $ADMIN_SITE_URL
+set_os2borgerpc_config admin_url "$ADMIN_SITE_URL"
 
 if [ -n "$SITE_UID" ]; then
-    set_os2borgerpc_config site $SITE_UID
+    set_os2borgerpc_config site "$SITE_UID"
 fi
 
 os2borgerpc_register_in_admin
