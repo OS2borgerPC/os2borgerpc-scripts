@@ -3,7 +3,7 @@
 # HEADER
 #================================================================
 #% SYNOPSIS
-#+    chrome_autostart - args[fullscreen(Ja/Nej/Fjernj)]
+#+    chrome_autostart - args[fullscreen(Ja/Nej/Fjern)]
 #%
 #% DESCRIPTION
 #%    This script sets Google Chrome to autostart in fullscreen or normal screen size.
@@ -15,16 +15,6 @@
 #-    copyright       Copyright 2019, Magenta Aps"
 #-    license         GNU General Public License
 #-    email           danni@magenta.dk
-#-
-#================================================================
-#  HISTORY
-#     2019/19/06 : danni : Changed exit -1 to exit 0 which is the correct exit status to use here.
-#     2019/19/06 : danni : Added exit -1 after remove autostart has been completed.
-#     2019/14/06 : danni : Changed command --full-screen to --start-fullscreen.
-#     2019/14/06 : danni : Removed password-store popup.
-#     2019/13/06 : danni : Added possibility to remove autostart file.
-#     2019/13/06 : danni : Script creation
-#
 #================================================================
 # END_OF_HEADER
 #================================================================
