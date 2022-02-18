@@ -27,7 +27,7 @@ DESKTOP_FILE_1=/usr/share/applications/google-chrome.desktop
 DESKTOP_FILE_2=/home/$USER/Skrivebord/google-chrome.desktop
 # In case they've run chrome_autostart.sh.
 # The name is no mistake, that one is not called google-chrome.desktop
-DESKTOP_FILE_3=/home/$USER/.config/autostart/chrome.desktop
+DESKTOP_FILE_3=/home/$USER/.config/autostart/google-chrome.desktop
 DESKTOP_FILE_4=/home/$USER/.local/share/applications/google-chrome.desktop
 FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3 $DESKTOP_FILE_4"
 
