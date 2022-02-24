@@ -3,12 +3,12 @@
 # DESCRIPTION
 #%    This script installs, sets up and enables a wm (bspwm)
 #%    and an on-screen keyboard (onboard).
-#%    Intended for OS2borgerPC Kiosk
+#%    Intended for OS2displayPC.
 #-    email           mfm@magenta.dk
 
 # PREREQUISITES:
-# 1. OS2borgerPC Kiosk - Installer Chromium
-# 2. OS2borgerPC Kiosk - Autostart Chromium
+# 1. OS2displayPC - Installer Chromium
+# 2. OS2displayPC - Autostart Chromium
 
 # Would like to skip installing sxhkd but it's not trivial to do as it's
 # classified as a "required dependency" for bspwm
@@ -129,7 +129,7 @@ fi
   # This is simply the original file with several sections (keys) commented out.
 cat << EOF > /usr/share/onboard/layouts/Compact.onboard
 <?xml version="1.0" ?>
-<!-- OS2borgerPC Kiosk: Comment out Control, Alt, Quit and Settings buttons -->
+<!-- OS2displayPC: Comment out Control, Alt, Quit and Settings buttons -->
 
 <!--
 Copyright © 2013 Francesco Fumanti <francesco.fumanti@gmx.net>
