@@ -18,7 +18,7 @@ Below `common` we have the following categories
 | hooks             | Scripts that add hooks to jobmanager                                       |
 | system            | Scripts that work on Ubuntu generally                                      |
 
-Below `OS2borgerPC` we have the following categories
+Below `os2borgerpc` we have the following categories
 
 | Category      | Description                                                                |
 | ------------- | ---------------------------------------------------------------------------|
@@ -33,7 +33,7 @@ Below `OS2borgerPC` we have the following categories
 | security      | Security scripts                                                           |
 | system        | Scripts that work on Ubuntu generally (OS2borgerPC and OS2borgerPC Kiosk)  |
 
-Below `OS2borgerPC` we have the following categories
+Below `os2borgerpc_kiosk` we have the following categories
 
 | Category          | Description                                                                |
 | ------------------| ---------------------------------------------------------------------------|
