@@ -1,15 +1,36 @@
 #!/usr/bin/env bash
 
 # Overwrite the Libreoffice registrymodifications.xcu config with our own version.
+# Takes two checkboxes as input. The first changes the default fileformats to Microsoft's (.docx, .pptx, .xlsx)
+# The second disables Tip of the day and displaying the changelog when you start the app
 
-mkdir -p /home/.skjult/.config/libreoffice/4/user/
+SET_FORMATS_TO_MICROSOFTS=$1
+REMOVE_TIP_OF_THE_DAY=$2
+CONFIG_DIR="/home/.skjult/.config/libreoffice/4/user/"
+FILE_PATH=$CONFIG_DIR"registrymodifications.xcu"
 
-cat << EOF > /home/.skjult/.config/libreoffice/4/user/registrymodifications.xcu
+mkdir -p $CONFIG_DIR
+
+rm -f $FILE_PATH
+
+cat << EOF >> $FILE_PATH
 <?xml version="1.0" encoding="UTF-8"?>
 <oor:items xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="ShowTipOfTheDay" oor:op="fuse"><value>false</value></prop></item>
-<item oor:path="/org.openoffice.Setup/Product"><prop oor:name="ooSetupLastVersion" oor:op="fuse"><value>6.4</value></prop></item>
-</oor:items>
 EOF
 
-exit 0 
+if [ "$REMOVE_TIP_OF_THE_DAY" == "True" ]; then
+cat << EOF >> $FILE_PATH
+    <item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="ShowTipOfTheDay" oor:op="fuse"><value>false</value></prop></item>
+    <item oor:path="/org.openoffice.Setup/Product"><prop oor:name="ooSetupLastVersion" oor:op="fuse"><value>6.4</value></prop></item>
+EOF
+fi
+
+if [ "$SET_FORMATS_TO_MICROSOFTS" == "True" ]; then
+cat << EOF >> $FILE_PATH
+    <item oor:path="/org.openoffice.Setup/Office/Factories/org.openoffice.Setup:Factory['com.sun.star.text.TextDocument']"><prop oor:name="ooSetupFactoryDefaultFilter" oor:op="fuse"><value>MS Word 2007 XML</value></prop></item>
+    <item oor:path="/org.openoffice.Setup/Office/Factories/org.openoffice.Setup:Factory['com.sun.star.sheet.SpreadsheetDocument']"><prop oor:name="ooSetupFactoryDefaultFilter" oor:op="fuse"><value>Calc MS Excel 2007 XML</value></prop></item>
+    <item oor:path="/org.openoffice.Setup/Office/Factories/org.openoffice.Setup:Factory['com.sun.star.presentation.PresentationDocument']"><prop oor:name="ooSetupFactoryDefaultFilter" oor:op="fuse"><value>Impress MS PowerPoint 2007 XML</value></prop></item>
+EOF
+fi
+
+printf "</oor:items>"  >> $FILE_PATH 
