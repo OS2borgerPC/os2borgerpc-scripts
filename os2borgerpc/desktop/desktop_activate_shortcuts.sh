@@ -1,33 +1,44 @@
 #! /usr/bin/env sh
 
+set -x
+
 USER=user
-SHADOW=.skjult
-AUTOSTART_DESKTOP_FILE_PATH=/home/$SHADOW/.config/autostart/gio-fix-desktop-file-permissions.desktop
+AUTOSTART_DESKTOP_SYSTEMD_UNIT=/etc/systemd/system/gio-fix-desktop-file-permissions.service
 SCRIPT_PATH=/usr/share/os2borgerpc/bin/gio-fix-desktop-file-permissions.sh
 
-# Create the autostart directory, in case it doesn't exist
-mkdir -p "$(dirname $AUTOSTART_DESKTOP_FILE_PATH)"
-
 # Autorun file that simply launches the script below it after startup
-cat << EOF > "$AUTOSTART_DESKTOP_FILE_PATH"
-[Desktop Entry]
-Type=Application
-Name=Automatically allow launching of .desktop files on the desktop
-Exec=$SCRIPT_PATH
-Icon=system-run
-X-GNOME-Autostart-enabled=true
+#TODO: Alternately try: After=os2borgerpc-cleanup.service
+cat << EOF > "$AUTOSTART_DESKTOP_SYSTEMD_UNIT"
+[Unit]
+Description=OS2borgerPC activate desktop shortcuts oneshot
+After=os2borgerpc-cleanup.service
+
+[Service]
+Type=oneshot
+ExecStart=$SCRIPT_PATH
+
+[Install]
+WantedBy=default.target
 EOF
 
-# Script to activate programs on the desktop 
+# Script to activate programs on the desktop
 # (equivalent to right-click -> Allow Launching)
 cat << EOF > "$SCRIPT_PATH"
 #! /usr/bin/env sh
 
 for FILE in /home/$USER/Skrivebord/*.desktop; do
-  gio set "\$FILE" metadata::trusted true
-  # Can't make sense of this as it already has execute permissions, but it
-  # won't work without it
-  chmod u+x "\$FILE"
+  # The for loop runs even if no desktop files are found, and thus the systemd service fails to
+  # start. Prevent that.
+  if [ -n "\$FILE" ]; then
+    # gio seemingly needs user ownership of the file
+    chown $USER:$USER "\$FILE"
+    su --login $USER --command "dbus-launch gio set \$FILE metadata::trusted true"
+    # Can't make sense of this as it already has execute permissions, but it
+    # won't work without it
+    chmod ug+x "\$FILE"
+    # Restoring root ownership of the file afterwards
+    chown root:$USER "\$FILE"
+  fi
 done
 EOF
 
@@ -36,3 +47,6 @@ EOF
 
 # The regular user needs to be able to execute the script
 chmod o+x "$SCRIPT_PATH"
+
+# Now enable the systemd unit which launches the activate desktop shortcuts script
+systemctl enable --now $(basename $AUTOSTART_DESKTOP_SYSTEMD_UNIT)

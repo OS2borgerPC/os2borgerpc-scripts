@@ -35,4 +35,5 @@ else
 	# Restore default, which currently is write access
 	sed -i "\@$TEXT1@d" $USER_CLEANUP
 	sed -i "\@$TEXT2@d" $USER_CLEANUP
+  chattr -i /home/$USER/$DESKTOP
 fi
