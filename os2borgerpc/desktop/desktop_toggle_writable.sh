@@ -9,12 +9,13 @@
 USER="user"
 DESKTOP="Skrivebord"
 USER_CLEANUP=/usr/share/os2borgerpc/bin/user-cleanup.bash
-TEXT1="chown -R root:user /home/$USER/$DESKTOP"
+TEXT1="chattr -i /home/$USER/$DESKTOP"
+TEXT2="chown -R root:user /home/$USER/$DESKTOP"
 # This is to prevent mv'ing Skrivebord to another name, and then creating a new one
 # which they DO have write permissions to
 # Another option considered was chowning /home/user itself (not recursively),
 # but then login didn't work. (maybe due to .xauthority?)
-TEXT2="chattr +i /home/$USER/$DESKTOP"
+TEXT3="chattr +i /home/$USER/$DESKTOP"
 
 lower() {
 	echo "$@" | tr '[:upper:]' '[:lower:]'
@@ -22,18 +23,23 @@ lower() {
 
 ACTIVATE="$(lower "$1")"
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
-	# Don't add it if it's already there (idempotency)
-	if ! grep -q -- "$TEXT1" "$USER_CLEANUP"; then
-		cat <<- EOF >> $USER_CLEANUP
-			$TEXT1
-			$TEXT2
-		EOF
-	fi
-else
-	# Restore default, which currently is write access
+cleanup() {
+	# Restore write access
 	sed -i "\@$TEXT1@d" $USER_CLEANUP
 	sed -i "\@$TEXT2@d" $USER_CLEANUP
-  chattr -i /home/$USER/$DESKTOP
+	sed -i "\@$TEXT3@d" $USER_CLEANUP
+	chattr -i /home/$USER/$DESKTOP
+}
+
+# First cleanup after previous runs of this script (idempotency)
+cleanup
+
+if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
+   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+	# Temporarily set it mutable before copying new files in, as otherwise that will fail
+	sed -i "/# Restore \$HOME/a\ $TEXT1" $USER_CLEANUP
+		cat <<- EOF >> $USER_CLEANUP
+		$TEXT2
+		$TEXT3
+	EOF
 fi

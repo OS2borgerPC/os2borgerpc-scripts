@@ -3,50 +3,57 @@
 set -x
 
 USER=user
-AUTOSTART_DESKTOP_SYSTEMD_UNIT=/etc/systemd/system/gio-fix-desktop-file-permissions.service
-SCRIPT_PATH=/usr/share/os2borgerpc/bin/gio-fix-desktop-file-permissions.sh
+SHADOW=.skjult
+GIO_LAUNCHER=/usr/share/os2borgerpc/bin/gio-fix-desktop-file-permissions.sh
+GIO_SCRIPT=/usr/share/os2borgerpc/bin/gio-dbus.sh
+SESSION_CLEANUP_FILE=/usr/share/os2borgerpc/bin/user-cleanup.bash
 
-# Autorun file that simply launches the script below it after startup
-#TODO: Alternately try: After=os2borgerpc-cleanup.service
-cat << EOF > "$AUTOSTART_DESKTOP_SYSTEMD_UNIT"
-[Unit]
-Description=OS2borgerPC activate desktop shortcuts oneshot
-After=os2borgerpc-cleanup.service
+# Cleanup if they've run previous versions of this script. Suppress deletion errors.
+rm --force /home/$SHADOW/.config/autostart/gio-fix-desktop-file-permissions.desktop
 
-[Service]
-Type=oneshot
-ExecStart=$SCRIPT_PATH
+# Script that actually runs gio as the user and kills the dbus session it creates to do so
+# afterwards
+cat << EOF > "$GIO_SCRIPT"
+#! /usr/bin/env sh
 
-[Install]
-WantedBy=default.target
+# gio needs to run as the user + dbus-launch, we have this script to create it and kill it afterwards
+export \$(dbus-launch)
+DBUS_PROCESS=\$\$
+
+for FILE in /home/$USER/Skrivebord/*.desktop; do
+  #dbus-launch gio set "\$FILE" metadata::trusted true"
+  #DBUS_PROCESS=\$$
+  #kill \$DBUS_PROCESS
+  gio set "\$FILE" metadata::trusted true
+done
+
+kill \$DBUS_PROCESS
 EOF
 
 # Script to activate programs on the desktop
 # (equivalent to right-click -> Allow Launching)
-cat << EOF > "$SCRIPT_PATH"
+cat << EOF > "$GIO_LAUNCHER"
 #! /usr/bin/env sh
 
+# Gio expects the user to own the file so temporarily change that
 for FILE in /home/$USER/Skrivebord/*.desktop; do
-  # The for loop runs even if no desktop files are found, and thus the systemd service fails to
-  # start. Prevent that.
-  if [ -n "\$FILE" ]; then
-    # gio seemingly needs user ownership of the file
-    chown $USER:$USER "\$FILE"
-    su --login $USER --command "dbus-launch gio set \$FILE metadata::trusted true"
-    # Can't make sense of this as it already has execute permissions, but it
-    # won't work without it
-    chmod ug+x "\$FILE"
-    # Restoring root ownership of the file afterwards
-    chown root:$USER "\$FILE"
-  fi
+  chown $USER:$USER \$FILE
+done
+
+su --login user --command $GIO_SCRIPT
+
+# Now set the permissions back to their restricted form
+for FILE in /home/$USER/Skrivebord/*.desktop; do
+  chown root:$USER "\$FILE"
+  # Can't make sense of this as it already has execute permissions, but it won't work without it
+  chmod ug+x "\$FILE"
 done
 EOF
 
-# Proper permissions on this file since it's in the home dir
-# chown $USER:$USER "$AUTOSTART_DESKTOP_FILE_PATH"
+chmod u+x "$GIO_LAUNCHER"
+chmod +x "$GIO_SCRIPT"
 
-# The regular user needs to be able to execute the script
-chmod o+x "$SCRIPT_PATH"
+# Cleanup if there are previous entries of the gio fix script in the file
+sed --in-place "\@$GIO_LAUNCHER@d" $SESSION_CLEANUP_FILE
 
-# Now enable the systemd unit which launches the activate desktop shortcuts script
-systemctl enable --now $(basename $AUTOSTART_DESKTOP_SYSTEMD_UNIT)
+printf "%s\n" "$GIO_LAUNCHER" >> $SESSION_CLEANUP_FILE
