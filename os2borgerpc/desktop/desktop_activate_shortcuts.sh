@@ -6,7 +6,7 @@ USER=user
 SHADOW=.skjult
 GIO_LAUNCHER=/usr/share/os2borgerpc/bin/gio-fix-desktop-file-permissions.sh
 GIO_SCRIPT=/usr/share/os2borgerpc/bin/gio-dbus.sh
-SESSION_CLEANUP_FILE=/usr/share/os2borgerpc/bin/user-cleanup.bash
+USER_CLEANUP=/usr/share/os2borgerpc/bin/user-cleanup.bash
 
 # Cleanup if they've run previous versions of this script. Suppress deletion errors.
 rm --force /home/$SHADOW/.config/autostart/gio-fix-desktop-file-permissions.desktop
@@ -21,9 +21,6 @@ export \$(dbus-launch)
 DBUS_PROCESS=\$\$
 
 for FILE in /home/$USER/Skrivebord/*.desktop; do
-  #dbus-launch gio set "\$FILE" metadata::trusted true"
-  #DBUS_PROCESS=\$$
-  #kill \$DBUS_PROCESS
   gio set "\$FILE" metadata::trusted true
 done
 
@@ -54,6 +51,6 @@ chmod u+x "$GIO_LAUNCHER"
 chmod +x "$GIO_SCRIPT"
 
 # Cleanup if there are previous entries of the gio fix script in the file
-sed --in-place "\@$GIO_LAUNCHER@d" $SESSION_CLEANUP_FILE
+sed --in-place "\@$GIO_LAUNCHER@d" $USER_CLEANUP
 
-printf "%s\n" "$GIO_LAUNCHER" >> $SESSION_CLEANUP_FILE
+printf "%s\n" "$GIO_LAUNCHER" >> $USER_CLEANUP
