@@ -1,38 +1,56 @@
 #! /usr/bin/env sh
 
+set -x
+
 USER=user
 SHADOW=.skjult
-AUTOSTART_DESKTOP_FILE_PATH=/home/$SHADOW/.config/autostart/gio-fix-desktop-file-permissions.desktop
-SCRIPT_PATH=/usr/share/os2borgerpc/bin/gio-fix-desktop-file-permissions.sh
+GIO_LAUNCHER=/usr/share/os2borgerpc/bin/gio-fix-desktop-file-permissions.sh
+GIO_SCRIPT=/usr/share/os2borgerpc/bin/gio-dbus.sh
+USER_CLEANUP=/usr/share/os2borgerpc/bin/user-cleanup.bash
 
-# Create the autostart directory, in case it doesn't exist
-mkdir -p "$(dirname $AUTOSTART_DESKTOP_FILE_PATH)"
+# Cleanup if they've run previous versions of this script. Suppress deletion errors.
+rm --force /home/$SHADOW/.config/autostart/gio-fix-desktop-file-permissions.desktop
 
-# Autorun file that simply launches the script below it after startup
-cat << EOF > "$AUTOSTART_DESKTOP_FILE_PATH"
-[Desktop Entry]
-Type=Application
-Name=Automatically allow launching of .desktop files on the desktop
-Exec=$SCRIPT_PATH
-Icon=system-run
-X-GNOME-Autostart-enabled=true
-EOF
-
-# Script to activate programs on the desktop 
-# (equivalent to right-click -> Allow Launching)
-cat << EOF > "$SCRIPT_PATH"
+# Script that actually runs gio as the user and kills the dbus session it creates to do so
+# afterwards
+cat << EOF > "$GIO_SCRIPT"
 #! /usr/bin/env sh
+
+# gio needs to run as the user + dbus-launch, we have this script to create it and kill it afterwards
+export \$(dbus-launch)
+DBUS_PROCESS=\$\$
 
 for FILE in /home/$USER/Skrivebord/*.desktop; do
   gio set "\$FILE" metadata::trusted true
-  # Can't make sense of this as it already has execute permissions, but it
-  # won't work without it
-  chmod u+x "\$FILE"
+done
+
+kill \$DBUS_PROCESS
+EOF
+
+# Script to activate programs on the desktop
+# (equivalent to right-click -> Allow Launching)
+cat << EOF > "$GIO_LAUNCHER"
+#! /usr/bin/env sh
+
+# Gio expects the user to own the file so temporarily change that
+for FILE in /home/$USER/Skrivebord/*.desktop; do
+  chown $USER:$USER \$FILE
+done
+
+su --login user --command $GIO_SCRIPT
+
+# Now set the permissions back to their restricted form
+for FILE in /home/$USER/Skrivebord/*.desktop; do
+  chown root:$USER "\$FILE"
+  # Can't make sense of this as it already has execute permissions, but it won't work without it
+  chmod ug+x "\$FILE"
 done
 EOF
 
-# Proper permissions on this file since it's in the home dir
-# chown $USER:$USER "$AUTOSTART_DESKTOP_FILE_PATH"
+chmod u+x "$GIO_LAUNCHER"
+chmod +x "$GIO_SCRIPT"
 
-# The regular user needs to be able to execute the script
-chmod o+x "$SCRIPT_PATH"
+# Cleanup if there are previous entries of the gio fix script in the file
+sed --in-place "\@$GIO_LAUNCHER@d" $USER_CLEANUP
+
+printf "%s\n" "$GIO_LAUNCHER" >> $USER_CLEANUP
