@@ -37,7 +37,7 @@
 #     2018/12/12 : danni : Script creation - based on shutdown_at_time.sh
 #     2018/12/12 : danni : Changed paramter count from 2 to 3.
 #     Corrected sed delete regex.
-#     2021/05/06 : mfm : Switch from sudo -u user crontab to crontab -u 
+#     2021/05/06 : mfm : Switch from sudo -u user crontab to crontab -u
 #                        user to not trigger our sudo warnings
 #
 #================================================================
@@ -54,39 +54,37 @@ crontab -l > $TCRON
 crontab -u user -l > $USERCRON
 
 
-if [ "$1" == "--off" ] 
-then
+if [ "$1" == "--off" ]; then
 
-    if [ -f $TCRON ] 
-    then
+    if [ -f $TCRON ]; then
         sed -i -e "/\/rtcwake/d" $TCRON
         crontab $TCRON
     fi
 
-    if [ -f $USERCRON ] 
-    then
+    if [ -f $USERCRON ]; then
         sed -i -e "/lukker/d" $USERCRON
         crontab -u user $USERCRON
     fi
 
 else
 
-    if [ $# == 3 ] 
-    then
+    if [ $# -gt 2 ]; then
         HOURS=$1
         MINUTES=$2
         SECONDS_TO_WAKEUP=$(( 3600 * $3))
+
+        # If not set set it to the previous script default: off
+        [ -z "$4" ] && MODE="off" || MODE=$4
+
         # We still remove shutdown lines, if any
-        if [ -f $TCRON ]
-        then
+        if [ -f $TCRON ]; then
             sed -i -e "/\/rtcwake/d" $TCRON
         fi
-        if [ -f $USERCRON ]
-        then
+        if [ -f $USERCRON ]; then
             sed -i -e "/lukker/d" $USERCRON
         fi
         # Assume the parameters are already validated as integers.
-        echo "$MINUTES $HOURS * * * /usr/sbin/rtcwake -m off -s $SECONDS_TO_WAKEUP" >> $TCRON
+        echo "$MINUTES $HOURS * * * /usr/sbin/rtcwake --mode $MODE --seconds $SECONDS_TO_WAKEUP" >> $TCRON
         crontab $TCRON
 
         MINM5P60=$(( $(( MINUTES - 5)) + 60))
@@ -104,7 +102,4 @@ else
 
 fi
 
-if [ -f $TCRON ] 
-then
-    rm $TCRON
-fi
+rm --force $TCRON
