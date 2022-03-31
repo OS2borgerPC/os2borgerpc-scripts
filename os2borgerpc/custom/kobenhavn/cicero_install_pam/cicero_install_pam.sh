@@ -4,9 +4,11 @@
 #   1: Whether to enable or disable Cicero login. 'yes' enables, 'no' disables.
 #
 # Prerequisites:
-# 1. Run the script: user_automatic_login.sh --disable
+#   1. Run the script: user_automatic_login.sh --disable
 #
 # You may need to restart for it to take effect.
+
+set -x
 
 lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
