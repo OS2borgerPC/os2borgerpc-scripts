@@ -7,11 +7,12 @@ USER=user
 FILE=/var/lib/lightdm/.cache/unity-greeter/state
 
 if [ "$ACTIVATE" = 'True' ]; then
-  cat <<- EOF > "$FILE"
-    [greeter]
-    last-user=$USER
-EOF
-  chattr +i $FILE
+	cat <<- EOF > "$FILE"
+		[greeter]
+		last-user=$USER
+	EOF
+
+	chattr +i $FILE
 else
-  chattr -i $FILE
+	chattr -i $FILE
 fi
