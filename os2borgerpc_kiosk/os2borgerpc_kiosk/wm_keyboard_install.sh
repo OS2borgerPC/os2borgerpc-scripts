@@ -3,25 +3,21 @@
 # DESCRIPTION
 #%    This script installs, sets up and enables a wm (bspwm)
 #%    and an on-screen keyboard (onboard).
-#%    Intended for OS2displayPC.
+#%    Intended for OS2borgerPC Kiosk.
 #-    email           mfm@magenta.dk
 
 # PREREQUISITES:
-# 1. OS2displayPC - Installer Chromium
-# 2. OS2displayPC - Autostart Chromium
+# 1. OS2borgerPC Kiosk - Installer Chromium
+# 2. OS2borgerPC Kiosk - Autostart Chromium
 
 # Would like to skip installing sxhkd but it's not trivial to do as it's
 # classified as a "required dependency" for bspwm
 
 set -ex
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
 [ -z "$1" ] && exit 1
 
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 
 CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
 USER=chrome
@@ -31,8 +27,7 @@ ONBOARD_OPTIONS="--theme=/usr/share/onboard/themes/HighContrast.theme --layout /
 # For apt installations/removals
 export DEBIAN_FRONTEND=noninteractive
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] || \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
 
   # Keyboard options: onboard (~100 mb incl. dependencies?), xvkbd (almost no
   # dependencies), florence (~500 mb incl. dependencies?!),
@@ -67,14 +62,14 @@ bspc config gapless_monocle      true
 # leave 20% space for the keyboard
 bspc config split_ratio          0.80
 
-# Always split downwards/vertically instead of whichever direction there is 
+# Always split downwards/vertically instead of whichever direction there is
 # more space (typically horizontally to begin with)
 bspc rule -a "*" split_dir=south
 
 # Test if no difference?: Don't default to monocle?
 # bspc desktop I --layout tiled
 
-# layer=normal is needed at least, to ensure it doesn't cover the entire 
+# layer=normal is needed at least, to ensure it doesn't cover the entire
 # screen by default
 bspc rule -a Onboard state=tiled layer=normal
 
@@ -239,7 +234,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
                         <key group="directions_alpha" id="DOWN"/>
                     </panel>
                     <panel layer="numbers" filename="Compact-Numbers.svg" border="2">
-                      
+
                         <key group='keypadmisc' id='NMLK' scan_priority='2'/>
                         <key group="keypadmisc" id="KPDL" scan_priority="2"/>
                         <key group="keypadmisc" id="KPEN" scan_priority="2"/>
@@ -321,7 +316,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
             </panel>-->
 
             <!--- side bar -->
-            <panel id="paneswitch" filename="Compact-Alpha.svg">        
+            <panel id="paneswitch" filename="Compact-Alpha.svg">
                 <box compact="true" orientation='vertical'>
                     <panel group='nowordlist'>
                         <!-- <key group='bottomrow' id='hide'/> -->
