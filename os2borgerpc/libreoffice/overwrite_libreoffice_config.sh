@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
 # Overwrite the Libreoffice registrymodifications.xcu config with our own version.
-# Takes two checkboxes as input. The first changes the default fileformats to Microsoft's (.docx, .pptx, .xlsx)
-# The second disables Tip of the day and displaying the changelog when you start the app
+# Takes two checkboxes as input. The first disables Tip of the day and displaying the changelog when you start the app.
+# The second changes the default fileformats to Microsoft's (.docx, .pptx, .xlsx).
 
-SET_FORMATS_TO_MICROSOFTS=$1
-REMOVE_TIP_OF_THE_DAY=$2
+REMOVE_TIP_OF_THE_DAY=$1
+SET_FORMATS_TO_MICROSOFTS=$2
+
 CONFIG_DIR="/home/.skjult/.config/libreoffice/4/user/"
 FILE_PATH=$CONFIG_DIR"registrymodifications.xcu"
 
