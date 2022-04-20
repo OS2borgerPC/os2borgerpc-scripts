@@ -10,12 +10,12 @@ POLICY="show-apport-crashes"
 POLICY_VALUE="false"
 
 POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
-POLICY_LOCK="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
 
 
 if [ "$ACTIVATE" = 'True' ]; then
 
-	mkdir --parents "$(dirname $POLICY_FILE)" "$(dirname $POLICY_LOCK)"
+	mkdir --parents "$(dirname $POLICY_FILE)" "$(dirname $POLICY_LOCK_FILE)"
 
 	# dconf does not, by default, require the use of a system database, so
 	# add one (called "os2borgerpc") to store our system-wide settings in
@@ -35,11 +35,11 @@ if [ "$ACTIVATE" = 'True' ]; then
 
 	# Tell the system that the values of the dconf keys we've just set can no
 	# longer be overridden by the user
-	cat > "$POLICY_LOCK" <<-END
+	cat > "$POLICY_LOCK_FILE" <<-END
 		/$POLICY_PATH/$POLICY
 	END
 else
-	rm -f "$POLICY_FILE" "$POLICY_LOCK"
+	rm -f "$POLICY_FILE" "$POLICY_LOCK_FILE"
 fi
 
 # Incorporate all of the text files we've just created into the system's dconf databases

@@ -15,13 +15,13 @@ POLICY="speed"
 POLICY_VALUE="$MOUSE_SPEED"
 
 POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
-POLICY_LOCK="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
 
-if [ "$1" = "" ] || [ "$1" = "false" ]; then
-    rm -f "$POLICY" "$POLICY_LOCK"
+if [ "$1" = "fra" ]; then
+    rm -f "$POLICY_FILE" "$POLICY_LOCK_FILE"
 else
 
-    mkdir --parents "$(dirname $POLICY_FILE)" "$(dirname $POLICY_LOCK)"
+    mkdir --parents "$(dirname $POLICY_FILE)" "$(dirname $POLICY_LOCK_FILE)"
 
     # dconf does not, by default, require the use of a system database, so
     # add one (called "os2borgerpc") to store our system-wide settings in
@@ -41,7 +41,7 @@ END
 
     # Tell the system that the values of the dconf keys we've just set can no
     # longer be overridden by the user
-    cat > "$POLICY_LOCK" <<END
+    cat > "$POLICY_LOCK_FILE" <<END
 /$POLICY_PATH/$POLICY
 END
 fi
