@@ -1,14 +1,21 @@
 #! /usr/bin/env sh
 
+# DESCRIPTION:
 # Add a button to show/hide the onscreen keyboard
 # ...or more precisely it toggles fullscreen on the browser
+# Intended for OS2borgerPC Kiosk.
 #
-# Arguments:
+# ARGUMENTS:
 # 1: Whether to install / uninstall the button
 # 2: The name of the process (e.g. a browser) that should be full screened
 # 3: The background image to use for the GTK window (keyboard toggle button)
 #
-# Author: mfm@magenta.dk
+# PREREQUISITES:
+# 1. os2borgerpc_kiosk/os2borgerpc_kiosk/chromium_install.sh
+# 2. os2borgerpc_kiosk/os2borgerpc_kiosk/chromium_setup.sh
+# 3. os2borgerpc_kiosk/os2borgerpc_kiosk/wm_keyboard_install.sh
+#
+# AUTHOR: mfm@magenta.dk
 
 set -ex
 
