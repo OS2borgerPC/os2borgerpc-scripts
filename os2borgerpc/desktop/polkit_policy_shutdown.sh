@@ -12,8 +12,8 @@
 #%    shutting down the system.
 #%
 #%    It takes one optional parameter: whether or not to enforce this policy.
-#%    If this parameter is missing, empty, "false", or "falsk", the policy will
-#%    be removed; otherwise, it will be enforced.
+#%    Use a boolean to decide whether to enforce the policy or not. A checked box
+#%    enforces the policy and an unchecked removes it
 #%
 #================================================================
 #- IMPLEMENTATION
@@ -36,7 +36,7 @@ set -x
 
 POLICY="/etc/polkit-1/localauthority/90-mandatory.d/10-os2borgerpc-no-user-shutdown.pkla"
 
-if [ "$1" = "" ] || [ "$1" = "false" ] || [ "$1" = "falsk" ]; then
+if [ "$1" = "False" ]; then
     rm -f "$POLICY"
 else
     if [ ! -d "$(dirname "$POLICY")" ]; then

@@ -3,7 +3,8 @@
 set -ex
 
 # Enable / Disable network printer discovery.
-# "til" enables network printer discovery, "fra" disables it.
+# Use a boolean to enable or disable. A checked box will enable the 
+# script and an unchecked one will disable it.
 # As a side effect all network printers previously found are removed 
 # and any you want, have to be added manually.
 # Log out or restart if changes don't take immediate effect.
@@ -15,13 +16,9 @@ set -ex
 #
 # Author: mfm@magenta.dk
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
+ACTIVATE=$1
 
-ACTIVATE="$(lower "$1")"
-
-if [ "$ACTIVATE" != 'fra' ] && [ "$ACTIVATE" != 'off' ]; then
+if [ "$ACTIVATE" = "True" ]; then
   # Enable network printer discovery
   systemctl unmask avahi-daemon cups-browsed
   systemctl start avahi-daemon cups-browsed

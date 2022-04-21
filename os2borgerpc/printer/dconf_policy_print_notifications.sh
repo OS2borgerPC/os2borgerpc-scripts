@@ -11,8 +11,8 @@
 #%    print notifications from popping up.
 #%
 #%    It takes one optional parameter: whether or not to enforce this policy.
-#%    If this parameter is missing, empty, or "false", the policy will be
-#%    removed; otherwise, it will be enforced.
+#%    Use a boolean to decide whether or not to enforce this policy, a checked box
+#%	  will enable the script, an unchecked box will remove it.
 #%
 #================================================================
 #- IMPLEMENTATION
@@ -31,17 +31,12 @@
 
 set -x
 
-lower() {
-	echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
 POLICY="/etc/dconf/db/os2borgerpc.d/01-print-notifications"
 POLICY_LOCK="/etc/dconf/db/os2borgerpc.d/locks/print-notifications"
 
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
 	mkdir --parents "$(dirname "$POLICY")"
 	mkdir --parents "$(dirname "$POLICY_LOCK")"
 

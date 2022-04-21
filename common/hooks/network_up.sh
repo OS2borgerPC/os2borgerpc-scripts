@@ -11,6 +11,9 @@
 #%    NetworkManager to bring up all network connections known to the target
 #%    machine.
 #%
+#%    Use a boolean to decide whether to enforce this policy or remove it.
+#%    A checked box enables it, an unchecked box removes the policy.
+#%
 #================================================================
 #- IMPLEMENTATION
 #-    version         network_up.sh (magenta.dk) 1.0.0
@@ -37,7 +40,7 @@ mkdir -p /etc/os2borgerpc/pre-checkin.d /etc/os2borgerpc/post-checkin.d
 
 HOOKS="/etc/os2borgerpc/pre-checkin.d/network_up.sh"
 
-if [ "$1" != "" ] && [ "$1" != "false" ] && [ "$1" != "falsk" ]; then
+if [ "$1" = "True" ]; then
     tee $HOOKS <<"END" > /dev/null
 #!/bin/sh
 

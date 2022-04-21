@@ -13,11 +13,7 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 SECRET="$2"
 
 [ "$#" -lt 1 ] && printf "The script needs at least one argument. Exiting." && exit 1
@@ -32,8 +28,7 @@ export DEBIAN_FRONTEND=noninteractive
 # If you want to generate a code with google-authenticator to see what format the config should be:
 #  google-authenticator --time-based --window-size 5 --force --disallow-reuse --rate-limit 3 \
 #  --rate-time 30 --emergency-codes 1 2>/dev/null
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
 
   apt-get update --assume-yes
   apt-get install --assume-yes libpam-google-authenticator

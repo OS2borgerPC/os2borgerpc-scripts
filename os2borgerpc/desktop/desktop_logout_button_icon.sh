@@ -3,22 +3,15 @@
 # Author: mfm@magenta.dk
 #
 # Arguments:
-# 1: Whether to add or delete the shortcut from the desktop.
-#    'nej' or 'falsk' removes it.
-# 2: The name the button should have on the desktop.
-#    If you choose deletion, the contents of the name argument does not matter.
-# 3: Whether to prompt for restart or not
-# 4: The icon to use for the button. Ideally SVG, but PNG works as well.
-#    If you choose deletion, which file you add here doesn't matter.
+# 1: The name the buttons should have on the desktop.
+# 2: Use a boolean to decide whether to prompt before logging out
+# 3: The icon to use for the button. Ideally SVG, but PNG works as well.
+
 
 set -x
 
-lower() {
-	echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
 NAME="$1"
-PROMPT="$(lower "$2")"
+PROMPT=$2
 ICON_UPLOAD=$3
 
 FILE_PATH=/home/.skjult/Skrivebord/Logout.desktop
@@ -26,8 +19,7 @@ mkdir --parents "$(dirname $FILE_PATH)"
 
 TO_PROMPT_OR_NOT=--no-prompt
 
-if [ "$PROMPT" != 'false' ] && [ "$PROMPT" != 'falsk' ] &&
-	 [ "$PROMPT" != 'no' ] && [ "$PROMPT" != 'nej' ]; then
+if [ "$PROMPT" = "True" ]; then
 	# If they DO want the prompt
 	unset TO_PROMPT_OR_NOT
 fi

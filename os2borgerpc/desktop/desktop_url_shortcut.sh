@@ -11,8 +11,8 @@
 # within /usr/share/icons/Yaru/
 #
 # Arguments:
-# 1: ACTIVATE: Add or remove the shortcut. false/false/no/nej removes it,
-#              anything else adds it.
+# 1: ACTIVATE: Use a boolean to decide whether to add or not. A checked box will
+# add the shortcut and an unchecked will remove it
 # 2: URL: The URL to visit when clicked
 # 3: NAME: The name the shortcut should have - it needs to be a valid filename!
 #
@@ -20,19 +20,14 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 URL=$2
 NAME=$3
 
 SHADOW=".skjult"
 FILE="/home/$SHADOW/Skrivebord/$NAME"
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
 
 	mkdir --parents /home/$SHADOW/Skrivebord
 
