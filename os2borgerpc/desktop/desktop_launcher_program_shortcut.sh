@@ -7,10 +7,10 @@
 # 1: Use a boolean, if left unchecked the script removes the given program shortcut.
 # 2: The name of the program you want to add/remove.
 
-REMOVE=$1
+ADD=$1
 PROGRAM=$2
 
-if [ "$REMOVE" = "False" ]; then
+if [ "$ADD" = "True" ]; then
 
   # Append the program specified above to the menu/launcher
   # Why ']? To not also match the first (title) line.

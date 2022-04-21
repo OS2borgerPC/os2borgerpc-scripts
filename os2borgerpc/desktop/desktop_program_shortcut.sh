@@ -15,12 +15,12 @@ lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
 }
 
-ACTIVATE=$1
+ADD=$1
 PROGRAM="$(lower "$2")"
 
 SHADOW=.skjult
 
-if [ "$ACTIVATE" = 'True' ]; then
+if [ "$ADD" = 'True' ]; then
   mkdir --parents /home/$SHADOW/Skrivebord
   cp "/usr/share/applications/$PROGRAM.desktop" /home/$SHADOW/Skrivebord/
 else
