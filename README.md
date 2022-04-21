@@ -9,6 +9,7 @@ The top level categories are as follows:
 | common            | Scripts that work on both OS2borgerPC and OS2borgerPC Kiosk                |
 | os2borgerpc       | Scripts that only work on OS2BorgerPC                                      |
 | os2borgerpc_kiosk | Scripts that only work on OS2BorgerPC Kiosk                                |
+| tools             | Assorted scripts used for debugging / development                          |
 
 Below `common` we have the following categories
 
