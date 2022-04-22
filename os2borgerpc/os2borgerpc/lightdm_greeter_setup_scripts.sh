@@ -8,21 +8,24 @@
 # 1. Checkbox. Enables or disables the whole running of scripts at greeter-setup
 # 2. Checkbox. If checked empties the SCRIPT_DIR
 
+ENABLE_LIGHTDM_GREETER_SETUP_SCRIPTS=$1
+CLEANUP_LIGHTDM_GREETER_SETUP_SCRIPTS_DIR=$2
+
 LIGHTDM_DIR="/etc/lightdm"
 FILE_PATH="$LIGHTDM_DIR""/lightdm.conf"
 SCRIPT_DIR="$LIGHTDM_DIR""/greeter-setup-scripts"
 
-sed -i "/greeter-setup-script=*/d" $FILE_PATH
+sed --in-place "/greeter-setup-script=*/d" $FILE_PATH
 
-if [ "$2" = "True" ]; then
+if [ "$CLEANUP_LIGHTDM_GREETER_SETUP_SCRIPTS_DIR" = "True" ]; then
     rm -r "$SCRIPT_DIR"
     echo Emptied directory "$SCRIPT_DIR"
 fi
 
-mkdir -p "$SCRIPT_DIR"
+mkdir --parents "$SCRIPT_DIR"
 
-if [ "$1" != "True" ]; then
-    echo Disabled running of scripts on lightdm greeter-setup
+if [ "$ENABLE_LIGHTDM_GREETER_SETUP_SCRIPTS" != "True" ]; then
+    echo "Disabled running of scripts on lightdm greeter-setup"
     exit 0
 fi
 
