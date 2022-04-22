@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
 #
 # Changes monitor power saving.
-# A special usecase for this is as a fix for touchscreens that refuse to
+# A special use case for this is as a fix for touchscreens that refuse to
 # wake up on touch.
 #
 # Arguments:
