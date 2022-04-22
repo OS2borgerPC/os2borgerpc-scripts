@@ -4,11 +4,7 @@
 
 set -x
 
-lower() {
-	echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 
 # Change these three to set a different policy to another value
 POLICY_PATH="org/gnome/desktop/lockdown"
@@ -19,8 +15,7 @@ POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
 POLICY_LOCK="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
 
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
 
 	mkdir --parents "$(dirname $POLICY_FILE)" "$(dirname $POLICY_LOCK)"
 
