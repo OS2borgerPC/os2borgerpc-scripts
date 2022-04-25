@@ -1,13 +1,14 @@
-#!/usr/bin/env bash
+#! /usr/bin/env sh
 
 # Delete printer
-lpadmin -x "$1"
+
+PRINTER_NAME=$1
 
 # Test if printer is deleted
-if ! (lpc status | grep --quiet --null-data "$1")
-then
-    echo "$1 er blevet slettet"
+if lpadmin -x "$PRINTER_NAME"; then
+    printf '%s\n' "Printeren $PRINTER_NAME er blevet slettet."
 else
-    echo "Der er sket en fejl og $1 blev ikke slettet"
+    printf '%s\n' "Fejl: Printeren $PRINTER_NAME blev ikke slettet" \
+         "Enten eksisterer ingen printer ved det navn, eller også fejlede sletningen."
     exit 1
 fi
