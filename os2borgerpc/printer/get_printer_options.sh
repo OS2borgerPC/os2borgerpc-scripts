@@ -1,3 +1,3 @@
-#!/bin/bash
+#! /usr/bin/env sh
 
-lpoptions -p "$1" -l 
+lpoptions -p "$1" -l

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#! /usr/bin/env sh
 
 # Check required parameters
 if [ $# -ne 1 ]
