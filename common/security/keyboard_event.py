@@ -7,8 +7,7 @@ which happened within the last 300 seconds.
 
 import sys
 from datetime import datetime, timedelta
-import csv_writer
-import log_read
+from os2borgerpc.client.security import csv_writer, log_read
 
 __author__ = "Danni Als"
 __copyright__ = "Copyright 2017-2020 Magenta ApS"

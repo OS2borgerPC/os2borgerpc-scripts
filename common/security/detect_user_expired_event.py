@@ -32,8 +32,7 @@ import sys
 from datetime import datetime, timedelta
 import re
 
-import csv_writer
-import log_read
+from os2borgerpc.client.security import csv_writer, log_read
 
 __author__ = "Søren Howe Gersager"
 __copyright__ = "Copyright 2017-2020 Magenta ApS"

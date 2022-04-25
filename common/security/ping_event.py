@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import csv_writer
+from os2borgerpc.client.security import csv_writer
 
 # securityEventCode, Tec sum, Raw data
 csv_data = []
