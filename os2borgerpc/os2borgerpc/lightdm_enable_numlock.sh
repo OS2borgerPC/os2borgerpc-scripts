@@ -7,29 +7,49 @@
 # Any changes made requires a reboot to take effect.
 #
 # PARAMETERS
-# 1. Checkbox. Enables or disables the script and unchecked will remove it.
+# 1. Checkbox. Enables or disables numlock
 
-ENABLE_NUMLOCK=$1
+set -ex
+
+NUMLOCK_ON=$1
 
 SCRIPT_DIR="/etc/lightdm/greeter-setup-scripts"
 SCRIPT="$SCRIPT_DIR/enable_numlock.sh"
+POLICY="/etc/xdg/autostart/os2borgerpc-numlock.desktop"
+# Stop Debconf from doing anything
+export DEBIAN_FRONTEND=noninteractive
 
-if [ "$ENABLE_NUMLOCK" = "True" ]; then
-
-    # Removing the older numlock policy to prevent redundancy if the older script was run
-    rm --force /etc/xdg/autostart/os2borgerpc-numlock.desktop
+if [ "$NUMLOCK_ON" = "True" ]; then
+    if [ ! -f "/usr/bin/numlockx" ]; then
+        apt-get update -qq > /dev/null
+        apt-get -yqq install numlockx
+    fi
 
     mkdir -p "$SCRIPT_DIR"
-    apt-get update -qq
-    apt-get install -yqq numlockx
+
     cat << EOF > "$SCRIPT"
 #!/bin/sh
 
 numlockx on
 EOF
-    echo "Added the script to $SCRIPT"
-else
-    rm --force "$SCRIPT"
-    apt-get remove -yqq numlockx
-    echo "Removed the script $SCRIPT"
+    echo "Added the script: $SCRIPT"
+
+
+    cat > "$POLICY" <<END
+[Desktop Entry]
+Type=Application
+Name=OS2borgerPC - Set NumLock state
+Name[da]=OS2borgerPC - Sæt NumLock-tilstand
+Exec=/usr/bin/numlockx on
+Terminal=False
+NoDisplay=true
+END
+    echo "Added the numlock policy as: $POLICY" 
+
+else 
+    if [ -f "/usr/bin/numlockx" ]; then 
+        apt-get remove -yqq numlockx
+    fi
+    rm -f "$POLICY" "$SCRIPT"
+    echo "Removed $POLICY, $SCRIPT and numlockx"
 fi
