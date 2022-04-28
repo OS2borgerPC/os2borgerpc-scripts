@@ -21,7 +21,7 @@ __email__ = "danni@magenta.dk"
 __status__ = "Production"
 
 
-# Get lines from syslog
+# The file to inspect for events
 fname = "/var/log/syslog"
 
 now = datetime.now()
@@ -40,7 +40,8 @@ lines = ''
 if delta_sec <= 86400:
     lines = log_read.read(delta_sec, fname)
 else:
-    raise ValueError("No security check in the last 24 hours.")
+    print("No security check in the last 24 hours.")
+    sys.exit(1)
 
 if lines.partition('Power Button')[2] != "":
     sys.exit()
