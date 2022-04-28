@@ -49,7 +49,7 @@ __email__ = "shg@magenta.dk"
 __status__ = "Production"
 
 
-# Get lines from syslog
+# The file to inspect for events
 fname = "/var/log/auth.log"
 
 now = datetime.now()
@@ -68,7 +68,8 @@ lines = ""
 if delta_sec <= 86400:
     lines = log_read.read(delta_sec, fname)
 else:
-    raise ValueError("No security check in the last 24 hours.")
+    print("No security check in the last 24 hours.")
+    sys.exit(1)
 
 usermod_regex = (
     r"(usermod\[[0-9]+\]: change user 'user'"
