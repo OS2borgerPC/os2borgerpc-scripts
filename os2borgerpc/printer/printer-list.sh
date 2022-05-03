@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#! /usr/bin/env sh
 
 printf "\n\nTilgængelige printere:\n\n"
 lpinfo -v

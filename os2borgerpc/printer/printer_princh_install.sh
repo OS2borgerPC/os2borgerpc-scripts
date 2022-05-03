@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#! /usr/bin/env sh
 
 set -ex
 
@@ -8,6 +8,8 @@ URL="https://packages.princh.com/linux/debian/amd64/PrinchCloudPrinter/productio
 # This will return "" if not installed, which is also fine as that means it'll be installed
 PRINCH_VERSION_AVAILABLE="$(curl --head --silent $URL | grep version | cut --delimiter ' ' --fields 2 | cut --delimiter '.' --fields 1,2,3)"
 PRINCH_VERSION_INSTALLED="$(dpkg --status princh-cloud-printer | grep Version | cut --delimiter ' ' --fields 2)"
+
+[ -z "$PRINCH_VERSION_AVAILABLE" ] && printf "%s\n" "Failed to obtain the current Princh version from Princh's servers" && exit 1
 
 # Remove the older versions of Princh, ignore if not existing
 apt-get remove --assume-yes princh || true

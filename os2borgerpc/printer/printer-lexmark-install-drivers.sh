@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#! /usr/bin/env sh
 
 # Installs Linux Universal Printer Driver for Lexmark printers
 

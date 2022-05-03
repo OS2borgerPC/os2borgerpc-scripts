@@ -1,6 +1,6 @@
-#!/bin/bash
+#! /usr/bin/env sh
 
-set -ex 
+set -ex
 
 PRINTER=$1
 PAGE_SIZE=$2
