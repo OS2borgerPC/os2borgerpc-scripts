@@ -7,6 +7,7 @@
 #    This script updates all apt repositories and then applies all available
 #    upgrades, picking default values for all debconf questions. It takes no
 #    parameters.
+#    Snap packages are already updated automatically by default in Ubuntu.
 #
 # IMPLEMENTATION
 #    version         update_all.sh (magenta.dk) 1.0.0
@@ -29,10 +30,8 @@ EOF
 export DEBIAN_FRONTEND=noninteractive
 
 # Update apt packages
-# Snap packages are updated automatically by default in Ubuntu
-apt-get update > /dev/null
+apt-get update > /dev/null # resync the local package index from its remote counterpart
 apt-get --assume-yes --fix-broken --fix-missing install # Attempt to fix broken or interrupted installations, and add missing packages
-apt-get --assume-yes upgrade
-apt-get --assume-yes dist-upgrade
-apt-get --assume-yes autoremove
-apt-get --assume-yes clean
+apt-get --assume-yes dist-upgrade # Upgrade all packages, and if needed remove packages preventing an upgrade
+apt-get --assume-yes autoremove # Remove packages only installed as dependencies which are no longer dependencies
+apt-get --assume-yes clean # Remove local repository of retrieved package files
