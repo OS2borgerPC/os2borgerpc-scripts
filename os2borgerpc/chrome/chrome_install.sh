@@ -14,12 +14,12 @@
 set -x
 
 export DEBIAN_FRONTEND=noninteractive
-DESKTOP_FILE_PATH=/usr/share/applications/google-chrome.desktop
+DESKTOP_FILE_PATH1=/usr/share/applications/google-chrome.desktop
 # In case they've also added Chrome to their desktop
 DESKTOP_FILE_PATH2=/home/$USER/Skrivebord/google-chrome.desktop
 # In case they've run chrome_autostart.sh
 DESKTOP_FILE_PATH3=/home/$USER/.config/autostart/chrome.desktop
-FILES="$DESKTOP_FILE_PATH $DESKTOP_FILE_PATH2 $DESKTOP_FILE_PATH3"
+FILES="$DESKTOP_FILE_PATH1 $DESKTOP_FILE_PATH2 $DESKTOP_FILE_PATH3"
 
 # Takes a parameter to add to Chrome and a list of .desktop files to add it to
 add_to_desktop_files() {
@@ -41,13 +41,14 @@ add_to_desktop_files() {
 wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
 apt-get update --assume-yes
-apt-get install --assume-yes google-chrome-stable
+if ! apt-get install --assume-yes google-chrome-stable; then
+  STATUS=$?
+  echo "Chrome failed to install"
+  exit $STATUS
+fi
 
 # Cleanup our previous policies if they're around (except the homepage)
-OLD_POLICY_1="/etc/opt/chrome/policies/managed/os2borgerpc-default-hp.json"
-OLD_POLICY_2="/etc/opt/chrome/policies/managed/os2borgerpc-login.json"
-[ -f "$OLD_POLICY_1" ] && rm "$OLD_POLICY_1"
-[ -f "$OLD_POLICY_2" ] && rm "$OLD_POLICY_2"
+rm --force /etc/opt/chrome/policies/managed/os2borgerpc-default-hp.json /etc/opt/chrome/policies/managed/os2borgerpc-login.json
 
 # Create the new policies
 POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-defaults.json"
