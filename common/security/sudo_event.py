@@ -53,7 +53,7 @@ def csv_writer(security_events):
 
 
 # The file to inspect for events
-fname = "/var/log/auth.log"
+log_name = "/var/log/auth.log"
 
 now = datetime.now()
 try:
@@ -65,7 +65,7 @@ except IOError:
     last_security_check = now - timedelta(seconds=86400)
 
 delta_sec = (now - last_security_check).total_seconds()
-log_event_tuples = log_read(delta_sec, fname)
+log_event_tuples = log_read(delta_sec, log_name)
 
 security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 # Ignore if not a sudo event
