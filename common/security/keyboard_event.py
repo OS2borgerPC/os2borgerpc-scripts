@@ -48,7 +48,7 @@ def csv_writer(security_events):
 
 
 # The file to inspect for events
-log_name = "/var/log/auth.log"
+log_name = "/var/log/syslog"
 
 now = datetime.now()
 try:
