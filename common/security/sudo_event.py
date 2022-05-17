@@ -8,14 +8,8 @@ import sys
 from datetime import datetime, timedelta
 import re
 
-__author__ = "Danni Als"
-__copyright__ = "Copyright 2017-2020 Magenta ApS"
-__credits__ = ["Carsten Agger", "Dennis Borup Jakobsens", "Alexander Faithfull"]
+__copyright__ = "Copyright 2017-2022 Magenta ApS"
 __license__ = "GPL"
-__version__ = "0.0.6"
-__maintainer__ = "Danni Als"
-__email__ = "danni@magenta.dk"
-__status__ = "Production"
 
 
 def log_read(sec, log_name):
@@ -77,7 +71,7 @@ regexes = [r"sudo:.*COMMAND"]
 log_event_tuples = [
     (log_timestamp, security_problem_uid_template_var, log_event, " ")
     for (log_timestamp, log_event) in log_event_tuples
-    if any([re.search(regex, log_event) for regex in regexes])
+    if any([re.search(regex, log_event, flags=re.IGNORECASE) for regex in regexes])
 ]
 
 if not log_event_tuples:
