@@ -32,7 +32,7 @@ import sys
 from datetime import datetime, timedelta
 import re
 
-__copyright__ = "Copyright 2017-2020 Magenta ApS"
+__copyright__ = "Copyright 2017-2022 Magenta ApS"
 __license__ = "GPL"
 
 
