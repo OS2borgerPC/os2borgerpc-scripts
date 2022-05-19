@@ -69,6 +69,9 @@ ExecStop=/usr/local/lib/os2borgerpc/create_shutdown_lockfile.sh
 WantedBy=multi-user.target
 END
     systemctl enable --now create_shutdown_lockfile.service
+    # Initially run create_shutdown_lockfile as the "OnBootSec" of check_shutdown_lockfile.py will fire immediately if the event was in the past:
+    # "If a timer configured with OnBootSec= or OnStartupSec= is already in the past when the timer unit is activated, it will immediately elapse and the configured unit is started."
+    /usr/local/lib/os2borgerpc/create_shutdown_lockfile.sh
 
     cat <<"END" > /usr/local/lib/os2borgerpc/check_shutdown_lockfile.py
 #!/usr/bin/env python3
