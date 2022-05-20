@@ -81,7 +81,7 @@ log_event_tuples = log_read(delta_sec, log_name)
 security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 
 # Ignore if not a keyboard event.
-regexes = [r"input: .*keyboard.*"]
+regexes = [r".*\[[ ]{0,3}[0-9]{2,}\..*\] input: .*Keyboard.*"]
 
 # Filter log_event_tuples based on regex matches and put them
 # on the form the admin site expects:
