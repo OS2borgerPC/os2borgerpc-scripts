@@ -80,7 +80,8 @@ log_event_tuples = log_read(delta_sec, log_name)
 
 security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 
-# Match keyboard events that are after 9.9999 seconds of boot up (so we don't match upstart keyboard events).
+# Match keyboard events that are after 9.9999 seconds of boot up
+# (so we don't match upstart keyboard events).
 # Example:
 # May 20 11:29:33 kbh-nuc-hoejre kernel: [ 10.122061] input: Dell Dell USB Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/0003:413C:2003.0003/input/input8
 regexes = [r".*\[[ ]{0,3}[0-9]{2,}\..*\] input: .*Keyboard.*"]
