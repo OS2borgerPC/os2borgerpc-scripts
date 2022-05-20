@@ -47,6 +47,10 @@ def csv_writer(security_events):
 
 
 def filter_security_events(security_events):
+    """Temporary function that filters security events older than 8 hours.
+
+    TODO: remove this in the future.
+    """
     now = datetime.now()
     filtered_events = [
         security_event
