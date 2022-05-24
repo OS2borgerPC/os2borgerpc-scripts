@@ -16,7 +16,7 @@
 #    license         GNU General Public License
 #    email           af@magenta.dk
 
-set -e
+set -ex
 
 # Fix dpkg settings to avoid interactivity.
 cat <<- EOF > /etc/apt/apt.conf.d/local
@@ -31,7 +31,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 # Update apt packages
 apt-get update > /dev/null # resync the local package index from its remote counterpart
-apt-get --assume-yes --fix-broken --fix-missing install # Attempt to fix broken or interrupted installations, and add missing packages
+apt-get --assume-yes --fix-broken install # Attempt to fix broken or interrupted installations
 apt-get --assume-yes dist-upgrade # Upgrade all packages, and if needed remove packages preventing an upgrade
 apt-get --assume-yes autoremove # Remove packages only installed as dependencies which are no longer dependencies
 apt-get --assume-yes clean # Remove local repository of retrieved package files
