@@ -10,11 +10,8 @@
 #    Snap packages are already updated automatically by default in Ubuntu.
 #
 # IMPLEMENTATION
-#    version         update_all.sh (magenta.dk) 1.0.0
-#    author          Alexander Faithfull
-#    copyright       Copyright 2019, Magenta ApS
+#    copyright       Copyright 2022, Magenta ApS
 #    license         GNU General Public License
-#    email           af@magenta.dk
 
 set -ex
 
