@@ -1,31 +1,19 @@
 #!/usr/bin/env bash
 
-#================================================================
-#% SYNOPSIS
-#+    update_all.sh
-#%
-#% DESCRIPTION
-#%    This script updates all apt repositories and then applies all available
-#%    upgrades, picking default values for all debconf questions. It takes no
-#%    parameters.
-#%
-#================================================================
-#- IMPLEMENTATION
-#-    version         update_all.sh (magenta.dk) 1.0.0
-#-    author          Alexander Faithfull
-#-    copyright       Copyright 2019, Magenta ApS
-#-    license         GNU General Public License
-#-    email           af@magenta.dk
-#-
-#================================================================
-#  HISTORY
-#     2019/07/16 : af : Script updated
+# SYNOPSIS
+#    update_all.sh
 #
-#================================================================
-# END_OF_HEADER
-#================================================================
+# DESCRIPTION
+#    This script updates all apt repositories and then applies all available
+#    upgrades, picking default values for all debconf questions. It takes no
+#    parameters.
+#    Snap packages are already updated automatically by default in Ubuntu.
+#
+# IMPLEMENTATION
+#    copyright       Copyright 2022, Magenta ApS
+#    license         GNU General Public License
 
-set -e
+set -ex
 
 # Fix dpkg settings to avoid interactivity.
 cat <<- EOF > /etc/apt/apt.conf.d/local
@@ -38,9 +26,9 @@ EOF
 # Stop Debconf from doing anything
 export DEBIAN_FRONTEND=noninteractive
 
-apt-get update > /dev/null
-apt-get -yf install # Attempt to fix broken or interrupted installations
-apt-get -y upgrade
-apt-get -y dist-upgrade
-apt-get -y autoremove
-apt-get -y clean
+# Update apt packages
+apt-get update > /dev/null # resync the local package index from its remote counterpart
+apt-get --assume-yes --fix-broken install # Attempt to fix broken or interrupted installations
+apt-get --assume-yes dist-upgrade # Upgrade all packages, and if needed remove packages preventing an upgrade
+apt-get --assume-yes autoremove # Remove packages only installed as dependencies which are no longer dependencies
+apt-get --assume-yes clean # Remove local repository of retrieved package files
