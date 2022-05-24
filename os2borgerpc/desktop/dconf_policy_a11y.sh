@@ -11,11 +11,8 @@
 #    remove the policy and a checked one will enforce it.
 #
 # IMPLEMENTATION
-#    version         dconf_policy_a11y.sh (magenta.dk) 1.1.0
-#    author          Alexander Faithfull
 #    copyright       Copyright 2022, Magenta ApS
 #    license         GNU General Public License
-#    email           af@magenta.dk
 
 set -x
 

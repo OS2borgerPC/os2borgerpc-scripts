@@ -14,8 +14,6 @@
 # IMPLEMENTATION
 #    copyright       Copyright 2022, Magenta ApS
 #    license         GNU General Public License
-#    author          mfm@magenta.dk
-#    credits         af@magenta.dk
 
 set -x
 

@@ -7,7 +7,7 @@ set -x
 # speed=-0.69117647058823528
 
 # Convert potential commas used for decimals into dots
-MOUSE_SPEED="$(echo "$@" | tr ',' '.')"
+MOUSE_SPEED="$(echo "$1" | tr ',' '.')"
 
 # Change these three to set a different policy to another value
 POLICY_PATH="org/gnome/desktop/peripherals/mouse"
@@ -17,7 +17,7 @@ POLICY_VALUE="$MOUSE_SPEED"
 POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
 POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
 
-if [ "$1" = "fra" ]; then
+if [ "$MOUSE_SPEED" = "fra" ]; then
     rm -f "$POLICY_FILE" "$POLICY_LOCK_FILE"
 else
 

@@ -10,11 +10,8 @@
 #    It takes one parameter: the path to the desktop background.
 #
 # IMPLEMENTATION
-#    version         dconf_policy_desktop.sh (magenta.dk) 1.1.0
-#    author          Alexander Faithfull
 #    copyright       Copyright 2022, Magenta ApS
 #    license         GNU General Public License
-#    email           af@magenta.dk
 
 set -x
 
