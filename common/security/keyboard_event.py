@@ -51,13 +51,15 @@ def csv_writer(security_events):
 log_name = "/var/log/syslog"
 
 now = datetime.now()
+# The default value in case lastcheck.txt is nonexisting or empty:
+last_security_check = now - timedelta(hours=24)
 try:
     with open("/etc/os2borgerpc/security/lastcheck.txt", "r") as fp:
         timestamp = fp.read()
         if timestamp:
             last_security_check = datetime.strptime(timestamp, "%Y%m%d%H%M")
 except IOError:
-    last_security_check = now - timedelta(seconds=86400)
+    pass
 
 delta_sec = (now - last_security_check).total_seconds()
 log_event_tuples = log_read(delta_sec, log_name)
