@@ -57,6 +57,8 @@ chmod +x /usr/local/bin/rotate_screen.sh &
 # in multiple files
 # If this script's path/name is changed, remember to change it in
 # install_wm_keyboard.sh as well
+#
+# password-store=basic and enable-offline-auto-reload does not exist as policies so we add them as flags.
 CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
 mkdir --parents "$(dirname "$CHROMIUM_SCRIPT")"
 
@@ -95,9 +97,8 @@ xset -dpms
 exec $CHROMIUM_SCRIPT nowm
 EOF
 
-
 CHROME_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
-mkdir --parents "$(dirname "$CHROME_POLICY_FILE")" 
+mkdir --parents "$(dirname "$CHROME_POLICY_FILE")"
 cat << EOF > $CHROME_POLICY_FILE
 {
   "AutoplayAllowed":true,
