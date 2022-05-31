@@ -52,6 +52,20 @@ def csv_writer(security_events):
             )
 
 
+def filter_security_events(security_events):
+    """Temporary function that filters security events older than 8 hours.
+
+    TODO: remove this in the future.
+    """
+    now = datetime.now()
+    filtered_events = [
+        security_event
+        for security_event in security_events
+        if datetime.strptime(security_event[0], "%Y%m%d%H%M") > now - timedelta(hours=8)
+    ]
+    return filtered_events
+
+
 # The file to inspect for events
 log_name = "/var/log/auth.log"
 
@@ -86,6 +100,8 @@ log_event_tuples = [
     for (log_timestamp, log_event) in log_event_tuples
     if any([re.search(regex, log_event, flags=re.IGNORECASE) for regex in regexes])
 ]
+
+log_event_tuples = filter_security_events(log_event_tuples)
 
 if not log_event_tuples:
     sys.exit()

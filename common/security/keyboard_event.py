@@ -47,6 +47,20 @@ def csv_writer(security_events):
             )
 
 
+def filter_security_events(security_events):
+    """Temporary function that filters security events older than 8 hours.
+
+    TODO: remove this in the future.
+    """
+    now = datetime.now()
+    filtered_events = [
+        security_event
+        for security_event in security_events
+        if datetime.strptime(security_event[0], "%Y%m%d%H%M") > now - timedelta(hours=8)
+    ]
+    return filtered_events
+
+
 # The file to inspect for events
 log_name = "/var/log/syslog"
 
@@ -66,8 +80,11 @@ log_event_tuples = log_read(delta_sec, log_name)
 
 security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 
-# Ignore if not a keyboard event.
-regexes = [r"input: .*keyboard.*"]
+# Match keyboard events that are after 9.9999 seconds of boot up
+# (so we don't match upstart keyboard events).
+# Example:
+# May 20 11:29:33 kbh-nuc-hoejre kernel: [ 10.122061] input: Dell Dell USB Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/0003:413C:2003.0003/input/input8 # noqa: E501
+regexes = [r".*\[[ ]{0,3}[0-9]{2,}\..*\] input: .*Keyboard.*"]
 
 # Filter log_event_tuples based on regex matches and put them
 # on the form the admin site expects:
@@ -77,6 +94,8 @@ log_event_tuples = [
     for (log_timestamp, log_event) in log_event_tuples
     if any([re.search(regex, log_event, flags=re.IGNORECASE) for regex in regexes])
 ]
+
+log_event_tuples = filter_security_events(log_event_tuples)
 
 if not log_event_tuples:
     sys.exit()
