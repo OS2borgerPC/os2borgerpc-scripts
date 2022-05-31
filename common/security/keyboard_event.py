@@ -56,6 +56,8 @@ try:
         timestamp = fp.read()
         if timestamp:
             last_security_check = datetime.strptime(timestamp, "%Y%m%d%H%M")
+        else:
+            last_security_check = now - timedelta(seconds=86400)
 except IOError:
     last_security_check = now - timedelta(seconds=86400)
 
