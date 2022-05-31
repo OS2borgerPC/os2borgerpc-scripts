@@ -56,9 +56,9 @@ try:
         if timestamp:
             last_security_check = datetime.strptime(timestamp, "%Y%m%d%H%M")
         else:
-            last_security_check = now - timedelta(seconds=86400)
+            last_security_check = now - timedelta(hours=24)
 except IOError:
-    last_security_check = now - timedelta(seconds=86400)
+    last_security_check = now - timedelta(hours=24)
 
 delta_sec = (now - last_security_check).total_seconds()
 log_event_tuples = log_read(delta_sec, log_name)

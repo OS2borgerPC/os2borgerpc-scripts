@@ -1,32 +1,14 @@
 #!/usr/bin/env python3
 
-# HEADER
-# ================================================================
-# SYNOPSIS
-#    detect_user_expired_event.py
-#
-# DESCRIPTION
-#    Security Script for finding user expired events that happened
-#    within the last 300 seconds.
-#
-#
-#    For use with the "lockdown_usb.sh" and "unexpire_user.sh"
-#    script.
-#
-# ================================================================
-# IMPLEMENTATION
-#    version         unexpire_user.sh (magenta.dk) 1.0.0
-#    author          Søren Howe Gersager
-#    copyright       Copyright 2021 Magenta ApS
-#    license         GNU General Public License
-#    email           shg@magenta.dk
-#
-# ================================================================
-#  HISTORY
-#     2021/08/30 : shg: Creation
-# ================================================================
-# END_OF_HEADER
-# ================================================================
+"""
+    Security Script for finding user expired events that happened
+    within the last 300 seconds.
+
+
+    For use with the "lockdown_usb.sh" and "unexpire_user.sh"
+    script.
+"""
+
 
 import sys
 from datetime import datetime, timedelta
@@ -80,9 +62,9 @@ try:
         if timestamp:
             last_security_check = datetime.strptime(timestamp, "%Y%m%d%H%M")
         else:
-            last_security_check = now - timedelta(seconds=86400)
+            last_security_check = now - timedelta(hours=24)
 except IOError:
-    last_security_check = now - timedelta(seconds=86400)
+    last_security_check = now - timedelta(hours=24)
 
 delta_sec = (now - last_security_check).total_seconds()
 log_event_tuples = log_read(delta_sec, log_name)
