@@ -58,7 +58,7 @@ chmod +x /usr/local/bin/rotate_screen.sh &
 # If this script's path/name is changed, remember to change it in
 # install_wm_keyboard.sh as well
 CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
-mkdir -p "$(dirname "$CHROMIUM_SCRIPT")"
+mkdir --parents "$(dirname "$CHROMIUM_SCRIPT")"
 
 cat << EOF > "$CHROMIUM_SCRIPT"
 #!/bin/sh
@@ -67,7 +67,7 @@ WM=\$1
 IURL="$URL"
 IWIDTH="$WIDTH"
 IHEIGHT="$HEIGHT"
-COMMON_SETTINGS="--password-store=basic --autoplay-policy=no-user-gesture-required --disable-translate --enable-offline-auto-reload"
+COMMON_SETTINGS="--password-store=basic --enable-offline-auto-reload"
 KIOSK="--kiosk"
 INCOGNITO=""
 
@@ -89,12 +89,20 @@ xset s off
 xset s noblank
 xset -dpms
 
-sleep 20
-
 /usr/local/bin/rotate_screen.sh
 
 # Launch chromium with its non-WM settings
 exec $CHROMIUM_SCRIPT nowm
+EOF
+
+
+CHROME_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
+mkdir --parents "$(dirname "$CHROME_POLICY_FILE")" 
+cat << EOF > $CHROME_POLICY_FILE
+{
+  "AutoplayAllowed":true,
+  "TranslateEnabled":false
+}
 EOF
 
 # Start X upon login
