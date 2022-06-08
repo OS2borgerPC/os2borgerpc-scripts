@@ -91,6 +91,10 @@ xset s off
 xset s noblank
 xset -dpms
 
+# Dev note: We used to have "sleep 20" here but we removed it.
+# Re-add if it causes timing issues. That said such potential issues should be
+# solveable simple by raising the sleep parameter to rotate_screen.sh
+
 /usr/local/bin/rotate_screen.sh
 
 # Launch chromium with its non-WM settings
