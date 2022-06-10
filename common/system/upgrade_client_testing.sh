@@ -15,6 +15,9 @@ rm /var/lib/os2borgerpc/jobs/*/parameters.json
 # Set the correct, more restrictive permissions on all previous jobs
 chmod --recursive 700 /var/lib/os2borgerpc
 
+# Fix permissions on /home/superuser
+chmod -R 700 /home/superuser
+
 cd /tmp/ || exit 1
 curl https://os2borgerpc-media-test.magenta.dk/div/os2borgerpc_client-1.3.0.tar.gz --output $FILE
 pip install $FILE
