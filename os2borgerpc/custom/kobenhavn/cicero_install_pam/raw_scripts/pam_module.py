@@ -9,7 +9,7 @@ def pam_sm_authenticate(pamh, flags, argv):
     # print(pamh.fail_delay)
     # http://pam-python.sourceforge.net/doc/html/
     username_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Lånernummer eller CPR")
-    password_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Kodeord")
+    password_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Pinkode")
     # Note: Response object also contains a ret_code
     username_response = pamh.conversation(username_msg)
     password_response = pamh.conversation(password_msg)
