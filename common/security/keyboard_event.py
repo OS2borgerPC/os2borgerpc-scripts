@@ -28,7 +28,7 @@ def log_read(sec, log_name):
                 str(now.year) + " " + log_event_timestamp, "%Y %b  %d %H:%M:%S"
             )
             security_event_log_timestamp = datetime.strftime(
-                log_event_datetime, "%Y%m%d%H%M"
+                log_event_datetime, "%Y%m%d%H%M%S"
             )
             # Detect lines from within the last x seconds to now.
             if (datetime.now() - timedelta(seconds=sec)) <= log_event_datetime <= now:
@@ -56,7 +56,8 @@ def filter_security_events(security_events):
     filtered_events = [
         security_event
         for security_event in security_events
-        if datetime.strptime(security_event[0], "%Y%m%d%H%M") > now - timedelta(hours=8)
+        if datetime.strptime(security_event[0], "%Y%m%d%H%M%S")
+        > now - timedelta(hours=8)
     ]
     return filtered_events
 
@@ -71,7 +72,7 @@ try:
     with open("/etc/os2borgerpc/security/lastcheck.txt", "r") as fp:
         timestamp = fp.read()
         if timestamp:
-            last_security_check = datetime.strptime(timestamp, "%Y%m%d%H%M")
+            last_security_check = datetime.strptime(timestamp, "%Y%m%d%H%M%S")
 except IOError:
     pass
 
