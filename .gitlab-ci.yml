@@ -25,8 +25,9 @@ Lint shell scripts:
 #  Consider using black instead?
 Lint python scripts:
   <<: *lint-default
-  image: python:3.10
+  image: python:3.10-alpine
   before_script:
+    - apk add --no-cache --virtual .deps gcc musl-dev
     - pip install black
   script:
     - fd --extension py --exec black --diff
