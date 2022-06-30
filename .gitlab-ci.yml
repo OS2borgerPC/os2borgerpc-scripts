@@ -25,11 +25,9 @@ Lint shell scripts:
 #  Consider using black instead?
 Lint python scripts:
   <<: *lint-default
-  image: python:3.6-alpine
+  image: python:3.10-alpine
   before_script:
-    - pip install flake8
-#    - pip install black
+    - apk add --no-cache --virtual .deps gcc musl-dev
+    - pip install black
   script:
-    - flake8 --version
-    - flake8
-#    - fd --extension py --exec black --diff
+    - black --check --diff --exclude=migrations .

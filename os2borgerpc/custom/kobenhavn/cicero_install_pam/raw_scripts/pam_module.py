@@ -30,7 +30,7 @@ def pam_sm_authenticate(pamh, flags, argv):
     time = int(cicero_response)
 
     if time > 0:
-        with open('$LOGOUT_TIMER_CONF', 'w') as f:
+        with open("$LOGOUT_TIMER_CONF", "w") as f:
             f.write("TIME_MINUTES=" + str(time))
         return pamh.PAM_SUCCESS
     elif time == 0:

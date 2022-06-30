@@ -55,15 +55,14 @@ from subprocess import run, DEVNULL
 #    General Public License <gnu.org/licenses/gpl.html> for more details.
 
 
-def grub2_mkpasswd_pbkdf2(passphrase,
-                          iterCount=100000, saltLength=64, debug=False):
+def grub2_mkpasswd_pbkdf2(passphrase, iterCount=100000, saltLength=64, debug=False):
     algo = "sha512"
 
     binSalt = urandom(saltLength)
     hexSalt = hexlify(binSalt).decode("ascii")
     passHash = hexlify(
-            pbkdf2_hmac(algo, passphrase.encode("ascii"),
-                        binSalt, iterCount)).decode("ascii")
+        pbkdf2_hmac(algo, passphrase.encode("ascii"), binSalt, iterCount)
+    ).decode("ascii")
 
     if debug:
         print("algo = '{}'".format(algo))
@@ -92,7 +91,7 @@ index 68700d9..b8ef18d
    fi      
    if [ "$quick_boot" = 1 ]; then
        echo "   recordfail" | sed "s/^/$submenu_indentation/"
-""" # noqa W291,E501
+"""  # noqa W291,E501
 
 
 def main():
@@ -111,17 +110,27 @@ def main():
     # Check if we've already patched /etc/grub.d/10_linux by checking if
     # unapplying it would succeed
     already_applied = run(
-            ["patch", "--dry-run", "--reverse", "--silent", "--force",
-             "/etc/grub.d/10_linux"],
-            input=diff, stdout=DEVNULL, stderr=DEVNULL,
-            universal_newlines=True)
+        [
+            "patch",
+            "--dry-run",
+            "--reverse",
+            "--silent",
+            "--force",
+            "/etc/grub.d/10_linux",
+        ],
+        input=diff,
+        stdout=DEVNULL,
+        stderr=DEVNULL,
+        universal_newlines=True,
+    )
     if already_applied.returncode != 0:
         # If we haven't, then patch it now
         print("patching /etc/grub.d/10_linux")
         application = run(
-                ["patch", "--silent", "--force", "/etc/grub.d/10_linux"],
-                input=diff,
-                universal_newlines=True)
+            ["patch", "--silent", "--force", "/etc/grub.d/10_linux"],
+            input=diff,
+            universal_newlines=True,
+        )
         if application.returncode != 0:
             print("patch failed")
             exit(1)
@@ -150,9 +159,10 @@ def main():
             for line in old:
                 if "# OS2borgerPC lockdown" not in line:
                     new.write(line)
-        new.write("set superusers=\"superuser\" # OS2borgerPC lockdown\n")
-        new.write("password_pbkdf2 superuser"
-                  " {0} # OS2borgerPC lockdown\n".format(encoded))
+        new.write('set superusers="superuser" # OS2borgerPC lockdown\n')
+        new.write(
+            "password_pbkdf2 superuser" " {0} # OS2borgerPC lockdown\n".format(encoded)
+        )
     chmod("/etc/grub.d/40_custom.tmp", 0o700)
     rename("/etc/grub.d/40_custom.tmp", "/etc/grub.d/40_custom")
 
@@ -164,5 +174,5 @@ def main():
         exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
