@@ -82,10 +82,13 @@ log_event_tuples = log_read(delta_sec, log_name)
 security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 
 # Match keyboard events that are after 9.9999 seconds of boot up
-# (so we don't match upstart keyboard events).
+# (so we don't match upstart keyboard events),
+# Also remove system control and consumer control entries.
 # Example:
 # May 20 11:29:33 kbh-nuc-hoejre kernel: [ 10.122061] input: Dell Dell USB Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/0003:413C:2003.0003/input/input8 # noqa: E501
-regexes = [r".*\[[ ]{0,3}[0-9]{2,}\..*\] input: .*Keyboard.*"]
+regexes = [
+    r".*\[[ ]{0,3}[0-9]{2,}\..*\] input: .*Keyboard (?!(system control))(?!(consumer control)).*"
+]
 
 # Filter log_event_tuples based on regex matches and put them
 # on the form the admin site expects:
