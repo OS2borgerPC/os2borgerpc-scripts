@@ -40,8 +40,11 @@ CUSER=chrome
 BSPWM_CONFIG="/home/$CUSER/.config/bspwm/bspwmrc"
 
 SCRIPTS_BASE_PATH=/usr/share/os2borgerpc/bin/keyboard-button
-BUTTON_WINDOW_TITLE="btn.py"
- # Don't need to be the same but why not
+# Doesn't work if this is lowercase btn.py.
+# The bspc rule supposed to match it no longer matches, so seemingly something uppercases the first letter for window
+# name
+BUTTON_WINDOW_TITLE="Btn.py"
+# Doesn't need to be the same but why not
 BUTTON_SCRIPT="$BUTTON_WINDOW_TITLE"
 BSPWM_ADD_BUTTON_SCRIPT="bspwm_add_button.sh"
 BUTTON_MOVE_SCRIPT="button_move.sh"
@@ -163,7 +166,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 	cat <<- EOF > "$BUTTON_MOVE_SCRIPT"
 		#! /usr/bin/env sh
 
-		WINDOW_TO_MOVE="btn.py"
+		WINDOW_TO_MOVE="$BUTTON_WINDOW_TITLE"
 
 		# Try to match the black border margin of the keyboard, ish
 		X_OFFSET=16
