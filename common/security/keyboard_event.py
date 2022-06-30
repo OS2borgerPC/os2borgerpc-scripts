@@ -83,9 +83,13 @@ security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 
 # Match keyboard events that are after 9.9999 seconds of boot up
 # (so we don't match upstart keyboard events),
-# Also remove system control and consumer control entries.
-# Example:
-# May 20 11:29:33 kbh-nuc-hoejre kernel: [ 10.122061] input: Dell Dell USB Keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/0003:413C:2003.0003/input/input8 # noqa: E501
+# Also remove system control and consumer control entries:
+# The reason is that some keyboards add three keyboard entries when connected.
+# Example from inserting a keyboard once:
+# Jun 28 14:24:43 kbh-nuc-venstre kernel: [ 1948.130701] input: Logitech HID compliant keyboard as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/0003:046D:C30E.000A/input/input25 
+# Jun 28 14:24:43 kbh-nuc-venstre kernel: [ 1948.264053] input: Logitech HID compliant keyboard System Control as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.1/0003:046D:C30E.000B/input/input27 
+# Jun 28 14:24:43 kbh-nuc-venstre kernel: [ 1948.204460] input: Logitech HID compliant keyboard Consumer Control as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.1/0003:046D:C30E.000B/input/input26 
+# Fortunately it seems Consumer Control and System Control aren't Logitech specific, as we've seen the exact same with Lenovo keyboards.
 regexes = [
     r".*\[[ ]{0,3}[0-9]{2,}\..*\] input: .*Keyboard "
     r"(?!(system control))(?!(consumer control)).*"
