@@ -20,6 +20,7 @@ class PlyvelInterface:
     The database has key-value-pairs and this script can read and write them.
     Fx. relevant to debug the OS2display script (auto_activate_chromium).
     """
+
     def __init__(self):
 
         # self.db = plyvel.DB('/home/' + user + '/snap/chromium/common/chromium/Default/Sync Data/LevelDB', create_if_missing=True, compression=None)  # noqa E501
