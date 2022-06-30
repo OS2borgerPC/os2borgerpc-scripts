@@ -11,15 +11,14 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
 # Argument handling
-ACTIVATE="$(lower "$1")"
-MINUTES_TO_LOGOUT=$2
+ACTIVATE=$1
+MINUTES_TO_LOGOUT_MSG=$2
 X_POSITION=$3
 Y_POSITION=$4
+GRACE_PERIOD_SECONDS=$5 # Example: 40
+PRE_TIMER_TEXT=$6       # Example: "Tid tilbage: "
+TEXT_AFTER_TIMEOUT=$7   # Example: "Tiden er udløbet: Du logges snart af."
 
 # Settings
 export DEBIAN_FRONTEND=noninteractive
@@ -28,25 +27,25 @@ LOGOUT_TIMER_ACTUAL="/usr/share/os2borgerpc/bin/logout_timer_actual.sh"
 LOGOUT_TIMER_VISUAL="/usr/share/os2borgerpc/bin/logout_timer_visual.sh"
 LOGOUT_TIMER_ACTUAL_LAUNCHER="/usr/share/os2borgerpc/bin/logout_timer_actual_launcher.sh"
 LOGOUT_TIMER_VISUAL_DESKTOP_FILE="/home/$SHADOW/.config/autostart/logout-timer_user.desktop"
-LOGOUT_TIMERS_CONF=/usr/share/os2borgerpc/logout_timer.conf
-SESSION_CLEANUP_FILE=/usr/share/os2borgerpc/bin/user-cleanup.bash
+LOGOUT_TIMERS_CONF="/usr/share/os2borgerpc/logout_timer.conf"
+SESSION_CLEANUP_FILE="/usr/share/os2borgerpc/bin/user-cleanup.bash"
+ICON="clock-app"
 
 # They might have automatic login enabled or not. We add it to all lightdm programs just in case.
-LIGHTDM_PAM=/etc/pam.d/lightdm
-LIGHTDM_GREETER_PAM=/etc/pam.d/lightdm-greeter
-LIGHTDM_AUTOLOGIN_PAM=/etc/pam.d/lightdm-autologin
+LIGHTDM_PAM="/etc/pam.d/lightdm"
+LIGHTDM_GREETER_PAM="/etc/pam.d/lightdm-greeter"
+LIGHTDM_AUTOLOGIN_PAM="/etc/pam.d/lightdm-autologin"
 LIGHTDM_FILES="$LIGHTDM_PAM $LIGHTDM_GREETER_PAM $LIGHTDM_AUTOLOGIN_PAM"
 
 
-[ $# -lt 1 ] && printf "The script takes at least one argument: Whether to enable or disable the timer\n" && exit 1
+[ $# -lt 7 ] && printf "%s\n" "This script takes at least $# arguments. Exiting." && exit 1
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
 	# TODO: Do we need to install zenity?
 	apt-get install --assume-yes xdotool
 
 	# The default time before logout
-	printf "TIME_MINUTES=%s" "$MINUTES_TO_LOGOUT" > $LOGOUT_TIMERS_CONF
+	printf "TIME_MINUTES=%s" "$MINUTES_TO_LOGOUT_MSG" > $LOGOUT_TIMERS_CONF
 
   # This timer handles the actual logout and thus runs as root so the user can't kill the process
 	cat <<- EOF > $LOGOUT_TIMER_ACTUAL
@@ -54,23 +53,21 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 
 		. $LOGOUT_TIMERS_CONF
 
-		GRACE_PERIOD_SECONDS=40
 		# Adding a little to this so they're warned a bit before they're actually logged out
-		COUNT=\$((TIME_MINUTES * 60 + GRACE_PERIOD_SECONDS))
+		# This is even more important since currently the timers might get out of sync
+		COUNT=\$((TIME_MINUTES * 60 + $GRACE_PERIOD_SECONDS))
 
-		until [ "\$COUNT" -eq "0" ]; do                              # Countdown loop.
-		    COUNT=\$((COUNT-1))                                      # Decrement seconds.
+		until [ "\$COUNT" -eq "0" ]; do                                # Countdown loop.
+		    COUNT=\$((COUNT-1))                                        # Decrement seconds.
 		    sleep 1
 		done
 
 		su --login user --command "DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/\$(id -u user)/bus" gnome-session-quit --logout --no-prompt"
-		# Alternate approach:
-		# who -u    #to obtain the ID of the session?
-		# kill <idFoundAbove>
-		# Alternate approach:
-		# killall lightdm
-		# Alternate approach:
-		# killall gnome-session
+		# Alternate approaches:
+		# 1. who -u    #to obtain the ID of the session?
+		#    kill <idFoundAbove>
+		# 2. killall lightdm
+		# 3. killall gnome-session
 	EOF
 
 	# This timer is for visually displaying how long they have left only.
@@ -87,26 +84,26 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 		. $LOGOUT_TIMERS_CONF
 
 		TITLE="Logintid"
-		TIME_SECONDS=\$((TIME_MINUTES * 60))                                         # Set a starting point.
+		TIME_SECONDS=\$((TIME_MINUTES * 60))                           # Set a starting point.
 
 		COUNT=\$TIME_SECONDS
 
-		until [ "\$COUNT" -eq "0" ]; do                              # Countdown loop.
-		    COUNT=\$((COUNT-1))                                      # Decrement seconds.
-		    PERCENT=\$((100-100*COUNT/TIME_SECONDS))                 # Calc percentage.
-		    echo "#Tid tilbage: \$(echo "obase=60;\$COUNT" | bc)"    # Convert to H:M:S.
-		    echo \$PERCENT                                           # Output for progbar.
+		until [ "\$COUNT" -eq "0" ]; do                                # Countdown loop.
+		    COUNT=\$((COUNT-1))                                        # Decrement seconds.
+		    PERCENT=\$((100-100*COUNT/TIME_SECONDS))                   # Calc percentage.
+		    echo "#$PRE_TIMER_TEXT \$(echo "obase=60;\$COUNT" | bc)"   # Convert to H:M:S.
+		    echo \$PERCENT                                             # Output for progbar.
 		    sleep 1
 		done | zenity --title "\$TITLE" --progress --percentage=0 --text="" \
-		    --auto-close --no-cancel &               # Progbar/time left.
+		    --auto-close --no-cancel &                                 # Progbar/time left.
 
 		# xdotool would not work in Wayland
 		sleep 3   # Give the zenity window a bit of time to appear before we try moving it
 		xdotool windowmove "\$(xdotool search --name "\$TITLE")" $X_POSITION $Y_POSITION
 		fg
 
-		zenity --notification --window-icon \$ICON --icon-name \$ICON \
-		    --text "Tiden er udløbet: Du logges snart af."  # Indicate finished!
+		zenity --notification --window-icon $ICON --icon-name $ICON \
+		    --text "$TEXT_AFTER_TIMEOUT"                               # Indicate finished!
 	EOF
 
 	# Simply a small script that launches the timer in the background and immediately exits
@@ -149,9 +146,10 @@ if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
 		EOF
 	fi
 
-	chmod +x $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_VISUAL $LOGOUT_TIMER_VISUAL_DESKTOP_FILE $LOGOUT_TIMER_ACTUAL_LAUNCHER
+	chmod u+x $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER
+	chmod +x $LOGOUT_TIMER_VISUAL $LOGOUT_TIMER_VISUAL_DESKTOP_FILE
 
-else # Delete the timer
+else # Delete everything related to the timer
 	rm $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_VISUAL $LOGOUT_TIMER_VISUAL_DESKTOP_FILE $LOGOUT_TIMER_ACTUAL_LAUNCHER
 	# Remove the cleanup of timer processes
 	sed --in-place "/pkill -f $(basename $LOGOUT_TIMER_ACTUAL)/d" $SESSION_CLEANUP_FILE
