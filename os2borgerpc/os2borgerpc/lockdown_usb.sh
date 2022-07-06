@@ -1,42 +1,34 @@
 #!/bin/sh
 
-#================================================================
-# HEADER
-#================================================================
-#% SYNOPSIS
-#+    lockdown_usb.sh [ENFORCE]
-#%
-#% DESCRIPTION
-#%    This script installs a system service that shuts down and disables the
-#%    user session whenever an action is detected on a USB port, and configures
-#%    udev to forward all USB events to this service.
-#%
-#%    Logins are disabled with the user account expiry mechanism.
-#%
-#%    It takes one optional parameter: whether or not to enforce this policy.
-#%    Use a boolean to decide whether or not to enable this policy, a checked box
-#%    will enable it and an unchecked box will remove it
-#%
-#%    For use with the "unexpire_user.sh" and
-#%    "detect_user_expired_event.py" script
-#%
-#%
-#================================================================
-#- IMPLEMENTATION
-#-    version         lockdown_usb.sh (magenta.dk) 1.0.0
-#-    author          Alexander Faithfull, Søren Howe Gersager
-#-    copyright       Copyright 2021 Magenta ApS
-#-    license         GNU General Public License
-#-    email           af@magenta.dk, shg@magenta.dk
-#-
-#================================================================
-#  HISTORY
-#     2021/08/30 : shg: Modified to user account expiration
-#     2021/04/12 : af : Script created
+# SYNOPSIS
+#    lockdown_usb.sh [ENFORCE]
 #
-#================================================================
-# END_OF_HEADER
-#================================================================
+# DESCRIPTION
+#    This script installs a system service that shuts down and disables the
+#    user session whenever an action is detected on a USB port, and configures
+#    udev to forward all USB events to this service.
+#
+#    Logins are disabled with the user account expiry mechanism.
+#
+#    It takes one optional parameter: whether or not to enforce this policy.
+#    Use a boolean to decide whether or not to enable this policy, a checked box
+#    will enable it and an unchecked box will remove it
+#
+#    For use with the "unexpire_user.sh" and
+#    "detect_user_expired_event.py" script
+#
+# IMPLEMENTATION
+#    version         lockdown_usb.sh (magenta.dk) 1.0.0
+#    copyright       Copyright 2022 Magenta ApS
+#    license         GNU General Public License
+#
+# TECHNICAL DESCRIPTION
+#    This scripts creates and starts "os2borgerpc-monitor.service" which runs the script "usb-monitor" as a daemon.
+#    "usb-monitor" is a python-script which continually reads from a FIFO, we name "usb-event".
+#
+#    If that FIFO receives any data, "usb-monitor" logs and locks the user named "user" out.
+#
+#    udev writes to that FIFO, by calling the shell script "on-usb-event", when it detects any USB related events.
 
 set -x
 
