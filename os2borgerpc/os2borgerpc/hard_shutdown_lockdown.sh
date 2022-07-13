@@ -1,46 +1,30 @@
 #!/bin/sh
 
-#================================================================
-# HEADER
-#================================================================
-#% SYNOPSIS
-#+    hard_shutdown_lockdown.sh [ENFORCE]
-#%
-#% DESCRIPTION
-#%    This script installs two system services:
-#&
-#%    shutdown_monitor.service & shutdown_monitor.timer - checks
-#%    for a shutdown_lockfile at boot, and if it does not exist,
-#%    locks the user account
-#%
-#%    create_shutdown_lockfile.service - creates a 
-#%    shutdown_lockfile during a normal reboot/poweroff    
-#%
-#%    Logins are disabled with the user account expiry mechanism.
-#%
-#%    It takes one optional parameter: whether or not to enforce this policy.
-#%    Use a boolean to decide whether or not to enforce the policy. A checked
-#%    box will enable the script, an unchecked box will remove the policy
-#%
-#%    For use with the "unexpire_user.sh" and
-#%    "detect_user_expired_event.py" script
-#%
-#%
-#================================================================
-#- IMPLEMENTATION
-#-    version         hard_shutdown_lockdown.sh (magenta.dk) 1.0.0
-#-    author          Søren Howe Gersager
-#-    copyright       Copyright 2021 Magenta ApS
-#-    license         GNU General Public License
-#-    email           shg@magenta.dk
-#-
-#================================================================
-#  HISTORY
-#     2021/10/18 : shg : Script created
+# SYNOPSIS
+#    hard_shutdown_lockdown.sh [ENFORCE]
 #
-#================================================================
-# END_OF_HEADER
-#================================================================
+# DESCRIPTION
+#    This script installs two system services:
+#
+#    shutdown_monitor.service & shutdown_monitor.timer - checks
+#    for a shutdown_lockfile at boot, and if it does not exist,
+#    locks the user account
+#
+#    create_shutdown_lockfile.service - creates a
+#    shutdown_lockfile during a normal reboot/poweroff
+#
+#    Logins are disabled with the user account expiry mechanism.
+#
+#    It takes one optional parameter: whether or not to enforce this policy.
+#    Use a boolean to decide whether or not to enforce the policy. A checked
+#    box will enable the script, an unchecked box will remove the policy
+#
+#    For use with the "unexpire_user.sh" and
+#    "detect_user_expired_event.py" script
+#
+# IMPLEMENTATION
+#    copyright       Copyright 2021 Magenta ApS
+#    license         GNU General Public License
 
 set -x
 
@@ -82,12 +66,15 @@ from subprocess import run
 
 SHUTDOWN_FILE = "/etc/os2borgerpc/shutdown_lockfile"
 
+# Old versions of this script expired to 1970-01-02 like lockdown_usb.sh
+# They were changed to use different dates so we can distinguish which
+# script locked the account from the security event directly
 def main():
     """Check if shutdown_lockfile exists, if not, expire the user account."""
     if exists(SHUTDOWN_FILE):
         remove(SHUTDOWN_FILE)
     else:
-        run(["usermod", "-e", "1", "user"])
+        run(["usermod", "-e", "1970-01-04", "user"])
 
 
 if __name__ == "__main__":
