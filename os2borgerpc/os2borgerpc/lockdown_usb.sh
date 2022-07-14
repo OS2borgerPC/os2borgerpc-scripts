@@ -47,9 +47,12 @@ import subprocess
 PIPE = "/var/lib/os2borgerpc/usb-event"
 
 
+# Old versions of this script expired to 1970-01-02 like hard_shutdown_lockdown.sh
+# It was changed to different dates so we can distinguish which
+# script locked the account from the security event directly
 def lockdown():
     """Disable the user account."""
-    subprocess.run(["usermod", "-e", "1", "user"])
+    subprocess.run(["usermod", "-e", "1970-01-05", "user"])
     subprocess.run(["loginctl", "terminate-user", "user"])
 
 
