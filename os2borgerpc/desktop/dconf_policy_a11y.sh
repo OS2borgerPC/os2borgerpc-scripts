@@ -1,21 +1,33 @@
-#! /usr/bin/env sh
+#!/usr/bin/env sh
+
+# SYNOPSIS
+#    dconf_policy_a11y.sh [ENFORCE]
+#
+# DESCRIPTION
+#    This script installs a policy that forces the Universal Access menu to be
+#    shown at all times.
+#
+#    Use a boolean to decide whether to enforce or not. An unchecked box will
+#    remove the policy and a checked one will enforce it.
+#
+# IMPLEMENTATION
+#    copyright       Copyright 2022, Magenta ApS
+#    license         GNU General Public License
 
 set -x
 
+# Change these three to set a different policy to another value
+POLICY_PATH="org/gnome/desktop/a11y"
+POLICY="always-show-universal-access-status"
+POLICY_VALUE="true"
+
+POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-accessibility"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/accessibility"
+
 ACTIVATE=$1
 
-# Change these three to set a different policy to another value
-POLICY_PATH="com/ubuntu/update-notifier"
-POLICY="show-apport-crashes"
-POLICY_VALUE="false"
-
-POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
-POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
-
-
 if [ "$ACTIVATE" = 'True' ]; then
-
-	mkdir --parents "$(dirname $POLICY_FILE)" "$(dirname $POLICY_LOCK_FILE)"
+	mkdir --parents "$(dirname "$POLICY_FILE")" "$(dirname "$POLICY_LOCK_FILE")"
 
 	# dconf does not, by default, require the use of a system database, so
 	# add one (called "os2borgerpc") to store our system-wide settings in
