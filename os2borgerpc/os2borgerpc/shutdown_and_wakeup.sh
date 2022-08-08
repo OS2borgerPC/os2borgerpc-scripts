@@ -94,7 +94,7 @@ else
         HRS=$(( HOURS - HRCORR))
         HRS=$(( $(( HRS + 24)) % 24))
         # Now output to user's crontab as well
-        echo "$MINS $HRS * * * DISPLAY=:0.0 /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON
+        echo "$MINS $HRS * * * XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON
         crontab -u user $USERCRON
     else
         echo "Usage: shutdown_and_wakeup.sh [--off] [hours minutes] [hours]"
