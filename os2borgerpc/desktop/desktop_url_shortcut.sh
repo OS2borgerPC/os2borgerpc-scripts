@@ -12,15 +12,13 @@
 # 2: URL: The URL to visit when clicked
 # 3: SHORTCUT_NAME: The name the shortcut should have - it needs to be a valid filename!
 # 4: ICON_UPLOAD: The path to an icon. If empty preferences-system-network from the current theme is used
-#
-# Author: mfm@magenta.dk
 
 set -x
 
 ACTIVATE=$1
 URL=$2
 SHORTCUT_NAME="$3"
-ICON_UPLOAD=$4
+ICON_UPLOAD="$4"
 
 SHADOW=".skjult"
 DESKTOP_FILE="/home/$SHADOW/Skrivebord/$SHORTCUT_NAME.desktop"
@@ -28,7 +26,7 @@ DESKTOP_FILE="/home/$SHADOW/Skrivebord/$SHORTCUT_NAME.desktop"
 if [ "$ACTIVATE" = 'True' ]; then
 
   if [ -z "$ICON_UPLOAD" ]; then
-    ICON_PATH="preferences-system-network"
+    ICON_NAME="preferences-system-network"
   else
     # HANDLE ICON HERE
     if ! echo "$ICON_UPLOAD" | grep --quiet '.png\|.svg\|.jpg\|.jpeg'; then
@@ -40,9 +38,7 @@ if [ "$ACTIVATE" = 'True' ]; then
       # Copy icon from the default destination to where it should actually be
       cp "$ICON_UPLOAD" $ICON_BASE_PATH/
       # A .desktop file apparently expects an icon without an extension
-      ICON_NAME="$(basename "$ICON_UPLOAD" | sed -e 's/.png|.svg|.jpg|.jpeg//')"
-
-      ICON_PATH=$ICON_BASE_PATH/$ICON_NAME
+      ICON_NAME="$(basename "$ICON_UPLOAD" | sed -e 's/\.[^.]*$//')"
 
       update-icon-caches $ICON_BASE_PATH
     fi
@@ -57,7 +53,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 		Name=$SHORTCUT_NAME
 		Type=Application
 		Exec=xdg-open $URL
-		Icon=$ICON_PATH
+		Icon=$ICON_NAME
 	EOF
 
 	chmod +x "$DESKTOP_FILE"
