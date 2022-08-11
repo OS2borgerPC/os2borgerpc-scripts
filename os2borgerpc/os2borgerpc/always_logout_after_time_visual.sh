@@ -41,7 +41,7 @@ LIGHTDM_FILES="$LIGHTDM_PAM $LIGHTDM_GREETER_PAM $LIGHTDM_AUTOLOGIN_PAM"
 [ $# -lt 7 ] && printf "%s\n" "This script takes at least $# arguments. Exiting." && exit 1
 
 if [ "$ACTIVATE" = 'True' ]; then
-	# TODO: Do we need to install zenity?
+	# Do we also need to install zenity?
 	apt-get install --assume-yes xdotool
 
 	# The default time before logout
@@ -64,7 +64,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 
 		su --login user --command "DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/\$(id -u user)/bus" gnome-session-quit --logout --no-prompt"
 		# Alternate approaches:
-		# 1. who -u    #to obtain the ID of the session?
+		# 1. who -u    # to obtain the ID of the session?
 		#    kill <idFoundAbove>
 		# 2. killall lightdm
 		# 3. killall gnome-session
@@ -76,7 +76,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 		#! /usr/bin/env bash
 
 		# Credits: https://handybashscripts.blogspot.com/2012/01/simple-timer-with-progress-bar.html
-
+    #
 		# We need job control to move the window but then suspend until the countdown finishes
 		set -m
 
@@ -133,11 +133,10 @@ if [ "$ACTIVATE" = 'True' ]; then
 		Type=Application
 		Name=Automatically allow launching of .desktop files on the desktop
 		Exec=$LOGOUT_TIMER_VISUAL
-		Icon=system-run
 		X-GNOME-Autostart-enabled=true
 	EOF
 
-	# Modify the cleanup run at logout to also kill remaining timers so they don't persist affecting
+	# Modify the cleanup run at logout to also kill remaining timers so they don't persist, affecting
 	# the next login
 	if ! grep -q "$(basename $LOGOUT_TIMER_ACTUAL)" $SESSION_CLEANUP_FILE; then
 		cat <<- EOF >> $SESSION_CLEANUP_FILE
