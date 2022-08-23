@@ -1,21 +1,16 @@
 #! /usr/bin/env sh
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
+ACTIVATE=$1
+FILE=$2
 
-ACTIVATE="$(lower "$1")"
-FILE="$(lower "$2")"
-
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
-  [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
   echo "##### Attempting to install Microsoft Teams #####"
-  apt-get update -y
-  apt-get install -f "$FILE" -y
+  apt-get update --assume-yes
+  apt-get install --fix-broken "$FILE" --assume-yes
 else
   echo "##### Removing Microsoft Teams #####"
-  apt-get purge teams -y
+  apt-get purge teams --assume-yes
 fi
 
 rm "$FILE"
-apt autoremove -y
+apt autoremove --assume-yes

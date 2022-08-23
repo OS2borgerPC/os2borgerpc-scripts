@@ -2,15 +2,10 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 LICENCE_KEY=$2 # available in the Heimdal Dashboard.
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] &&
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
 
     apt-get update --assume-yes
     apt-get install --assume-yes ca-certificates curl unzip gnupg lsb-release netcat
