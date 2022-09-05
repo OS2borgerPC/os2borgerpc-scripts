@@ -3,8 +3,8 @@
 # Arguments:
 # 1: Whether to add or remove the logout button from the menu. 'True' adds it.
 # 2: The name the shortcut should have in the menu (display when you hover over the icon)
-# 3: An optional icon to use for the shortcut. Ideally SVG, but PNG and JPG work as well.
-# 4: Whether to put the icon at the start of the end of the menu. 'True' for start, 'False' for end.
+# 3: Whether to put the icon at the start of the end of the menu. 'True' for start, 'False' for end.
+# 4: An optional icon to use for the shortcut. Ideally SVG, but PNG and JPG work as well.
 
 set -x
 
