@@ -30,6 +30,9 @@
 #    For use with the "unexpire_user.sh" and
 #    "detect_user_expired_event.py" script
 #
+#    Before running this script for the first time, please run lockdown_usb.sh with the
+#    input False, i.e. an unchecked checkbox
+#
 # IMPLEMENTATION
 #    version         lockdown_usb_unless_approved.sh (magenta.dk) 1.0.0
 #    copyright       Copyright 2022 Magenta ApS
