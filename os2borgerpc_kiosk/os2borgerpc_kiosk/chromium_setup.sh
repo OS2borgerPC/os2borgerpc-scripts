@@ -3,50 +3,51 @@
 
 set -ex
 
-# Initialize parameters
-
 TIME=$1
 URL=$2
 WIDTH=$3
 HEIGHT=$4
 ORIENTATION=$5
 
+USER="chrome"
+
 # Setup Chromium user.
 # useradd will fail on multiple runs, so prevent that
-if ! id chrome &>/dev/null; then
-  useradd chrome -m -p 12345 -s /bin/bash -U
+if ! id $USER &>/dev/null; then
+  useradd $USER -m -p 12345 -s /bin/bash -U
 fi
-chfn -f Chrome chrome
 
 # Autologin default user
-
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 
 cat << EOF > /etc/systemd/system/getty@tty1.service.d/override.conf
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --noissue --autologin chrome %I $TERM
+ExecStart=-/sbin/agetty --noissue --autologin $USER %I $TERM
 Type=idle
 EOF
 
 # Create script to rotate screen
 
 cat << EOF > /usr/local/bin/rotate_screen.sh
-#!/usr/bin/env bash
+#!/usr/bin/env sh
+
 set -x
 
 sleep $TIME
 
-export XAUTHORITY=/home/chrome/.Xauthority
-# Rotate screen
-active_monitors=(\$(xrandr --listactivemonitors -display :0 | grep -v Monitors | awk '{ print \$4; }'))
-# If more than one monitor, rotate them all.
+export XAUTHORITY=/home/$USER/.Xauthority
 
-for m in "\${active_monitors[@]}"
-do
-    xrandr --output \$m --rotate $ORIENTATION -display :0
-done
+# --listactivemonitors lists the primary monitor first
+ALL_MONITORS=\$(xrandr --listactivemonitors | tail -n +2 | cut --delimiter ' ' --fields 6)
 
+# Make all connected monitors display what the first monitor displays, rather than them extending the desktop
+PRIMARY_MONITOR=\$(echo "\$ALL_MONITORS" | head -n 1)
+OTHER_MONITORS=\$(echo "\$ALL_MONITORS" | tail -n +2)
+echo "\$OTHER_MONITORS" | xargs -I {} xrandr --output {} --same-as "\$PRIMARY_MONITOR"
+
+# Rotate screen - and if more than one monitor, rotate them all.
+echo "\$ALL_MONITORS" | xargs -I {} xrandr --output {} --rotate $ORIENTATION
 EOF
 
 chmod +x /usr/local/bin/rotate_screen.sh &
@@ -56,9 +57,9 @@ chmod +x /usr/local/bin/rotate_screen.sh &
 # launches, to avoid logic duplication, fx. having to update chromium settings
 # in multiple files
 # If this script's path/name is changed, remember to change it in
-# install_wm_keyboard.sh as well
+# wm_keyboard_install.sh as well
 #
-# password-store=basic and enable-offline-auto-reload does not exist as policies so we add them as flags.
+# password-store=basic and enable-offline-auto-reload do not exist as policies so we add them as flags.
 CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
 mkdir --parents "$(dirname "$CHROMIUM_SCRIPT")"
 
@@ -82,9 +83,8 @@ fi
 EOF
 chmod +x "$CHROMIUM_SCRIPT"
 
-# Launch chrome upon startup
-XINITRC="/home/chrome/.xinitrc"
-cat << EOF > $XINITRC
+# Launch chromium upon starting up X
+cat << EOF > /home/$USER/.xinitrc
 #!/bin/sh
 
 xset s off
@@ -111,6 +111,6 @@ cat << EOF > $CHROME_POLICY_FILE
 EOF
 
 # Start X upon login
-if ! grep -q -- 'startx' "$XINITRC"; then # Ensure idempotency
-  echo "startx" >> /home/chrome/.profile
+if ! grep -q -- 'startx' /home/$USER/.xinitrc; then # Ensure idempotency
+  echo "startx" >> /home/$USER/.profile
 fi
