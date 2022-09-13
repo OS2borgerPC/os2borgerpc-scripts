@@ -72,10 +72,10 @@ fi
 
 # Chromium is only available as a snap and will also be installed as
 # a snap when using apt-get install
-LOG_OUT=$(apt-get install --assume-yes chromium-browser)
+LOG_OUTPUT=$(apt-get install --assume-yes chromium-browser)
 # Save exit status so we get the exit status of apt rather than from base64
 EXIT_STATUS=$?
-echo "$LOG_OUT" | base64
+echo "$LOG_OUTPUT" | base64
 
 # This section is related to the above workaround
 # and removes the related service once it is no longer needed
