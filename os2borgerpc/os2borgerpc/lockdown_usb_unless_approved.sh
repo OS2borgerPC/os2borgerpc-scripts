@@ -165,36 +165,12 @@ def get_approved_ids():
         approved_ids[i] = approved_ids[i][:-1]
     return approved_ids
 
-def get_event_id(usb_event):
-    """Get the ID of the usb device that caused a usb event.
-    This only works when the event was caused by the device being inserted
-    because you cannot check the ID of a device that is not connected.
-    Otherwise, the function returns None."""
-    path_info = re.match("bind\s(.+)", usb_event)
-    if path_info is None:
-        return None
-    else:
-        id_path = path_info[1]
-        id_path = id_path + "/modalias"
-        if not exists(id_path):
-            return None
-        else:
-            with open(id_path) as file:
-                content = file.read()
-            id_info = re.search("usb:v(\w{4})p(\w{4})", content)
-            usb_id = id_info.group(1).lower() + ":" + id_info.group(2).lower()
-            return usb_id
-
-def check_usb_event(usb_event):
+def check_usb_event():
     """Check if a usb event was caused by an approved device
     and return the resulting boolean"""
-    usb_id = get_event_id(usb_event)
-    # If the event was not caused by a device being inserted, ignore it
-    if usb_id is None:
-        return True
-    else:
-        approved_ids = get_approved_ids()
-        return usb_id in approved_ids
+    current_ids = get_current_ids()
+    approved_ids = get_approved_ids()
+    return all(id in approved_ids for id in current_ids)
 
 def main():
 
@@ -219,7 +195,7 @@ def main():
                 # gives us a signal. If the usb device that caused the signal
                 # is not among the approved devices, lock the system immediately
                 usb_event = fp.read()
-                allowed = check_usb_event(usb_event)
+                allowed = check_usb_event()
                 if not allowed:
                     lockdown()
     finally:
