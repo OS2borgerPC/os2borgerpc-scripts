@@ -3,8 +3,8 @@
 set -ex
 
 # Enable / Disable network printer discovery.
-# Use a boolean to enable or disable. A checked box will enable the 
-# script and an unchecked one will disable it.
+# Use a boolean to enable or disable. A checked box will disable
+# network printer discovery and an unchecked one will enable it.
 # As a side effect all network printers previously found are removed 
 # and any you want, have to be added manually.
 # Log out or restart if changes don't take immediate effect.
@@ -19,12 +19,12 @@ set -ex
 ACTIVATE=$1
 
 if [ "$ACTIVATE" = "True" ]; then
-  # Enable network printer discovery
-  systemctl unmask avahi-daemon cups-browsed
-  systemctl start avahi-daemon cups-browsed
-
-else # Disable network printer discovery
+  # Disable network printer discovery
   systemctl mask avahi-daemon cups-browsed
   # Mask vs. disable: https://askubuntu.com/a/816378/284161
   systemctl stop avahi-daemon cups-browsed
+
+else # Enable network printer discovery
+  systemctl unmask avahi-daemon cups-browsed
+  systemctl start avahi-daemon cups-browsed
 fi
