@@ -1,23 +1,23 @@
 #! /usr/bin/env sh
 
-set -x
+set -ex
 
 if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
   exit 1
 fi
+# lpadmin doesn't like spaces
+NAME="$(echo "$1" | tr ' ' '_')"
+PRINCH_ID="$2"
+DESCRIPTION="$3"
+LOCATION="$4"
 
-# Princh says spaces won't work, likely because of CUPS itself, so replace spaces with underscores
-printer_name="$(echo "$1" | tr ' ' '_')"
-printer_id="$2"
-printer_descr="$3"
-
-# Delete the printer if a printer already exists by that name
-lpadmin -x "$printer_name"
+# Delete the printer if a printer already exists by that NAME
+lpadmin -x "$NAME"
 
 # No princh-cloud-printer binary in path, so checking for princh-setup
 if which princh-setup > /dev/null; then
-   lpadmin -p "$printer_name" -v "princh:$printer_id" -D "$printer_descr" -E -P /usr/share/ppd/princh/princheu.ppd
+   lpadmin -p "$NAME" -v "princh:$PRINCH_ID" -D "$DESCRIPTION" -E -P /usr/share/ppd/princh/princheu.ppd -L "$LOCATION"
 else
    echo "Princh er ikke installeret. Kør scriptet til at installere Princh først."
    exit 1
