@@ -22,13 +22,15 @@
 #    copyright       Copyright 2022 Magenta ApS
 #    license         GNU General Public License
 #
-# TECHNICAL DESCRIPTION
+# TECHNICAL NOTES
 #    This scripts creates and starts "os2borgerpc-monitor.service" which runs the script "usb-monitor" as a daemon.
 #    "usb-monitor" is a python-script which continually reads from a FIFO, we name "usb-event".
 #
 #    If that FIFO receives any data, "usb-monitor" logs and locks the user named "user" out.
 #
 #    udev writes to that FIFO, by calling the shell script "on-usb-event", when it detects any USB related events.
+#
+#    You can check whether a user has been expired by checking the last column for the user in /etc/shadow
 
 set -x
 
