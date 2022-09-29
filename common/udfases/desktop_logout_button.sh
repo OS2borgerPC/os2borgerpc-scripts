@@ -11,12 +11,15 @@
 ACTIVATE=$1
 NAME="$2"
 
-FILE_PATH=/home/.skjult/Skrivebord/Logout.desktop
+OLD_DESKTOP_FILE=/home/.skjult/Skrivebord/Logout.desktop
+DESKTOP_FILE=/home/.skjult/Skrivebord/logout.desktop
+
+rm --force "$OLD_DESKTOP_FILE"
 
 if [ "$ACTIVATE" = 'True' ]; then
-	mkdir --parents "$(dirname $FILE_PATH)"
+	mkdir --parents "$(dirname $DESKTOP_FILE)"
 
-	cat <<- EOF > $FILE_PATH
+	cat <<- EOF > $DESKTOP_FILE
 		[Desktop Entry]
 		Version=1.0
 		Type=Application
@@ -27,5 +30,5 @@ if [ "$ACTIVATE" = 'True' ]; then
 	EOF
 
 else
-	rm "$FILE_PATH"
+	rm "$DESKTOP_FILE"
 fi
