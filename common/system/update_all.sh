@@ -27,7 +27,8 @@ EOF
 export DEBIAN_FRONTEND=noninteractive
 
 # Update apt packages
-apt-get update > /dev/null # resync the local package index from its remote counterpart
+apt-get update > /dev/null # Resync the local package index from its remote counterpart
+dpkg --configure -a # Configure any packages which have been unpacked but not configured, as otherwise --fix-broken might fail
 apt-get --assume-yes --fix-broken install # Attempt to fix broken or interrupted installations
 apt-get --assume-yes dist-upgrade # Upgrade all packages, and if needed remove packages preventing an upgrade
 apt-get --assume-yes autoremove # Remove packages only installed as dependencies which are no longer dependencies
