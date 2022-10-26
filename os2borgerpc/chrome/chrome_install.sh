@@ -9,15 +9,15 @@
 # 3. Add a launch option to Chrome that prevents it
 #    from checking for updates and showing it's out of date to whoever
 #
-# Author: Carsten Agger, Marcus Funch Mogensen
+# Authors: Carsten Agger, Marcus Funch Mogensen
 
 set -ex
 
 export DEBIAN_FRONTEND=noninteractive
 DESKTOP_FILE_PATH_1=/usr/share/applications/google-chrome.desktop
-# In case they've also added Chrome to their desktop
+# In case a Chrome shortcut has been added to the desktop
 DESKTOP_FILE_PATH_2=/home/$USER/Skrivebord/google-chrome.desktop
-# In case they've run chrome_autostart.sh
+# In case chrome_autostart.sh has been executed
 DESKTOP_FILE_PATH_3=/home/$USER/.config/autostart/chrome.desktop
 FILES="$DESKTOP_FILE_PATH_1 $DESKTOP_FILE_PATH_2 $DESKTOP_FILE_PATH_3"
 
@@ -28,7 +28,7 @@ add_to_desktop_files() {
   for FILE in "$@"; do
     # Only continue if the particular file exists
     if [ -f "$FILE" ]; then
-      # Don't add the parameter multiple times
+      # Don't add the parameter multiple times (idempotency)
       if ! grep -q -- "$PARAMETER" "$FILE"; then
         # Note: Using a different delimiter here than in the maximized script,
         # as "," is part of the string
@@ -41,6 +41,8 @@ add_to_desktop_files() {
 wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
 apt-get update --assume-yes
+# If the package manager is in an inconsistent state fix that first
+apt-get install --assume-yes --fix-broken
 apt-get install --assume-yes google-chrome-stable
 
 # Cleanup our previous policies if they're around (except the homepage)
