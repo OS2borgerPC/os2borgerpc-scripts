@@ -26,9 +26,13 @@
 #    copyright       Copyright 2021 Magenta ApS
 #    license         GNU General Public License
 
+# TECHNICAL NOTES
+#    You can check whether a user has been expired by checking the last column for the user in /etc/shadow
+
 set -x
 
 ACTIVATE=$1
+
 
 if [ "$ACTIVATE" = "True" ]; then
     mkdir -p /usr/local/lib/os2borgerpc
