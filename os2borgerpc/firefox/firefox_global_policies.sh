@@ -4,9 +4,11 @@
 Policy-script developed by Magenta ApS for Aarhus Municipal.
 Learn more about Firefox "Policy Names" here:
 https://github.com/mozilla/policy-templates/blob/master/README.md
-There is only possible to have ONE policy-file, so this script
-will have to evolve to be more dynamic if we want to be able to, e.g. 
-use the same script accross machines and group policies. 
+It's only possible to have ONE policy-file. In the future this script 
+should have to evolve to be a more dynamic solution if we want to be 
+able to, e.g. use the same script accross machines and handpick which
+Policies we want to use. Until then there will be set some default static
+Policies with OS2borgerPC in mind.  
 Author: Heini L. Ovason
 COMMENT
 
@@ -45,6 +47,7 @@ cat << EOF > "$POLICIES_DIR/$POLICY"
       $PAGES_STRING
       "StartPage": "homepage"
     },
+    "DisableFirefoxAccounts": true,
     "OverrideFirstRunPage": "",
     "OverridePostUpdatePage": "",
     "Preferences": {
