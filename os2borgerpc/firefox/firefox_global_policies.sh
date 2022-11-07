@@ -17,9 +17,7 @@ set -x
 STARTPAGE="$1"
 ADDITIONAL_PAGES="$2"
 
-POLICIES_DIR="/etc/firefox/policies"
-POLICY="policies.json"
-
+POLICY="/etc/firefox/policies/policies.json"
 if [ -z "$STARTPAGE" ]; then
   echo "WARNING: Missing <URL> argument. Not able to set Firefox startpage."
   exit 1
@@ -38,7 +36,7 @@ if [ -n "$ADDITIONAL_PAGES" ]; then
   PAGES_STRING+="]," # finish array-string
 fi
 
-cat << EOF > "$POLICIES_DIR/$POLICY"
+cat << EOF > "$POLICY"
 {
   "policies": {
     "Homepage": {
@@ -48,12 +46,53 @@ cat << EOF > "$POLICIES_DIR/$POLICY"
       "StartPage": "homepage"
     },
     "DisableFirefoxAccounts": true,
+    "InstallAddonsPermission": {
+      "Default": false
+    },
     "OverrideFirstRunPage": "",
     "OverridePostUpdatePage": "",
     "Preferences": {
       "datareporting.policy.dataSubmissionPolicyBypassNotification": true
+    },
+    "BlockAboutAddons": true,
+	  "BlockAboutConfig": true,
+	  "BlockAboutProfiles": true,
+	  "BlockAboutSupport": true,
+    "DownloadDirectory": "/home/user/Hentet",
+    "PromptForDownloadLocation": false,
+	  "DisableFirefoxAccounts": true,
+	  "DisableFormHistory": true,
+	  "DisableProfileImport": true,
+    "OfferToSaveLogins": false,
+	  "OfferToSaveLoginsDefault": false,
+	  "PasswordManagerEnabled": false,
+	  "SanitizeOnShutdown": {
+      "Cache": true,
+      "Cookies": true,
+      "Downloads": false,
+      "FormData": true,
+      "History": true,
+      "Sessions": true,
+      "SiteSettings": true,
+      "OfflineApps": true,
+      "Locked": true
+    },
+    "SearchEngines": {
+      "PreventInstalls": true
+    },
+    "EnableTrackingProtection": {
+      "Value": true,
+      "Locked": true,
+      "Cryptomining": true,
+      "Fingerprinting": true
     }
   }
 }
 
 EOF
+
+# Attempting to remove policy from former standard location.
+OLD_POLICY="/usr/lib/firefox/distribution/policies.json"
+if [ -f "$OLD_POLICY" ]; then
+    rm -f "$OLD_POLICY"
+fi
