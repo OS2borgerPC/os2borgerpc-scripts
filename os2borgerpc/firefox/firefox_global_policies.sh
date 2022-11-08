@@ -85,7 +85,8 @@ cat << EOF > "$POLICY"
       "Locked": true,
       "Cryptomining": true,
       "Fingerprinting": true
-    }
+    },
+    "DisableDeveloperTools": true
   }
 }
 
