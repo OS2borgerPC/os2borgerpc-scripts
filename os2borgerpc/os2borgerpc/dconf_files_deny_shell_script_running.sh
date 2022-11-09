@@ -3,24 +3,20 @@
 set -x
 
 # Example value:
-# [org/gnome/desktop/peripherals/mouse]
-# speed=-0.69117647058823528
+# [org/gnome/nautilus/preferences]
+# executable-text-activation='display'
 
-# Convert potential commas used for decimals into dots
-MOUSE_SPEED="$(echo "$1" | tr ',' '.')"
+ENABLE="$1"
 
 # Change these three to set a different policy to another value
-POLICY_PATH="org/gnome/desktop/peripherals/mouse"
-POLICY="speed"
-POLICY_VALUE="$MOUSE_SPEED"
+POLICY_PATH="org/gnome/nautilus/preferences"
+POLICY="executable-text-activation"
+POLICY_VALUE="'display'"
 
-POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
-POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
+POLICY_FILE="/etc/dconf/db/os2borgerpc.d/05-$POLICY"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/05-$POLICY"
 
-if [ "$MOUSE_SPEED" = "fra" ]; then
-    rm --force "$POLICY_FILE" "$POLICY_LOCK_FILE"
-else
-
+if [ "$ENABLE" = "True" ]; then
     mkdir --parents "$(dirname $POLICY_FILE)" "$(dirname $POLICY_LOCK_FILE)"
 
     # dconf does not, by default, require the use of a system database, so
@@ -44,6 +40,8 @@ else
 	cat > "$POLICY_LOCK_FILE" <<-END
 		/$POLICY_PATH/$POLICY
 	END
+else
+    rm --force "$POLICY_FILE" "$POLICY_LOCK_FILE"
 fi
 
 # Incorporate all of the text files we've just created into the system's dconf databases
