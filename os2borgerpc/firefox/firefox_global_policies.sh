@@ -17,10 +17,16 @@ set -x
 STARTPAGE="$1"
 ADDITIONAL_PAGES="$2"
 
-POLICY="/etc/firefox/policies/policies.json"
+POLICY_DIR="/etc/firefox/policies"
+POLICY_FILE="policies.json"
+
 if [ -z "$STARTPAGE" ]; then
   echo "WARNING: Missing <URL> argument. Not able to set Firefox startpage."
   exit 1
+fi
+
+if [ ! -d "$POLICY_DIR" ]; then
+  mkdir -p "$POLICY_DIR";
 fi
 
 PAGES_STRING=""
@@ -36,7 +42,7 @@ if [ -n "$ADDITIONAL_PAGES" ]; then
   PAGES_STRING+="]," # finish array-string
 fi
 
-cat << EOF > "$POLICY"
+cat << EOF > "$POLICY_DIR/$POLICY_FILE"
 {
   "policies": {
     "Homepage": {
