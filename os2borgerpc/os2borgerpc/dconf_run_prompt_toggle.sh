@@ -1,23 +1,22 @@
 #! /usr/bin/env sh
 
-# Removes lock screen from the menu - also removes the related keybind as an intended side effect
-
 set -x
 
 ACTIVATE=$1
 
 # Change these three to set a different policy to another value
-POLICY_PATH="org/gnome/desktop/lockdown"
-POLICY="disable-lock-screen"
-POLICY_VALUE="true"
+POLICY_PATH="org/gnome/desktop/wm/keybindings"
+POLICY="panel-run-dialog"
+POLICY_VALUE_NO_BIND="@as []"
+# This is the value it has when setting it back to Alt-F2, but from tests
+# it seems sufficient to delete the policy file:
+#POLICY_VALUE_BIND="['<Alt>F2']"
 
-POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
-POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
-
+POLICY_FILE="/etc/dconf/db/os2borgerpc.d/05-run-prompt"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/05-run-prompt"
 
 if [ "$ACTIVATE" = 'True' ]; then
-
-	mkdir --parents "$(dirname $POLICY_FILE)" "$(dirname $POLICY_LOCK_FILE)"
+	mkdir --parents "$(dirname "$POLICY_FILE")" "$(dirname "$POLICY_LOCK_FILE")"
 
 	# dconf does not, by default, require the use of a system database, so
 	# add one (called "os2borgerpc") to store our system-wide settings in
@@ -28,7 +27,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 
 	cat > "$POLICY_FILE" <<-END
 		[$POLICY_PATH]
-		$POLICY=$POLICY_VALUE
+		$POLICY=$POLICY_VALUE_NO_BIND
 	END
 	# "dconf update" will only act if the content of the keyfile folder has
 	# changed: individual files changing are of no consequence. Force an update
