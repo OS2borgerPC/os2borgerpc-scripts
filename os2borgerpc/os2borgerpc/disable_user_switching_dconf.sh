@@ -41,7 +41,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 		/$POLICY_PATH/$POLICY
 	END
 else
-	rm -f "$POLICY_FILE" "$POLICY_LOCK_FILE"
+	rm --force "$POLICY_FILE" "$POLICY_LOCK_FILE"
 fi
 
 # Incorporate all of the text files we've just created into the system's dconf databases

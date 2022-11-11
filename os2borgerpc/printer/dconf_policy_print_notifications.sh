@@ -27,8 +27,7 @@ POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
 ACTIVATE=$1
 
 if [ "$ACTIVATE" = 'True' ]; then
-	mkdir --parents "$(dirname "$POLICY")"
-	mkdir --parents "$(dirname "$POLICY_LOCK")"
+	mkdir --parents "$(dirname "$POLICY")" "$(dirname "$POLICY_LOCK")"
 
 	# dconf does not, by default, require the use of a system database, so
 	# add one (called "os2borgerpc") to store our system-wide settings in
@@ -54,7 +53,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 		/$POLICY_PATH/$POLICY
 	END
 else
-	rm -f "$POLICY_FILE" "$POLICY_LOCK_FILE"
+	rm --force "$POLICY_FILE" "$POLICY_LOCK_FILE"
 fi
 
 # Incorporate all of the text files we've just created into the system's dconf databases
