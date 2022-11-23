@@ -22,7 +22,7 @@ EOF
 if [ "$REMOVE_TIP_OF_THE_DAY" == "True" ]; then
 cat << EOF >> $FILE_PATH
     <item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="ShowTipOfTheDay" oor:op="fuse"><value>false</value></prop></item>
-    <item oor:path="/org.openoffice.Setup/Product"><prop oor:name="ooSetupLastVersion" oor:op="fuse"><value>6.4</value></prop></item>
+    <item oor:path="/org.openoffice.Setup/Product"><prop oor:name="ooSetupLastVersion" oor:op="fuse"><value>30.0</value></prop></item>
 EOF
 fi
 
