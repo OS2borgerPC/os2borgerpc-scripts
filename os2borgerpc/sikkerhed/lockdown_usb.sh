@@ -42,6 +42,10 @@ fi
 ACTIVATE=$1
 
 if [ "$ACTIVATE" = "True" ]; then
+    FILE=/etc/systemd/system/os2borgerpc-usb-monitor.service
+    if [ -f "$FILE" ]; then
+        systemctl disable --now os2borgerpc-usb-monitor.service
+    fi
     mkdir -p /usr/local/lib/os2borgerpc
 
     cat <<"END" > /usr/local/lib/os2borgerpc/usb-monitor.py
@@ -50,6 +54,7 @@ if [ "$ACTIVATE" = "True" ]; then
 from os import mkfifo, unlink
 from os.path import exists
 import subprocess
+import datetime
 
 PIPE = "/var/lib/os2borgerpc/usb-event"
 
@@ -62,6 +67,26 @@ def lockdown():
     subprocess.run(["usermod", "-e", "1970-01-05", "user"])
     subprocess.run(["loginctl", "terminate-user", "user"])
 
+def get_current_devices():
+    """Get the ids of the currently connected usb devices."""
+    encoding = 'utf-8'
+    lsusb_output = subprocess.check_output("lsusb")
+    device_ids = []
+    for info in lsusb_output.split(b'\n'):
+        if info:
+            device_ids.append(info)
+    device_ids = list(dict.fromkeys(device_ids))
+    device_ids = [str(device_id, encoding) for device_id in device_ids]
+    return device_ids
+
+def make_log_entry(device):
+    current_datetime = datetime.datetime.now()
+    months = ["January", "February", "March", "April", "May", "June", "July", "August",
+              "September", "October", "November", "December"]
+    month = months[current_datetime.month - 1]
+    entry = f"{current_datetime.day} {month} {current_datetime.year} " \
+            f"{current_datetime.hour}:{current_datetime.minute} - USB-event caused by {device}\n"
+    return entry
 
 def main():
     # Make sure we always start with a fresh FIFO
@@ -73,12 +98,19 @@ def main():
     mkfifo(PIPE)
     try:
         while True:
+            devices_before_event = get_current_devices()
             with open(PIPE, "rt") as fp:
                 # Reading from a FIFO should block until the udev helper script
                 # gives us a signal. Lock the system immediately when that
-                # happens
+                # happens and then write the log
                 content = fp.read()
                 lockdown()
+                devices_after_event = get_current_devices()
+                changed_device = list(set(devices_before_event).symmetric_difference(set(devices_after_event)))
+                for device in changed_device:
+                    entry = make_log_entry(changed_device)
+                    with open("/var/log/usb-events.log", "a") as log:
+                        log.write(entry)
     finally:
         unlink(PIPE)
 
