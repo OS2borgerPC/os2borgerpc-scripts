@@ -24,6 +24,9 @@ set -x
 autostart_text="[Desktop Entry]\nType=Application\nExec=google-chrome-stable --password-store=basic --start-fullscreen\nHidden=false\nNoDisplay=false\nX-GNOME-Autostart-enabled=true\nName[en_US]=Chrome\nName=Chrome\nComment[en_US]=run the Google-chrome webbrowser at startup\nComment=run the Google-chrome webbrowser at startup\nName[en]=Chrome\n"
 desktop_file="/home/.skjult/.config/autostart/google-chrome.desktop"
 
+# The previous name of this desktop file should be deleted
+rm --force "/home/.skjult/.config/autostart/chrome.desktop"
+
 if [ "$1" = "Nej" ]
 then
     autostart_text=$(echo "$autostart_text" | sed -e "s/ --start-fullscreen//g")

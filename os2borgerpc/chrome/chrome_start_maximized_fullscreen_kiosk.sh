@@ -40,7 +40,7 @@ add_to_desktop_files() {
     if [ -f "$FILE" ]; then
       # Don't add the parameter multiple times
       if ! grep -q -- "$PARAMETER" "$FILE"; then
-        sed -i "s,\(Exec=/usr/bin/google-chrome-stable\)\(.*\),\1 $PARAMETER\2," "$FILE"
+        sed -i "s,\(Exec=\S*\)\(.*\),\1 $PARAMETER\2," "$FILE"
       fi
     fi
   done
@@ -57,6 +57,13 @@ remove_from_desktop_files() {
     fi
   done
 }
+
+# Old versions of Chrome autostart had this .desktop-file-name instead
+OLD_DESKTOP_FILE="/home/.skjult/.config/autostart/chrome.desktop"
+if [ -f $OLD_DESKTOP_FILE ]; then
+  echo "Genkør venligst Chrome - Autostart tilføj/fjern"
+  exit 1
+fi
 
 case "$SETTING" in
   0) # Disable all three
