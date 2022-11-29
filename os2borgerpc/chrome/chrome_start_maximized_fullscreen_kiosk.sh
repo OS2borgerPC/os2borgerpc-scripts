@@ -25,11 +25,14 @@ USER=".skjult"
 DESKTOP_FILE_1=/usr/share/applications/google-chrome.desktop
 # In case they've also added Chrome to their desktop
 DESKTOP_FILE_2=/home/$USER/Skrivebord/google-chrome.desktop
+# TODO: Delete DESKTOP_FILE_3 later on as its now a symlink to DESKTOP_FILE_1 - as it should be
 # In case they've run chrome_autostart.sh.
 # The name is no mistake, that one is not called google-chrome.desktop
 DESKTOP_FILE_3=/home/$USER/.config/autostart/google-chrome.desktop
-DESKTOP_FILE_4=/home/$USER/.local/share/applications/google-chrome.desktop
-FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3 $DESKTOP_FILE_4"
+FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3"
+
+# Delete this superfluous .desktop file if it exists (Solrød had it)
+rm --force /home/$USER/.local/share/applications/google-chrome.desktop
 
 # Takes a parameter to add to Chrome and a list of .desktop files to add it to
 add_to_desktop_files() {
