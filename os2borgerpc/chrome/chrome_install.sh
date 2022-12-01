@@ -8,8 +8,38 @@
 #    - disables the remember password prompt feature.
 # 3. Add a launch option to Chrome that prevents it
 #    from checking for updates and showing it's out of date to whoever
+
+# Authors: Carsten Agger, Heini Leander Ovason, Marcus Funch Mogensen
 #
-# Authors: Carsten Agger, Marcus Funch Mogensen
+# DEVELOPER NOTES:
+#
+# > POLICIES:
+#
+# The policies we set and why
+#
+# Lockdown:
+# BrowserAddPersonAvailable: Make it impossible to add a new Profile. Doesn't lock down editing a Profile, but it gets some of the way.
+# BrowserSignin: Disable sync/login with own google account
+# DeveloperToolsAvailable: Disables access to developer tools, where someone could make changes to a website
+# EnableMediaRouter: Disable Chrome Cast support
+# ExtensionInstallBlocklist: With the argument * it blocks installing any extension
+# ForceEphemeralProfiles: Clear Profiles on browser close automatically, for privacy reasons
+#
+# Start page:
+# HomepageIsNewTabPage: Don't allow someone to override the homepage with the new tab page
+# HomepageLocation: Sets the page the HomeButton links to, if visible. Confusingly this does not set the homepage that Chrome opens on startup!
+# RestoreOnStartup: Controls what happens on startup. Also prevents users from changing the startup URLs when reopening the browser without logging out of the OS first. Possibly not needed with Guest mode, incognito or ephemeral.
+# RestoreOnStartupURLs: This is, confusingly, what can actually control the homepage, but only if RestoreOnStartup is set to "4".
+#
+# Various:
+# BrowserGuestModeEnabled: Allow people to start a guest session, if they want, so history isn't even temporarily recorded. Not crucial.
+# DefaultBrowserSettingEnabled: Don't check if it's default browser. Irrelevant for visitors, and maybe you want Firefox as default.
+# MetricsReportingEnabled: Disable some of Googles metrics, for privacy reasons
+# PasswordManagerEnabled: Don't try to save passwords on a public machine used by many people
+# ShowHomeButton: A button to go back to the home page. Not crucial.
+
+# Additional info on the many policies that can be set:
+# https://support.google.com/chrome/a/answer/187202?hl=en
 
 set -ex
 
@@ -55,18 +85,35 @@ if [ ! -d "$(dirname "$POLICY")" ]; then
     mkdir --parents "$(dirname "$POLICY")"
 fi
 
-# Additional info on the many policies that can be set:
-# https://support.google.com/chrome/a/answer/187202?hl=en
 cat > "$POLICY" <<- END
-		{
-		    "DefaultBrowserSettingEnabled": false,
-		    "MetricsReportingEnabled": false,
-		    "BrowserSignin": 0,
-		    "PasswordManagerEnabled": false
-		}
+{
+    "BrowserAddPersonEnabled": false,
+    "BrowserGuestModeEnabled": true,
+    "BrowserSignin": 0,
+    "DefaultBrowserSettingEnabled": false,
+    "DeveloperToolsAvailability": 2,
+    "EnableMediaRouter": false,
+    "ExtensionInstallBlocklist": [
+      "*"
+    ],
+    "ForceEphemeralProfiles": true,
+    "HomepageIsNewTabPage": false,
+    "HomepageLocation": "https://borger.dk",
+    "MetricsReportingEnabled": false,
+    "PasswordManagerEnabled": false,
+    "RestoreOnStartup": 4,
+    "RestoreOnStartupURLs": [
+        "https://borger.dk"
+    ],
+    "ShowHomeButton": true,
+    "URLBlocklist": [
+      "chrome://*"
+    ]
+}
 END
 
 # Chrome: Disable its own check for updates
+# It would be more elegant to control this via a policy, but unfortunately that does not seem to be possible currently
 # Add this launch argument to all desktop files in case the customer's
 # already have e.g. a desktop shortcut for it, which would otherwise launch
 # Chrome without disabling its check for updates
