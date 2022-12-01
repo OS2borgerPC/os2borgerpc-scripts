@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Make Chromium autostart, fx. in preparation for OS2Display.
 
 set -ex
@@ -20,6 +21,8 @@ fi
 # Autologin default user
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 
+# Note: The empty ExecStart is not insignificant!
+# By default the value is appended, so the empty line changes it to an override
 cat << EOF > /etc/systemd/system/getty@tty1.service.d/override.conf
 [Service]
 ExecStart=
@@ -101,9 +104,9 @@ xset -dpms
 exec $CHROMIUM_SCRIPT nowm
 EOF
 
-CHROME_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
-mkdir --parents "$(dirname "$CHROME_POLICY_FILE")"
-cat << EOF > $CHROME_POLICY_FILE
+CHROMIUM_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
+mkdir --parents "$(dirname "$CHROMIUM_POLICY_FILE")"
+cat << EOF > $CHROMIUM_POLICY_FILE
 {
   "AutoplayAllowed":true,
   "TranslateEnabled":false
