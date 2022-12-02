@@ -107,7 +107,9 @@ cat > "$POLICY" <<- END
     ],
     "ShowHomeButton": true,
     "URLBlocklist": [
-      "chrome://*"
+      "chrome://accessibility",
+      "chrome://extensions",
+      "chrome://flags",
     ]
 }
 END
