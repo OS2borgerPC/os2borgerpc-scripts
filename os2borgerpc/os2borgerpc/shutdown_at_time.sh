@@ -38,7 +38,14 @@
 # END_OF_HEADER
 #================================================================
 
+set -x
 
+WAKE_PLAN_FILE=/etc/os2borgerpc/plan.json
+
+if [ -f $WAKE_PLAN_FILE ]; then
+  echo "Dette script kan ikke anvendes på en PC, der er tilknyttet en tænd/sluk tidsplan."
+  exit 1
+fi
 
 TCRON=/tmp/oldcron
 USERCRON=/tmp/usercron
