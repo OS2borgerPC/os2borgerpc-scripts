@@ -40,6 +40,12 @@
 
 # Additional info on the many policies that can be set:
 # https://support.google.com/chrome/a/answer/187202?hl=en
+#
+# Blocked URLs
+#
+# chrome://accessibility because it seems to have a builtin keylogger?!
+# chrome://extensions ?
+# chrome://flags ?
 
 set -ex
 
