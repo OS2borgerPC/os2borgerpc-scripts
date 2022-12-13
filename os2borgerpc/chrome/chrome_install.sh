@@ -43,9 +43,9 @@
 #
 # Blocked URLs
 #
-# chrome://accessibility because it seems to have a builtin keylogger?!
-# chrome://extensions ?
-# chrome://flags ?
+# chrome://accessibility: It seems to have what's essentially a builtin keylogger?!
+# chrome://extensions: Extension settings can be changed here, and extensions enabled/disabled
+# chrome://flags: Experimental features can be enabled/disabled here.
 
 set -ex
 
