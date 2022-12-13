@@ -39,6 +39,10 @@ JSON_BOOKMARKS="$4" # This argument is a file
 POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-bookmarks.json"
 JSON_BOOKMARKS_TMP="/tmp/json-bookmarks.txt"
 
+if [ ! -d "$(dirname "$POLICY")" ]; then
+    mkdir --parents "$(dirname "$POLICY")"
+fi
+
 # Fix file encoding on JSON_BOOKMARKS in case it's latin-1, as apparently Chrome fails to read æøå in that case
 # and it never loads the policy.
 if file --brief --mime "$JSON_BOOKMARKS" | grep --quiet 'iso-8859-1'; then
