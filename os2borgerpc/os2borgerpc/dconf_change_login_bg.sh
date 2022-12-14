@@ -1,18 +1,22 @@
 #! /usr/bin/env sh
 
-# Removes user switching from the menu
+# Sets new background image on login-screen
 
 set -x
 
 ACTIVATE=$1
+IMAGE_UPLOAD=$2
+IMAGE_NAME=$(basename "$IMAGE_UPLOAD")
+
+mv "$IMAGE_UPLOAD" "/usr/share/backgrounds/"
 
 # Change these three to set a different policy to another value
-POLICY_PATH="org/gnome/desktop/lockdown"
-POLICY="disable-user-switching"
-POLICY_VALUE="true"
+POLICY_PATH="com/canonical/unity-greeter"
+POLICY="background"
+POLICY_VALUE="'/usr/share/backgrounds/$IMAGE_NAME'"
 
-POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
-POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
+POLICY_FILE="/etc/dconf/db/os2borgerpc.d/06-login-screen-bg-image"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/06-login-screen-bg-image"
 
 
 if [ "$ACTIVATE" = 'True' ]; then
@@ -28,6 +32,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 
 	cat > "$POLICY_FILE" <<-END
 		[$POLICY_PATH]
+		draw-user-backgrounds=false
 		$POLICY=$POLICY_VALUE
 	END
 	# "dconf update" will only act if the content of the keyfile folder has
@@ -42,6 +47,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 	END
 else
 	rm --force "$POLICY_FILE" "$POLICY_LOCK_FILE"
+    rm POLICY_VALUE
 fi
 
 # Incorporate all of the text files we've just created into the system's dconf databases
