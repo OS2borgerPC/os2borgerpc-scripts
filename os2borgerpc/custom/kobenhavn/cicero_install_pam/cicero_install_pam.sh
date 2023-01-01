@@ -21,7 +21,8 @@ LIGHTDM_PAM=/etc/pam.d/lightdm
 # Put our module where PAM modules normally are
 PAM_PYTHON_MODULE=/usr/lib/x86_64-linux-gnu/security/os2borgerpc-cicero-pam-module.py
 # shellcheck disable=SC2034   # It exists in the included file
-LOGOUT_TIMER_CONF=/usr/share/os2borgerpc/logout_timer.conf
+EXTENSION_NAME='logout_timer@os2borgerpc.magenta.dk'
+LOGOUT_TIMER_CONF="/usr/share/gnome-shell/extensions/$EXTENSION_NAME/config.json"
 CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
 if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
@@ -95,6 +96,9 @@ cat << EOF > $PAM_PYTHON_MODULE
 # -*- coding: utf-8 -*-
 
 from subprocess import check_output
+import json
+
+CONF_TIME_VALUE = "timeMinutes"
 
 
 def pam_sm_authenticate(pamh, flags, argv):
@@ -118,18 +122,31 @@ def pam_sm_authenticate(pamh, flags, argv):
             pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Prøv senere."
         )
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
 
     time = int(cicero_response)
 
     if time > 0:
-        with open('$LOGOUT_TIMER_CONF', 'w') as f:
-            f.write("TIME_MINUTES=" + str(time))
+        # Set the countdown time for the timers
+        with open("$LOGOUT_TIMER_CONF", "r+") as f:
+            # Read the current config, update it, then overwrite it with the updated contents
+            conf = json.loads(f.read())
+            conf[CONF_TIME_VALUE] = time
+
+            f.seek(0)
+            f.truncate()
+
+            f.write(json.dumps(conf, indent=2))
+
         return pamh.PAM_SUCCESS
+
     elif time == 0:
         result_msg = pamh.Message(pamh.PAM_ERROR_MSG, "Login mislykkedes.")
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
+
     elif time < 0:
         time_pos = abs(time)
         hours = str(time_pos // 60)
@@ -139,6 +156,7 @@ def pam_sm_authenticate(pamh, flags, argv):
             "Du kan først logge ind igen om " + hours + "t " + minutes + "m.",
         )
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
 
 

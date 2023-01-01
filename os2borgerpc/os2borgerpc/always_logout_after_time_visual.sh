@@ -7,7 +7,7 @@
 # but at the same time the timer program must run as the regular user to be able to write things to
 # screen.
 # It's fine if they kill the visual timer as long as they're then logged out automatically or the timer
-# continues in the background. Or we can restart zenity in that case.
+# continues in the background.
 
 set -x
 
@@ -18,49 +18,69 @@ fi
 
 # Argument handling
 ACTIVATE=$1
-MINUTES_TO_LOGOUT_MSG=$2
-X_POSITION=$3
-Y_POSITION=$4
-GRACE_PERIOD_SECONDS=$5 # Example: 40
-PRE_TIMER_TEXT=$6       # Example: "Tid tilbage: "
-TEXT_AFTER_TIMEOUT=$7   # Example: "Tiden er udløbet: Du logges snart af."
+MINUTES_TO_LOGOUT_MSG=$2 # This sets the default timeout time, which the Cicero script then overwrites
+PRE_TIMER_TEXT=$3        # Example: "Tid tilbage: "
+TEXT_AFTER_TIMEOUT=$4    # Example: "Tiden er udløbet: Du logges snart af."
+HEADS_UP_SECONDS_LEFT=$6 # Example: 60
+HEADS_UP_MESSAGE=$7      # Example: "Tiden er løbet ud om ét minut. Husk at gemme dine ting.."
 
 # Settings
+
+# COMMON
 export DEBIAN_FRONTEND=noninteractive
 SHADOW=".skjult"
-LOGOUT_TIMER_ACTUAL="/usr/share/os2borgerpc/bin/logout_timer_actual.sh"
-LOGOUT_TIMER_VISUAL="/usr/share/os2borgerpc/bin/logout_timer_visual.sh"
-LOGOUT_TIMER_ACTUAL_LAUNCHER="/usr/share/os2borgerpc/bin/logout_timer_actual_launcher.sh"
-LOGOUT_TIMER_VISUAL_DESKTOP_FILE="/home/$SHADOW/.config/autostart/logout-timer_user.desktop"
-LOGOUT_TIMERS_CONF="/usr/share/os2borgerpc/logout_timer.conf"
+EXTENSION_NAME='logout-timer@os2borgerpc.magenta.dk'
+LOGOUT_TIMER_CONF="/usr/share/gnome-shell/extensions/$EXTENSION_NAME/config.json"
 SESSION_CLEANUP_FILE="/usr/share/os2borgerpc/bin/user-cleanup.bash"
-ICON="clock-app"
+LOGOUT_TIMER_SESSION_CLEANUP_FILE="/usr/share/os2borgerpc/bin/user-cleanup-logout-timer.bash"
 
+# LOGOUT_TIMER_ACTUAL:
+LOGOUT_TIMER_ACTUAL="/usr/share/os2borgerpc/bin/logout_timer_actual.sh"
+LOGOUT_TIMER_ACTUAL_LAUNCHER="/usr/share/os2borgerpc/bin/logout_timer_actual_launcher.sh"
 # They might have automatic login enabled or not. We add it to all lightdm programs just in case.
 LIGHTDM_PAM="/etc/pam.d/lightdm"
 LIGHTDM_GREETER_PAM="/etc/pam.d/lightdm-greeter"
 LIGHTDM_AUTOLOGIN_PAM="/etc/pam.d/lightdm-autologin"
 LIGHTDM_FILES="$LIGHTDM_PAM $LIGHTDM_GREETER_PAM $LIGHTDM_AUTOLOGIN_PAM"
+GRACE_PERIOD_MULTIPLIER="1.07" # The root timer has this added to it, to be more certain that it doesn't run out before the gnome extension. Effectively this means thta if the logout timer is set to 60 minutes, the root timer will ensure the user is logged out after around 64 minutes
+
+# EXTENSION ADDITIONAL SETTINGS:
+REPO_NAME="os2borgerpc-gnome-extensions"
+EXTENSION_GIT_URL=https://github.com/OS2borgerPC/$REPO_NAME/archive/refs/heads/main.zip
+EXTENSION_ACTIVATION_DESKTOP_FILE="/home/$SHADOW/.config/autostart/logout-timer_user.desktop"
 
 
-[ $# -lt 7 ] && printf "%s\n" "This script takes at least $# arguments. Exiting." && exit 1
+[ $# -lt 2 ] && printf "%s\n" "This script takes at least 2 arguments. Exiting." && exit 1
 
 if [ "$ACTIVATE" = 'True' ]; then
-	# Do we also need to install zenity?
-	apt-get install --assume-yes xdotool
+	# TODO: Do we need to install bc or is come preinstalled?
+	apt-get install --assume-yes jq
 
-	# The default time before logout
-	printf "TIME_MINUTES=%s" "$MINUTES_TO_LOGOUT_MSG" > $LOGOUT_TIMERS_CONF
+	# The default configuration values
+	cat <<- EOF > $LOGOUT_TIMER_CONF
+		timeMinutes=$MINUTES_TO_LOGOUT_MSG
+		preTimerText="$PRE_TIMER_TEXT"
+		textAfterTimeout="$TEXT_AFTER_TIMEOUT"
+		headsUpSecondsLeft="$HEADS_UP_SECONDS_LEFT"
+		headsUpMessage="$HEADS_UP_MESSAGE"
+	EOF
 
-  # This timer handles the actual logout and thus runs as root so the user can't kill the process
+	# Fetch and install gnome extension
+	BRANCH=main
+	wget $EXTENSION_GIT_URL
+	unzip $BRANCH.zip
+	$REPO_NAME-$BRANCH/install.sh whatever $EXTENSION_NAME true true true
+	rm -r $BRANCH.zip $REPO_NAME-$BRANCH
+
+	# A backup timer used to logout if the user-run gnome extension is disabled/killed, running as root
 	cat <<- EOF > $LOGOUT_TIMER_ACTUAL
 		#! /usr/bin/env sh
 
-		. $LOGOUT_TIMERS_CONF
+		TIME_MINUTES=\$(jq < $LOGOUT_TIMER_CONF '.timeMinutes')
 
 		# Adding a little to this so they're warned a bit before they're actually logged out
 		# This is even more important since currently the timers might get out of sync
-		COUNT=\$((TIME_MINUTES * 60 + $GRACE_PERIOD_SECONDS))
+		COUNT=\$(bc <<< "\$TIME_MINUTES * 60 * $GRACE_PERIOD_MULTIPLIER")
 
 		until [ "\$COUNT" -eq "0" ]; do                                # Countdown loop.
 		    COUNT=\$((COUNT-1))                                        # Decrement seconds.
@@ -69,46 +89,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 
 		su --login user --command "DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/\$(id -u user)/bus" gnome-session-quit --logout --no-prompt"
 		# Alternate approaches:
-		# 1. who -u    # to obtain the ID of the session?
-		#    kill <idFoundAbove>
-		# 2. killall lightdm
-		# 3. killall gnome-session
-	EOF
-
-	# This timer is for visually displaying how long they have left only.
-	# Using bash to have access to set -m
-	cat <<- EOF > $LOGOUT_TIMER_VISUAL
-		#! /usr/bin/env bash
-
-		# Credits: https://handybashscripts.blogspot.com/2012/01/simple-timer-with-progress-bar.html
-    #
-		# We need job control to move the window but then suspend until the countdown finishes
-		set -m
-
-		# Load TIME_MINUTES from the config
-		. $LOGOUT_TIMERS_CONF
-
-		TITLE="Logintid"
-		TIME_SECONDS=\$((TIME_MINUTES * 60))                           # Set a starting point.
-
-		COUNT=\$TIME_SECONDS
-
-		until [ "\$COUNT" -eq "0" ]; do                                # Countdown loop.
-		    COUNT=\$((COUNT-1))                                        # Decrement seconds.
-		    PERCENT=\$((100-100*COUNT/TIME_SECONDS))                   # Calc percentage.
-		    echo "#$PRE_TIMER_TEXT \$(echo "obase=60;\$COUNT" | bc)"   # Convert to H:M:S.
-		    echo \$PERCENT                                             # Output for progbar.
-		    sleep 1
-		done | zenity --title "\$TITLE" --progress --percentage=0 --text="" \
-		    --auto-close --no-cancel &                                 # Progbar/time left.
-
-		# xdotool would not work in Wayland
-		sleep 3   # Give the zenity window a bit of time to appear before we try moving it
-		xdotool windowmove "\$(xdotool search --name "\$TITLE")" $X_POSITION $Y_POSITION
-		fg
-
-		zenity --notification --window-icon $ICON --icon-name $ICON \
-		    --text "$TEXT_AFTER_TIMEOUT"                               # Indicate finished!
+		# 1. PID=who -u && kill <PID> OR killall lightdm OR killall gnome-session
 	EOF
 
 	# Simply a small script that launches the timer in the background and immediately exits
@@ -132,32 +113,44 @@ if [ "$ACTIVATE" = 'True' ]; then
 	# Make a .desktop autostart for the visual countdown program
 	mkdir --parents /home/$SHADOW/.config/autostart
 
-	# Autorun file that simply launches the script above after startup
-	cat <<- EOF > "$LOGOUT_TIMER_VISUAL_DESKTOP_FILE"
+	# Autorun file that enables the extension on startup every time
+	cat <<- EOF > "$EXTENSION_ACTIVATION_DESKTOP_FILE"
 		[Desktop Entry]
 		Type=Application
 		Name=Automatically allow launching of .desktop files on the desktop
-		Exec=$LOGOUT_TIMER_VISUAL
+		Exec=gnome-extensions enable $EXTENSION_NAME
 		X-GNOME-Autostart-enabled=true
 	EOF
 
 	# Modify the cleanup run at logout to also kill remaining timers so they don't persist, affecting
 	# the next login
 	if ! grep -q "$(basename $LOGOUT_TIMER_ACTUAL)" $SESSION_CLEANUP_FILE; then
-		cat <<- EOF >> $SESSION_CLEANUP_FILE
-			pkill -f $(basename $LOGOUT_TIMER_ACTUAL)
-			pkill -f $(basename $LOGOUT_TIMER_VISUAL)
+		# Cleanup after previous runs of this script
+		sed --in-place "/pkill -f $(basename $LOGOUT_TIMER_ACTUAL)/d" $SESSION_CLEANUP_FILE
+		sed --in-place "/pkill -f logout_timer_visual.sh/d" $SESSION_CLEANUP_FILE
+
+		# Create a new script to handle cleanup after the logout timer
+		cat <<- EOF >> $LOGOUT_TIMER_SESSION_CLEANUP_FILE
+			pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
+			gnome-extensions disable $EXTENSION_NAME
 		EOF
+
+		# Finally append this new cleaner script to the end of user-cleanup
+		echo "$LOGOUT_TIMER_SESSION_CLEANUP_FILE" >> $SESSION_CLEANUP_FILE
 	fi
 
-	chmod u+x $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER
-	chmod +x $LOGOUT_TIMER_VISUAL $LOGOUT_TIMER_VISUAL_DESKTOP_FILE
+	chmod u+x $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $LOGOUT_TIMER_SESSION_CLEANUP_FILE
+	chmod +x "$EXTENSION_ACTIVATION_DESKTOP_FILE"
 
-else # Delete everything related to the timer
-	rm $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_VISUAL $LOGOUT_TIMER_VISUAL_DESKTOP_FILE $LOGOUT_TIMER_ACTUAL_LAUNCHER
-	# Remove the cleanup of timer processes
-	sed --in-place "/pkill -f $(basename $LOGOUT_TIMER_ACTUAL)/d" $SESSION_CLEANUP_FILE
-	sed --in-place "/pkill -f $(basename $LOGOUT_TIMER_VISUAL)/d" $SESSION_CLEANUP_FILE
+else # Stop the timers and delete everything related to them
+	pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
+	gnome-extensions disable $EXTENSION_NAME  # Note: Don't do this if we make disable run gnome-session-quit --logout as well
+
+	rm -r $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $EXTENSION_ACTIVATION_DESKTOP_FILE "$EXTENSIONS_PATH/${EXTENSION_NAME:?}" $LOGOUT_TIMER_SESSION_CLEANUP_FILE
+	sed --in-place "\@$LOGOUT_TIMER_SESSION_CLEANUP_FILE@d" $SESSION_CLEANUP_FILE
+
+	#	Alternate solution: Kill all processes started by user in user-cleanup.sh? Maybe that's a better idea anyway,
+	#	which we should do for everyone in the future?
 
 	for f in $LIGHTDM_FILES; do
 		sed --in-place "/# OS2borgerPC Timer/d" "$f"
