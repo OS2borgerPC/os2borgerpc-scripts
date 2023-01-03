@@ -260,7 +260,7 @@ def main():
         cronentries = cronfile.readlines()
     with open(TCRON, 'w') as cronfile:
         for entry in cronentries:
-            if "scheduled_off" not in entry and "set_on-off_schedule" not in entry:
+            if "scheduled_off" not in entry and "set_on-off_schedule" not in entry and "shutdown" not in entry and "rtcwake" not in entry:
                 cronfile.write(entry)
     # Add entry for next shutdown and refresh
     with open(TCRON, 'a') as cronfile:
