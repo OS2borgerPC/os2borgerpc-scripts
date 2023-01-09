@@ -35,7 +35,7 @@ cat << EOF > "$LIGHTDM_DIR"/greeter_setup_script.sh
 if [ \$(ls -A "$SCRIPT_DIR"/) ]; then
     for file in "$SCRIPT_DIR"/*
     do
-        sh "\$file"
+        bash "\$file" &
     done
 fi
 EOF
