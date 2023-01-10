@@ -48,7 +48,12 @@ GRACE_PERIOD_MULTIPLIER="1.07" # The root timer has this added to it, to be more
 # EXTENSION ADDITIONAL SETTINGS:
 REPO_NAME="os2borgerpc-gnome-extensions"
 EXTENSION_GIT_URL=https://github.com/OS2borgerPC/$REPO_NAME/archive/refs/heads/main.zip
-EXTENSION_ACTIVATION_DESKTOP_FILE="/home/$SHADOW/.config/autostart/logout-timer_user.desktop"
+
+# TODO: Consider not handling this here, and instead running install.sh with False to remove an extension. But then the repo
+# either needs to remain on disk or be downloaded anew just to delete an extension...?
+# It seems better to handle it there once for all extensions, instead of re-implementing installation/removal in every
+# single extensino script
+EXTENSION_ACTIVATION_DESKTOP_FILE="/home/$SHADOW/.config/autostart/logout-timer-user.desktop"
 
 
 [ $# -lt 2 ] && printf "%s\n" "This script takes at least 2 arguments. Exiting." && exit 1
@@ -115,15 +120,6 @@ if [ "$ACTIVATE" = 'True' ]; then
 	# Make a .desktop autostart for the visual countdown program
 	mkdir --parents /home/$SHADOW/.config/autostart
 
-	# Autorun file that enables the extension on startup every time
-	cat <<- EOF > "$EXTENSION_ACTIVATION_DESKTOP_FILE"
-		[Desktop Entry]
-		Type=Application
-		Name=Automatically allow launching of .desktop files on the desktop
-		Exec=gnome-extensions enable $EXTENSION_NAME
-		X-GNOME-Autostart-enabled=true
-	EOF
-
 	# Modify the cleanup run at logout to also kill remaining timers so they don't persist, affecting
 	# the next login
 	if ! grep -q "$(basename $LOGOUT_TIMER_ACTUAL)" $SESSION_CLEANUP_FILE; then
@@ -144,14 +140,13 @@ if [ "$ACTIVATE" = 'True' ]; then
 	fi
 
 	chmod u+x $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $LOGOUT_TIMER_SESSION_CLEANUP_FILE
-	chmod +x "$EXTENSION_ACTIVATION_DESKTOP_FILE"
 
 else # Stop the timers and delete everything related to them
 	pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
 	gnome-extensions disable $EXTENSION_NAME  # Note: Don't do this if we make disable run gnome-session-quit --logout as well
 
-	rm -r $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $EXTENSION_ACTIVATION_DESKTOP_FILE "$(dirname $LOGOUT_TIMER_CONF)" $LOGOUT_TIMER_SESSION_CLEANUP_FILE
 	sed --in-place "\@$LOGOUT_TIMER_SESSION_CLEANUP_FILE@d" $SESSION_CLEANUP_FILE
+	rm -r $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $EXTENSION_ACTIVATION_DESKTOP_FILE "$(dirname $LOGOUT_TIMER_CONF)" $LOGOUT_TIMER_SESSION_CLEANUP_FILE
 
 	#	Alternate solution: Kill all processes started by user in user-cleanup.sh? Maybe that's a better idea anyway,
 	#	which we should do for everyone in the future?
