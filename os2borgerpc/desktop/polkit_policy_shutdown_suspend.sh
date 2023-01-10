@@ -8,18 +8,19 @@
 #%
 #% DESCRIPTION
 #%    This script installs a mandatory PolicyKit policy that either prevents
-#%    the "user" or "lightdm" users from suspending the system,
-#%    prevents the "user" or "lightdm" users from restarting/shutting down
-#%    the system or prevents both.
+#%    the "user" or "lightdm" users from suspending the system or
+#%    prevents the "user" or "lightdm" users from suspending, restarting or shutting down
+#%    the system.
 #%
 #%    It takes two optional parameters: whether to prevent suspending the system
-#%    and whether to prevent restart/shutdown.
+#%    and whether to also prevent restart/shutdown.
 #%    1. Use a boolean to decide whether or not to prevent the "user" from
 #%       suspending the system. A checked box prevents suspend and an
 #%       unchecked box allows it
-#%    2. Use a boolean to decide whether or not to prevent the "user" from
+#%    2. Use a boolean to decide whether or not to also prevent the "user" from
 #%       restarting/shutting down the system. A checked box prevents
-#%       restart/shutdown and an unchecked box allows it
+#%       restart/shutdown and an unchecked box allows it.
+#%       Has no effect if input 1 is unchecked
 #%
 #================================================================
 #- IMPLEMENTATION
@@ -47,25 +48,16 @@ set -x
 POLICY="/etc/polkit-1/localauthority/90-mandatory.d/10-os2borgerpc-no-user-shutdown.pkla"
 
 if [ ! -d "$(dirname "$POLICY")" ]; then
-    mkdir "$(dirname "$POLICY")"
+    mkdir -p "$(dirname "$POLICY")"
 fi
 
-if [ "$1" = "False" ] && [ "$2" = "False" ]; then
+if [ "$1" = "False" ]; then
   rm -f "$POLICY"
 elif [ "$1" = "True" ] && [ "$2" = "False" ]; then
   cat > "$POLICY" <<END
 [Restrict system shutdown]
 Identity=unix-user:user;unix-user:lightdm
 Action=org.freedesktop.login1.hibernate*;org.freedesktop.login1.suspend*;org.freedesktop.login1.lock-sessions
-ResultAny=no
-ResultActive=no
-ResultInactive=no
-END
-elif [ "$1" = "False" ] && [ "$2" = "True" ]; then
-  cat > "$POLICY" <<END
-[Restrict system shutdown]
-Identity=unix-user:user;unix-user:lightdm
-Action=org.freedesktop.login1.power-off*;org.freedesktop.login1.reboot*;org.freedesktop.login1.lock-sessions;org.freedesktop.login1.set-reboot*
 ResultAny=no
 ResultActive=no
 ResultInactive=no
