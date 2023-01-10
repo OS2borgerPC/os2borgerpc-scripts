@@ -19,9 +19,10 @@ fi
 # Argument handling
 ACTIVATE=$1
 MINUTES_TO_LOGOUT=$2 # This sets the default timeout time, which the Cicero script then overwrites
-PRE_TIMER_TEXT=$3        # Example: "Tid tilbage: "
-HEADS_UP_SECONDS_LEFT=$4 # Example: 60
-HEADS_UP_MESSAGE=$5      # Example: "Tiden er løbet ud om ét minut. Husk at gemme dine ting.."
+PRE_TIMER_TEXT="${3:-Tid tilbage: }"
+HEADS_UP_SECONDS_LEFT=${4:-60}
+HEADS_UP_MESSAGE="${5:-Tiden er udløbet om et minut. Husk at gemme dine ting}"
+
 
 # Settings
 
@@ -32,6 +33,7 @@ EXTENSION_NAME='logout-timer@os2borgerpc.magenta.dk'
 LOGOUT_TIMER_CONF="/usr/share/gnome-shell/extensions/$EXTENSION_NAME/config.json"
 SESSION_CLEANUP_FILE="/usr/share/os2borgerpc/bin/user-cleanup.bash"
 LOGOUT_TIMER_SESSION_CLEANUP_FILE="/usr/share/os2borgerpc/bin/user-cleanup-logout-timer.bash"
+OUR_USER="user"
 
 # LOGOUT_TIMER_ACTUAL:
 LOGOUT_TIMER_ACTUAL="/usr/share/os2borgerpc/bin/logout_timer_actual.sh"
@@ -62,7 +64,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 	$REPO_NAME-$BRANCH/install.sh whatever $EXTENSION_NAME true true true
 	rm -r $BRANCH.zip $REPO_NAME-$BRANCH
 
-	# The default configuration values
+	# Now overwrite the testing config with what the user inputted/defaults in this script
 	cat <<- EOF > $LOGOUT_TIMER_CONF
 	{
 	  "timeMinutes": $MINUTES_TO_LOGOUT,
@@ -87,9 +89,9 @@ if [ "$ACTIVATE" = 'True' ]; then
 		    sleep 1
 		done
 
-		su --login user --command "DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/\$(id -u user)/bus" gnome-session-quit --logout --no-prompt"
-		# Alternate approaches:
-		# 1. PID=who -u && kill <PID> OR killall lightdm OR killall gnome-session
+		runuser --login user --command "XDG_RUNTIME_DIR=/run/user/$(id -u user) gnome-session-quit --logout --no-prompt"
+		# Alternate, less graceful approaches:
+		# 1. PID=who -u && kill <PID-OBTAINED> OR killall lightdm OR killall gnome-session
 	EOF
 
 	# Simply a small script that launches the timer in the background and immediately exits
@@ -130,11 +132,11 @@ if [ "$ACTIVATE" = 'True' ]; then
 		sed --in-place "/pkill -f logout_timer_visual.sh/d" $SESSION_CLEANUP_FILE
 
 		# Create a new script to handle cleanup after the logout timer
-		cat <<- EOF >> $LOGOUT_TIMER_SESSION_CLEANUP_FILE
+		cat <<- EOF > $LOGOUT_TIMER_SESSION_CLEANUP_FILE
 		    #! /usr/bin/env sh
 
 			pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
-			runuser --login user --command "DISPLAY=:0 gnome-extensions disable $EXTENSION_NAME"
+			runuser --login $OUR_USER --command "XDG_RUNTIME_DIR=/run/user/$(id -u $OUR_USER) gnome-extensions disable $EXTENSION_NAME"
 		EOF
 
 		# Finally append this new cleaner script to the end of user-cleanup
