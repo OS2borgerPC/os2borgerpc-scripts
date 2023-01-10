@@ -18,11 +18,10 @@ fi
 
 # Argument handling
 ACTIVATE=$1
-MINUTES_TO_LOGOUT_MSG=$2 # This sets the default timeout time, which the Cicero script then overwrites
+MINUTES_TO_LOGOUT=$2 # This sets the default timeout time, which the Cicero script then overwrites
 PRE_TIMER_TEXT=$3        # Example: "Tid tilbage: "
-TEXT_AFTER_TIMEOUT=$4    # Example: "Tiden er udløbet: Du logges snart af."
-HEADS_UP_SECONDS_LEFT=$6 # Example: 60
-HEADS_UP_MESSAGE=$7      # Example: "Tiden er løbet ud om ét minut. Husk at gemme dine ting.."
+HEADS_UP_SECONDS_LEFT=$4 # Example: 60
+HEADS_UP_MESSAGE=$5      # Example: "Tiden er løbet ud om ét minut. Husk at gemme dine ting.."
 
 # Settings
 
@@ -56,21 +55,22 @@ if [ "$ACTIVATE" = 'True' ]; then
 	# TODO: Do we need to install bc or is come preinstalled?
 	apt-get install --assume-yes jq
 
-	# The default configuration values
-	cat <<- EOF > $LOGOUT_TIMER_CONF
-		timeMinutes=$MINUTES_TO_LOGOUT_MSG
-		preTimerText="$PRE_TIMER_TEXT"
-		textAfterTimeout="$TEXT_AFTER_TIMEOUT"
-		headsUpSecondsLeft="$HEADS_UP_SECONDS_LEFT"
-		headsUpMessage="$HEADS_UP_MESSAGE"
-	EOF
-
 	# Fetch and install gnome extension
 	BRANCH=main
 	wget $EXTENSION_GIT_URL
 	unzip $BRANCH.zip
 	$REPO_NAME-$BRANCH/install.sh whatever $EXTENSION_NAME true true true
 	rm -r $BRANCH.zip $REPO_NAME-$BRANCH
+
+	# The default configuration values
+	cat <<- EOF > $LOGOUT_TIMER_CONF
+	{
+	  "timeMinutes": $MINUTES_TO_LOGOUT,
+	  "preTimerText": "$PRE_TIMER_TEXT",
+	  "headsUpSecondsLeft": $HEADS_UP_SECONDS_LEFT,
+	  "headsUpMessage": "$HEADS_UP_MESSAGE"
+	}
+	EOF
 
 	# A backup timer used to logout if the user-run gnome extension is disabled/killed, running as root
 	cat <<- EOF > $LOGOUT_TIMER_ACTUAL
@@ -131,8 +131,10 @@ if [ "$ACTIVATE" = 'True' ]; then
 
 		# Create a new script to handle cleanup after the logout timer
 		cat <<- EOF >> $LOGOUT_TIMER_SESSION_CLEANUP_FILE
+		    #! /usr/bin/env sh
+
 			pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
-			gnome-extensions disable $EXTENSION_NAME
+			runuser --login user --command "DISPLAY=:0 gnome-extensions disable $EXTENSION_NAME"
 		EOF
 
 		# Finally append this new cleaner script to the end of user-cleanup
@@ -146,7 +148,7 @@ else # Stop the timers and delete everything related to them
 	pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
 	gnome-extensions disable $EXTENSION_NAME  # Note: Don't do this if we make disable run gnome-session-quit --logout as well
 
-	rm -r $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $EXTENSION_ACTIVATION_DESKTOP_FILE "$EXTENSIONS_PATH/${EXTENSION_NAME:?}" $LOGOUT_TIMER_SESSION_CLEANUP_FILE
+	rm -r $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $EXTENSION_ACTIVATION_DESKTOP_FILE "$(dirname $LOGOUT_TIMER_CONF)" $LOGOUT_TIMER_SESSION_CLEANUP_FILE
 	sed --in-place "\@$LOGOUT_TIMER_SESSION_CLEANUP_FILE@d" $SESSION_CLEANUP_FILE
 
 	#	Alternate solution: Kill all processes started by user in user-cleanup.sh? Maybe that's a better idea anyway,
