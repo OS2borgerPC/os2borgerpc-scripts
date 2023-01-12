@@ -136,7 +136,9 @@ if [ "$ACTIVATE" = 'True' ]; then
 		EOF
 
 		# Finally append this new cleaner script to the end of user-cleanup
-		echo "$LOGOUT_TIMER_SESSION_CLEANUP_FILE" >> $SESSION_CLEANUP_FILE
+		if ! grep -q "$LOGOUT_TIMER_SESSION_CLEANUP_FILE" $SESSION_CLEANUP_FILE; then
+			echo "$LOGOUT_TIMER_SESSION_CLEANUP_FILE" >> $SESSION_CLEANUP_FILE
+		fi
 	fi
 
 	chmod u+x $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $LOGOUT_TIMER_SESSION_CLEANUP_FILE
