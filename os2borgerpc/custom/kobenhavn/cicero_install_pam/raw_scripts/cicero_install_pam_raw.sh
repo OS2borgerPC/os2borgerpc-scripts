@@ -10,11 +10,7 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 
 export DEBIAN_FRONTEND=noninteractive
 LIGHTDM_PAM=/etc/pam.d/lightdm
@@ -26,8 +22,7 @@ EXTENSION_NAME='logout_timer@os2borgerpc.magenta.dk'
 LOGOUT_TIMER_CONF="/usr/share/gnome-shell/extensions/$EXTENSION_NAME/config.json"
 CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
   if ! apt-get install --assume-yes libpam-python; then
     echo "Error installing dependencies."
