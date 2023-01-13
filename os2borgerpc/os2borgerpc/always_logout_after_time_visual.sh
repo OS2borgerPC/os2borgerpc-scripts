@@ -55,6 +55,8 @@ EXTENSION_GIT_URL=https://github.com/OS2borgerPC/$REPO_NAME/archive/refs/heads/m
 # single extensino script
 EXTENSION_ACTIVATION_DESKTOP_FILE="/home/$SHADOW/.config/autostart/logout-timer-user.desktop"
 
+# Delete previously used logout timer conf
+rm --force /usr/share/os2borgerpc/logout_timer.conf
 
 [ $# -lt 2 ] && printf "%s\n" "This script takes at least 2 arguments. Exiting." && exit 1
 

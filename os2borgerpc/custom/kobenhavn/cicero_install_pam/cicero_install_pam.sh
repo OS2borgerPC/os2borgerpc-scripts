@@ -16,6 +16,7 @@ export DEBIAN_FRONTEND=noninteractive
 LIGHTDM_PAM=/etc/pam.d/lightdm
 # Put our module where PAM modules normally are
 PAM_PYTHON_MODULE=/usr/lib/x86_64-linux-gnu/security/os2borgerpc-cicero-pam-module.py
+# Keep this in sync with the extensions name as given in the os2borgerpc-gnome-extensions repo!
 # shellcheck disable=SC2034   # It exists in an included file
 EXTENSION_NAME='logout-timer@os2borgerpc.magenta.dk'
 # shellcheck disable=SC2034   # It exists in an included file
