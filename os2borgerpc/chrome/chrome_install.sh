@@ -124,16 +124,9 @@ cat > "$POLICY" <<- END
       "*"
     ],
     "ForceEphemeralProfiles": true,
-    "HomepageIsNewTabPage": false,
-    "HomepageLocation": "https://borger.dk",
     "MetricsReportingEnabled": false,
     "PasswordManagerEnabled": false,
     "PaymentMethodQueryEnabled": false,
-    "RestoreOnStartup": 4,
-    "RestoreOnStartupURLs": [
-        "https://borger.dk"
-    ],
-    "ShowHomeButton": true,
     "URLBlocklist": [
       "chrome://accessibility",
       "chrome://extensions",
