@@ -18,12 +18,15 @@
 # The policies we set and why
 #
 # Lockdown:
+# AutofillAddressEnabled: Disable Autofill of addresses
+# AutofillCreditCardEnabled: Disable Autofill of payment methods
 # BrowserAddPersonAvailable: Make it impossible to add a new Profile. Doesn't lock down editing a Profile, but it gets some of the way.
 # BrowserSignin: Disable sync/login with own google account
 # DeveloperToolsAvailable: Disables access to developer tools, where someone could make changes to a website
 # EnableMediaRouter: Disable Chrome Cast support
 # ExtensionInstallBlocklist: With the argument * it blocks installing any extension
 # ForceEphemeralProfiles: Clear Profiles on browser close automatically, for privacy reasons
+# PaymentMethodQueryEnabled: Prevent websites from checking if the user has saved payment methods
 #
 # Start page:
 # HomepageIsNewTabPage: Don't allow someone to override the homepage with the new tab page
@@ -33,6 +36,9 @@
 #
 # Various:
 # BrowserGuestModeEnabled: Allow people to start a guest session, if they want, so history isn't even temporarily recorded. Not crucial.
+# BrowsingDataLifetime: Continuously remove all browsing data after 1 hour (the minimum possible),
+# except "cookies_and_other_site_data" and "password_signin",
+# because the visitor might be at the computer and still signed in to something.
 # DefaultBrowserSettingEnabled: Don't check if it's default browser. Irrelevant for visitors, and maybe you want Firefox as default.
 # MetricsReportingEnabled: Disable some of Googles metrics, for privacy reasons
 # PasswordManagerEnabled: Don't try to save passwords on a public machine used by many people
@@ -93,9 +99,24 @@ fi
 
 cat > "$POLICY" <<- END
 {
+    "AutofillAddressEnabled": false,
+    "AutofillCreditCardEnabled": false,
     "BrowserAddPersonEnabled": false,
     "BrowserGuestModeEnabled": true,
     "BrowserSignin": 0,
+    "BrowsingDataLifetime": [
+      {
+        "data_types": [
+          "autofill",
+          "browsing_history",
+          "cached_images_and_files",
+          "download_history",
+          "hosted_app_data",
+          "site_settings"
+        ],
+        "time_to_live_in_hours": 1
+      }
+    ],
     "DefaultBrowserSettingEnabled": false,
     "DeveloperToolsAvailability": 2,
     "EnableMediaRouter": false,
@@ -103,19 +124,13 @@ cat > "$POLICY" <<- END
       "*"
     ],
     "ForceEphemeralProfiles": true,
-    "HomepageIsNewTabPage": false,
-    "HomepageLocation": "https://borger.dk",
     "MetricsReportingEnabled": false,
     "PasswordManagerEnabled": false,
-    "RestoreOnStartup": 4,
-    "RestoreOnStartupURLs": [
-        "https://borger.dk"
-    ],
-    "ShowHomeButton": true,
+    "PaymentMethodQueryEnabled": false,
     "URLBlocklist": [
       "chrome://accessibility",
       "chrome://extensions",
-      "chrome://flags",
+      "chrome://flags"
     ]
 }
 END
