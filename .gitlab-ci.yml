@@ -1,6 +1,24 @@
 # Chronologically specify the pipeline stages to run
 stages:
+  - permissions
   - lint
+
+# Relevant for scripts that are cloned here to be run e.g. when building an image
+Ensure execute permissions:
+  stage: permissions
+  image: alpine
+  before_script:
+    - apk add fd
+    - printf 'Ensuring executable permissions on all files:'
+  script:
+    - |+
+      for fperm in $(fd . ${CI_PROJECT_DIR} --type f --exec stat -c %a); do
+        if [ "$fperm" != "755" ] && [ "$fperm" != "777" ]; then
+          printf "%s\n" "At least one file does not have execute permissions. Specifically it had the permission: $fperm" \
+                        "All files in this repo should have 755/777 permissions, because they're being cloned and executed."
+          exit 1
+        fi
+      done
 
 # Common settings for linters to avoid code repetition
 # Needs can be used to specify dependencies
