@@ -137,7 +137,7 @@ cat > "$POLICY" <<- END
     "URLBlocklist": [
       "chrome://accessibility",
       "chrome://extensions",
-      "chrome://flags",
+      "chrome://flags"
     ]
 }
 END
