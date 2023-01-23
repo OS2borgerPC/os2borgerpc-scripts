@@ -31,6 +31,9 @@ make_desktop_writable() {
 	chattr -i /home/$USER/$DESKTOP
 }
 
+# Make sure that /home/.skjult/Skrivebord exists as otherwise this script will not work correctly
+mkdir --parents /home/.skjult/Skrivebord
+
 # Undo write access removal.
 # We always do this to prevent adding the same lines multiple times (idempotency)
 make_desktop_writable
