@@ -250,6 +250,10 @@ def main():
     # Determine off time
     off_time = int((startup - shutdown).total_seconds())
 
+    # Make sure the machine will wake up as planned even if it is not shut down by the schedule
+    startup_string = f"{startup.year}-{startup.month}-{startup.day} {startup.hour}:{startup.minute}"
+    subprocess.run(["rtcwake", "-m", "no", "--date", startup_string])
+
     # Update crontab
     # Get current entries
     TCRON = "/tmp/oldcron"
@@ -260,7 +264,8 @@ def main():
         cronentries = cronfile.readlines()
     with open(TCRON, 'w') as cronfile:
         for entry in cronentries:
-            if "scheduled_off" not in entry and "set_on-off_schedule" not in entry and "shutdown" not in entry and "rtcwake" not in entry:
+            if "scheduled_off" not in entry and "set_on-off_schedule" not in entry and \
+                    "shutdown" not in entry and "rtcwake" not in entry:
                 cronfile.write(entry)
     # Add entry for next shutdown and refresh
     with open(TCRON, 'a') as cronfile:
