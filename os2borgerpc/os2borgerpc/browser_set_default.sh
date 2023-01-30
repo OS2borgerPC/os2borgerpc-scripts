@@ -17,7 +17,11 @@ BROWSER="$(lower "$1")"
 FILE="/usr/share/applications/defaults.list"
 
 if [ "$BROWSER" = "firefox" ]; then
-  DESKTOP_FILE=firefox.desktop
+  if [ -d "/snap/firefox" ]; then
+    DESKTOP_FILE=firefox_firefox.desktop
+  else
+    DESKTOP_FILE=firefox.desktop
+  fi
 else
   DESKTOP_FILE=google-chrome.desktop
 fi

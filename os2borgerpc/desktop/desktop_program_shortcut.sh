@@ -22,8 +22,16 @@ SHADOW=.skjult
 
 if [ "$ADD" = 'True' ]; then
   mkdir --parents /home/$SHADOW/Skrivebord
-  cp "/usr/share/applications/$PROGRAM.desktop" /home/$SHADOW/Skrivebord/
+  if [ -f "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" ]; then
+    cp "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" /home/$SHADOW/Skrivebord/
+  else
+    cp "/usr/share/applications/$PROGRAM.desktop" /home/$SHADOW/Skrivebord/
+  fi
 else
   echo "Forsøger at slette programmet $PROGRAM"
-  rm "/home/$SHADOW/Skrivebord/$PROGRAM.desktop"
+  if [ -f "/home/$SHADOW/Skrivebord/${PROGRAM}_$PROGRAM.desktop" ]; then
+    rm "/home/$SHADOW/Skrivebord/${PROGRAM}_$PROGRAM.desktop"
+  else
+    rm "/home/$SHADOW/Skrivebord/$PROGRAM.desktop"
+  fi
 fi

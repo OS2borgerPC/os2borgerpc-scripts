@@ -10,6 +10,10 @@
 ADD=$1
 PROGRAM=$2
 
+if [ -f "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" ]; then
+  PROGRAM="${PROGRAM}_$PROGRAM"
+fi
+
 if [ "$ADD" = "True" ]; then
 
   # Append the program specified above to the menu/launcher
