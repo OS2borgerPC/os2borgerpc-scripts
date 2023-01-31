@@ -58,7 +58,7 @@ cat <<- EOF > $DESKTOP_FILE
 	Name=$SHORTCUT_NAME
 	Comment=Logud
 	Icon=$ICON
-	Exec=gnome-session-quit --logout $TO_PROMPT_OR_NOT
+	Exec=sh -c "sleep 0.1 && gnome-session-quit --logout $TO_PROMPT_OR_NOT"
 EOF
 
 else
