@@ -3,13 +3,15 @@
 # Adds/Removes programs from the desktop in Ubuntu 20.04
 # Author: mfm@magenta.dk
 #
-# Note that the program assumes danish locale, where the 'Desktop' directory
+# Note that this script currently assumes danish locale, where the 'Desktop' directory
 # is instead named 'Skrivebord'.
 #
 # Arguments:
 # 1: Use a boolean to decide whether to add or remove the program shortcut
 # 2: This argument should specify the name of a program (.desktop-file)
-# under /usr/share/applications/
+# under /usr/share/applications/ or /var/lib/snapd/desktop/applications/
+
+set -x
 
 lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
@@ -18,20 +20,26 @@ lower() {
 ADD=$1
 PROGRAM="$(lower "$2")"
 
-SHADOW=.skjult
+SHADOW=".skjult"
+
+# TODO?: Make it replace all desktop icons which are copies with symlinks?
+
+mkdir --parents /home/$SHADOW/Skrivebord
 
 if [ "$ADD" = 'True' ]; then
-  mkdir --parents /home/$SHADOW/Skrivebord
   if [ -f "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" ]; then
-    cp "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" /home/$SHADOW/Skrivebord/
+    DESKTOP_FILE=/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop
   else
-    cp "/usr/share/applications/$PROGRAM.desktop" /home/$SHADOW/Skrivebord/
+    DESKTOP_FILE=/usr/share/applications/$PROGRAM.desktop
   fi
+
+  # Remove it first as it may be a copy and not symlink (ln --force can't overwrite regular files)
+  rm "/home/$SHADOW/Skrivebord/$PROGRAM.desktop"
+
+  ln --symbolic --force "$DESKTOP_FILE" /home/$SHADOW/Skrivebord/
 else
-  echo "Forsøger at slette programmet $PROGRAM"
   if [ -f "/home/$SHADOW/Skrivebord/${PROGRAM}_$PROGRAM.desktop" ]; then
-    rm "/home/$SHADOW/Skrivebord/${PROGRAM}_$PROGRAM.desktop"
-  else
-    rm "/home/$SHADOW/Skrivebord/$PROGRAM.desktop"
+    PROGRAM=${PROGRAM}_$PROGRAM
   fi
+  rm --force "/home/$SHADOW/Skrivebord/$PROGRAM.desktop"
 fi

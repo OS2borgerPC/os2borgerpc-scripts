@@ -4,7 +4,6 @@
 #
 # Arguments:
 # 1: Which browser to set as default.
-#    Options are: 'firefox' or 'chrome'
 
 set -ex
 
@@ -16,14 +15,16 @@ BROWSER="$(lower "$1")"
 
 FILE="/usr/share/applications/defaults.list"
 
-if [ "$BROWSER" = "firefox" ]; then
-  if [ -d "/snap/firefox" ]; then
-    DESKTOP_FILE=firefox_firefox.desktop
-  else
-    DESKTOP_FILE=firefox.desktop
-  fi
+# They can type in "chrome" but the desktop file is called google-chrome
+if [ "$BROWSER" = "chrome" ]; then
+  BROWSER=google-chrome.desktop
+fi
+
+# Handle snaps, which have names like firefox_firefox.desktop
+if [ -d "/snap/$BROWSER" ]; then
+	DESKTOP_FILE=${BROWSER}_$BROWSER.desktop
 else
-  DESKTOP_FILE=google-chrome.desktop
+	DESKTOP_FILE=${BROWSER}.desktop
 fi
 
 # We cleanup the defaults.list as sometimes it seems to be populated
