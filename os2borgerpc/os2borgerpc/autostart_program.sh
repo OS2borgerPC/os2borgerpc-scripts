@@ -1,42 +1,45 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
-# DESCRIPTION 
+# DESCRIPTION
 # This script either copies a given installed .desktop file to the autostart directory
-# or removes a given file from the autostart directory. 
+# or removes a given file from the autostart directory.
 #
-# To check which scripts are installed on a machine run the script 
-# "desktop_print_program_list.sh" AKA "Desktop - Vis programliste" with paremeter 
+# To check which scripts are installed on a machine run the script
+# "desktop_print_program_list.sh" AKA "Desktop - Vis programliste" with paremeter
 # "mulige" to print a full list of eligible files to add to autostart.
 #
 # PARAMENTERS
-# 1. String. The given file's name, either with no extension or with .desktop
-#            eg. "firefox" or "firefox.desktop". This parameter IS case-sensitive
-#            as some applications have capitalized characters in their filename.
+# 1. String. The given file's name, e.g. firefox, without the .desktop extension.
+#            This parameter IS case-sensitive as some applications have
+#            capitalized characters in their filename.
 # 2. Checkbox. Check this box to delete a file from the autostart folder instead.
 
-SELECTED=$1
-DELETE=$2
+set -x
 
-if [[ $SELECTED != *.desktop ]]; then
-    SELECTED="$SELECTED.desktop"
-fi
+PROGRAM="$1"
+DELETE="$2"
 
 AUTOSTART_DIR="/home/.skjult/.config/autostart"
-AUTOSTART_FILE="$AUTOSTART_DIR/$SELECTED"
-INSTALLED_APP_FILE="/usr/share/applications/$SELECTED"
 
-if [ "$DELETE" = "True" ]; then 
-    echo "Removing $SELECTED from autostart directory"
-    
-    rm "$AUTOSTART_FILE"
+if [ -f "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" ]; then
 
-    exit "$?"    
+  INSTALLED_APP_FILE="/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop"
+  AUTOSTART_FILE="$AUTOSTART_DIR/${PROGRAM}_$PROGRAM.desktop"
+else
+  INSTALLED_APP_FILE="/usr/share/applications/$PROGRAM"
+  AUTOSTART_FILE="$AUTOSTART_DIR/$PROGRAM.desktop"
 fi
 
-mkdir -p $AUTOSTART_DIR
+mkdir --parents $AUTOSTART_DIR
 
-echo "Adding $SELECTED to autostart directory"
+# Remove it first, partially because ln even with --force cannot replace it if it's a regular file
+rm --force "$AUTOSTART_FILE"
 
-cp "$INSTALLED_APP_FILE" "$AUTOSTART_FILE"
+if [ "$DELETE" != "True" ]; then
 
-exit "$?"
+  echo "Adding $PROGRAM to autostart directory"
+
+  ln --symbolic --force "$INSTALLED_APP_FILE" "$AUTOSTART_FILE"
+
+  exit "$?"
+fi

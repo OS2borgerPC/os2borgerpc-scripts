@@ -9,16 +9,14 @@
 # Arguments:
 # 1: Use a boolean to decide whether to add or remove the program shortcut
 # 2: This argument should specify the name of a program (.desktop-file)
-# under /usr/share/applications/ or /var/lib/snapd/desktop/applications/
+#    under /usr/share/applications/ or /var/lib/snapd/desktop/applications/
+#    This parameter IS case-sensitive as some applications have
+#    capitalized characters in their filename.
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ADD=$1
-PROGRAM="$(lower "$2")"
+ADD="$1"
+PROGRAM="$2"
 
 SHADOW=".skjult"
 
