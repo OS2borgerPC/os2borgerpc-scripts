@@ -16,15 +16,13 @@ rm --force /home/$SHADOW/.config/autostart/gio-fix-desktop-file-permissions.desk
 cat << EOF > "$GIO_SCRIPT"
 #! /usr/bin/env sh
 
-# gio needs to run as the user + dbus-launch, we have this script to create it and kill it afterwards
-export \$(dbus-launch)
-DBUS_PROCESS=\$\$
+# gio needs to run as the user with correct dbus settings
+export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u user)/bus"
 
 for FILE in /home/$USER/Skrivebord/*.desktop; do
   gio set "\$FILE" metadata::trusted true
 done
 
-kill \$DBUS_PROCESS
 EOF
 
 # Script to activate programs on the desktop
@@ -42,7 +40,9 @@ su --login user --command $GIO_SCRIPT
 # Now set the permissions back to their restricted form
 for FILE in /home/$USER/Skrivebord/*.desktop; do
   chown root:$USER "\$FILE"
-  # Can't make sense of this as it already has execute permissions, but it won't work without it
+  # In order for gio changes to take effect, it is necessary to update the file time stamp
+  # This can be done with many commands such as chmod or simply touch
+  # However, in some cases the files might not have execute permission so we add it with chmod
   chmod ug+x "\$FILE"
 done
 EOF
