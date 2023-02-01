@@ -40,7 +40,7 @@ make_desktop_writable
 
 if [ "$ACTIVATE" = 'True' ]; then
 	# Temporarily set it mutable before copying new files in, as otherwise that will fail
-	sed -i "/# Restore \$HOME/a\ $SET_USER_DESKTOP_MUTABLE" $USER_CLEANUP
+	sed -i "/USERNAME=\"user\"/a $SET_USER_DESKTOP_MUTABLE" $USER_CLEANUP
 	cat <<- EOF >> $USER_CLEANUP
 		$SET_USER_DESKTOP_ROOT_OWNED
 		$SET_USER_DESKTOP_IMMUTABLE
