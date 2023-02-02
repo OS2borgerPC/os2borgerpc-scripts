@@ -5,7 +5,6 @@ from subprocess import check_output
 
 
 def pam_sm_authenticate(pamh, flags, argv):
-
     # print(pamh.fail_delay)
     # http://pam-python.sourceforge.net/doc/html/
     username_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Lånernummer eller CPR")

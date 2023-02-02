@@ -22,7 +22,6 @@ class PlyvelInterface:
     """
 
     def __init__(self):
-
         # self.db = plyvel.DB('/home/' + user + '/snap/chromium/common/chromium/Default/Sync Data/LevelDB', create_if_missing=True, compression=None)  # noqa E501
         self.db = plyvel.DB(
             "/home/"
