@@ -110,7 +110,6 @@ try:
         expected.visibility_of_element_located((By.CLASS_NAME, "default--full-screen"))
     )
 except:  # noqa: E722 - TODO: next refactor: investigate which exceptions specifically
-
     print("Exception occured while waiting for OS2display screen.")
 
 token = browser.execute_script("return localStorage.getItem('indholdskanalen_token')")

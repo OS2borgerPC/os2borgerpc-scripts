@@ -7,7 +7,6 @@ import socket
 
 
 def cicero_validate(cicero_user, cicero_pass):
-
     host_address = (
         check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
     )
