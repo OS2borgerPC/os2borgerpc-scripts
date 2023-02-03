@@ -13,31 +13,31 @@
 #    This parameter IS case-sensitive as some applications have
 #    capitalized characters in their filename.
 
-set -x
-
 ADD="$1"
 PROGRAM="$2"
 
-SHADOW=".skjult"
+SHADOW_DESKTOP="/home/.skjult/Skrivebord"
+SNAP_DESKTOP_FILE_PATH="/var/lib/snapd/desktop/applications"
+APT_DESKTOP_FILE_PATH="/usr/share/applications"
 
 # TODO?: Make it replace all desktop icons which are copies with symlinks?
 
-mkdir --parents /home/$SHADOW/Skrivebord
+mkdir --parents $SHADOW_DESKTOP
 
 if [ "$ADD" = 'True' ]; then
-  if [ -f "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" ]; then
-    DESKTOP_FILE=/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop
+  if [ -f "$SNAP_DESKTOP_FILE_PATH/${PROGRAM}_$PROGRAM.desktop" ]; then
+    DESKTOP_FILE=$SNAP_DESKTOP_FILE_PATH/${PROGRAM}_$PROGRAM.desktop
   else
-    DESKTOP_FILE=/usr/share/applications/$PROGRAM.desktop
+    DESKTOP_FILE=$APT_DESKTOP_FILE_PATH/$PROGRAM.desktop
   fi
 
   # Remove it first as it may be a copy and not symlink (ln --force can't overwrite regular files)
-  rm "/home/$SHADOW/Skrivebord/$PROGRAM.desktop"
+  rm "$SHADOW_DESKTOP/$PROGRAM.desktop"
 
-  ln --symbolic --force "$DESKTOP_FILE" /home/$SHADOW/Skrivebord/
+  ln --symbolic --force "$DESKTOP_FILE" $SHADOW_DESKTOP/
 else
-  if [ -f "/home/$SHADOW/Skrivebord/${PROGRAM}_$PROGRAM.desktop" ]; then
+  if [ -f "$SHADOW_DESKTOP/${PROGRAM}_$PROGRAM.desktop" ]; then
     PROGRAM=${PROGRAM}_$PROGRAM
   fi
-  rm --force "/home/$SHADOW/Skrivebord/$PROGRAM.desktop"
+  rm --force "$SHADOW_DESKTOP/$PROGRAM.desktop"
 fi

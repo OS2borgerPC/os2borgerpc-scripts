@@ -17,7 +17,7 @@ FILE="/usr/share/applications/defaults.list"
 
 # They can type in "chrome" but the desktop file is called google-chrome
 if [ "$BROWSER" = "chrome" ]; then
-  BROWSER=google-chrome.desktop
+  BROWSER=google-chrome
 fi
 
 # Handle snaps, which have names like firefox_firefox.desktop

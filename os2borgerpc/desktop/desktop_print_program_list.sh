@@ -4,28 +4,34 @@
 # Author: mfm@magenta.dk
 #
 # Arguments
-# 1: Default is to print programs available. Write 'skrivebord' to print
-# programs already on the desktop.
+# 1: Default is to print programs available/installed. Write 'skrivebord' to list
+#    programs already on the desktop, or "menu" to list programs in the launcher.
 
 lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
 }
 
-DESKTOP="$(lower "$1")"
+find_desktop_files_path() {
+  PTH_LOCAL=$1
+  # - shellcheck says find handles non-alphanumeric file names better than ls
+  find "$PTH_LOCAL" -maxdepth 1 | grep --fixed-strings .desktop | xargs basename --suffix .desktop
+}
 
-USER=user
+LOCATION="$(lower "$1")"
 
-if [ "$DESKTOP" = "menu" ];
-then
+SHADOW_DESKTOP=/home/.skjult/Skrivebord
+SNAP_DESKTOP_FILE_PATH="/var/lib/snapd/desktop/applications"
+APT_DESKTOP_FILE_PATH="/usr/share/applications"
+
+if [ "$LOCATION" = "menu" ]; then
   # Print only the last line only and format it a bit more nicely
   tail -n 1 /etc/dconf/db/os2borgerpc.d/02-launcher-favorites | sed "s/favorite-apps=\[\|'\|\]\ \|.desktop//g" | tr ',' '\n'
   exit
-elif [ "$DESKTOP" = "skrivebord" ]
-then
-  PTH="/home/$USER/Skrivebord/"
+elif [ "$LOCATION" = "skrivebord" ]; then
+  PTH="$SHADOW_DESKTOP/"
 else
-  PTH=/usr/share/applications/
+  PTH=$APT_DESKTOP_FILE_PATH/
+  find_desktop_files_path $SNAP_DESKTOP_FILE_PATH
 fi
 
-# - shellcheck says find handles non-alphanumeric file names better than ls
-find $PTH -maxdepth 1 | sed "s,$PTH\|.desktop,,g"
+find_desktop_files_path "$PTH"
