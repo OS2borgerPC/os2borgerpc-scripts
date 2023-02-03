@@ -2,6 +2,18 @@
 
 # Make Chromium autostart, fx. in preparation for OS2Display.
 
+# Policies:
+# AutofillAddressEnabled: Disable Autofill of addresses
+# AutofillCreditCardEnabled: Disable Autofill of payment methods
+# AutoplayAllowed: Allow auto-playing content. Relevant for displaying videos without user input?
+# PasswordManagerEnabled: Disables the password manager, which should also prevent autofilling passwords
+# TranslateEnabled: Don't translate or prompt for translation of content that isn't in the current locale on a computer that's often userless
+#
+# Launch args:
+# Note: Convert these to policies if it is or becomes possible!
+# --enable-offline-auto-reload: This should reload all pages if the browser lost internet access and regained it
+# --password-store=basic: Don't prompt user to unlock GNOME keyring on a computer that's often userless
+
 set -ex
 
 TIME=$1
@@ -12,10 +24,11 @@ ORIENTATION=$5
 
 USER="chrome"
 
-# Setup Chromium user.
+# Create user.
+# TODO: This is now built into the image instead, but for now it's kept here for backwards compatibility with old images
 # useradd will fail on multiple runs, so prevent that
 if ! id $USER &>/dev/null; then
-  useradd $USER -m -p 12345 -s /bin/bash -U
+  useradd $USER --create-home --password 12345 --shell /bin/bash --user-group --comment "Chrome"
 fi
 
 # Autologin default user
@@ -37,6 +50,9 @@ OLD_ROTATE_SCREEN_SCRIPT_PATH="/usr/local/bin/rotate_screen.sh"
 
 # ...remove the rotate script from its previous location
 rm --force $OLD_ROTATE_SCREEN_SCRIPT_PATH
+
+# Make the new folder
+mkdir --parents /usr/share/os2borgerpc/bin
 
 cat << EOF > $ROTATE_SCREEN_SCRIPT_PATH
 #!/usr/bin/env sh
@@ -84,8 +100,6 @@ IWIDTH="$WIDTH"
 IHEIGHT="$HEIGHT"
 COMMON_SETTINGS="--password-store=basic --enable-offline-auto-reload"
 KIOSK="--kiosk"
-INCOGNITO=""
-
 if [ "\$WM" == "wm" ]
 then
   chromium-browser "\$KIOSK" "\$IURL" "\$COMMON_SETTINGS"
@@ -117,12 +131,15 @@ CHROMIUM_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-de
 mkdir --parents "$(dirname "$CHROMIUM_POLICY_FILE")"
 cat << EOF > $CHROMIUM_POLICY_FILE
 {
-  "AutoplayAllowed":true,
-  "TranslateEnabled":false
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "AutoplayAllowed": true,
+  "PasswordManagerEnabled": false,
+  "TranslateEnabled": false
 }
 EOF
 
 # Start X upon login
-if ! grep -q -- 'startx' /home/$USER/.xinitrc; then # Ensure idempotency
+if ! grep --quiet -- 'startx' /home/$USER/.xinitrc; then # Ensure idempotency
   echo "startx" >> /home/$USER/.profile
 fi
