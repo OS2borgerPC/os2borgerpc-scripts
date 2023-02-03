@@ -52,11 +52,14 @@ EXTENSION_GIT_URL=https://github.com/OS2borgerPC/$REPO_NAME/archive/refs/heads/m
 # TODO: Consider not handling this here, and instead running install.sh with False to remove an extension. But then the repo
 # either needs to remain on disk or be downloaded anew just to delete an extension...?
 # It seems better to handle it there once for all extensions, instead of re-implementing installation/removal in every
-# single extensino script
+# single extensi1n script
 EXTENSION_ACTIVATION_DESKTOP_FILE="/home/$SHADOW/.config/autostart/logout-timer-user.desktop"
 
-# Delete previously used logout timer conf
-rm --force /usr/share/os2borgerpc/logout_timer.conf
+# CLEANUP AFTER PREVIOUS RUNS OF THIS SCRIPT
+rm --force /usr/share/os2borgerpc/logout_timer.conf /usr/share/os2borgerpc/bin/logout_timer_visual.sh /home/$SHADOW/.config/autostart/logout-timer_user.desktop
+# - This next line is handled in LOGOUT_TIMER_SESSION_CLEANUP_FILE instead
+sed --in-place "/pkill -f $(basename $LOGOUT_TIMER_ACTUAL)/d" $SESSION_CLEANUP_FILE
+sed --in-place "/pkill -f logout_timer_visual.sh/d" $SESSION_CLEANUP_FILE
 
 [ $# -lt 2 ] && printf "%s\n" "This script takes at least 2 arguments. Exiting." && exit 1
 
@@ -119,35 +122,26 @@ if [ "$ACTIVATE" = 'True' ]; then
   	done
   fi
 
-	# Make a .desktop autostart for the visual countdown program
-	mkdir --parents /home/$SHADOW/.config/autostart
-
 	# Modify the cleanup run at logout to also kill remaining timers so they don't persist, affecting
 	# the next login
-	if ! grep -q "$(basename $LOGOUT_TIMER_ACTUAL)" $SESSION_CLEANUP_FILE; then
-		# Cleanup after previous runs of this script
-		sed --in-place "/pkill -f $(basename $LOGOUT_TIMER_ACTUAL)/d" $SESSION_CLEANUP_FILE
-		sed --in-place "/pkill -f logout_timer_visual.sh/d" $SESSION_CLEANUP_FILE
-
 		# Create a new script to handle cleanup after the logout timer
-		cat <<- EOF > $LOGOUT_TIMER_SESSION_CLEANUP_FILE
-		    #! /usr/bin/env sh
+	cat <<- EOF > $LOGOUT_TIMER_SESSION_CLEANUP_FILE
+		#! /usr/bin/env sh
 
-			pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
-			runuser --login $OUR_USER --command "XDG_RUNTIME_DIR=/run/user/$(id -u $OUR_USER) gnome-extensions disable $EXTENSION_NAME"
-		EOF
+		pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
+		runuser --login $OUR_USER --command "XDG_RUNTIME_DIR=/run/user/$(id -u $OUR_USER) gnome-extensions disable $EXTENSION_NAME"
+	EOF
 
-		# Finally append this new cleaner script to the end of user-cleanup
-		if ! grep -q "$LOGOUT_TIMER_SESSION_CLEANUP_FILE" $SESSION_CLEANUP_FILE; then
-			echo "$LOGOUT_TIMER_SESSION_CLEANUP_FILE" >> $SESSION_CLEANUP_FILE
-		fi
+	# Finally append this new cleaner script to the end of user-cleanup
+	if ! grep -q "$LOGOUT_TIMER_SESSION_CLEANUP_FILE" $SESSION_CLEANUP_FILE; then
+		echo "$LOGOUT_TIMER_SESSION_CLEANUP_FILE" >> $SESSION_CLEANUP_FILE
 	fi
 
 	chmod u+x $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $LOGOUT_TIMER_SESSION_CLEANUP_FILE
 
 else # Stop the timers and delete everything related to them
 	pkill -f "$(basename $LOGOUT_TIMER_ACTUAL)"
-	gnome-extensions disable $EXTENSION_NAME  # Note: Don't do this if we make disable run gnome-session-quit --logout as well
+	gnome-extensions disable $EXTENSION_NAME  # Note: Don't do this if we make "disable" run "gnome-session-quit --logout" as well!
 
 	sed --in-place "\@$LOGOUT_TIMER_SESSION_CLEANUP_FILE@d" $SESSION_CLEANUP_FILE
 	rm -r $LOGOUT_TIMER_ACTUAL $LOGOUT_TIMER_ACTUAL_LAUNCHER $EXTENSION_ACTIVATION_DESKTOP_FILE "$(dirname $LOGOUT_TIMER_CONF)" $LOGOUT_TIMER_SESSION_CLEANUP_FILE
