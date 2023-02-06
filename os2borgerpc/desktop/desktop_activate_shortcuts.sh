@@ -16,13 +16,15 @@ rm --force /home/$SHADOW/.config/autostart/gio-fix-desktop-file-permissions.desk
 cat << EOF > "$GIO_SCRIPT"
 #! /usr/bin/env sh
 
-# gio needs to run as the user with correct dbus settings
-export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u user)/bus"
+# gio needs to run as the user + dbus-launch, we have this script to create it and kill it afterwards
+export \$(dbus-launch)
+DBUS_PROCESS=\$\$
 
 for FILE in /home/$USER/Skrivebord/*.desktop; do
   gio set "\$FILE" metadata::trusted true
 done
 
+kill \$DBUS_PROCESS
 EOF
 
 # Script to activate programs on the desktop
