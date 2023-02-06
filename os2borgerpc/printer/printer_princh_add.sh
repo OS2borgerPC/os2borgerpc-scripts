@@ -10,15 +10,14 @@ fi
 NAME="$(echo "$1" | tr ' ' '_')"
 PRINCH_ID="$2"
 DESCRIPTION="$3"
-LOCATION="$4"
 
 # Delete the printer if a printer already exists by that NAME
-lpadmin -x "$NAME"
+lpadmin -x "$NAME" || true
 
 # No princh-cloud-printer binary in path, so checking for princh-setup
 if which princh-setup > /dev/null; then
-   lpadmin -p "$NAME" -v "princh:$PRINCH_ID" -D "$DESCRIPTION" -E -P /usr/share/ppd/princh/princheu.ppd -L "$LOCATION"
+   lpadmin -p "$NAME" -v "princh:$PRINCH_ID" -D "$DESCRIPTION" -E -P /usr/share/ppd/princh/princheu.ppd -L "$DESCRIPTION"
 else
-   echo "Princh er ikke installeret. Kør scriptet til at installere Princh først."
+   echo "Princh is not installed. Please run the script that installs Princh before this one."
    exit 1
 fi
