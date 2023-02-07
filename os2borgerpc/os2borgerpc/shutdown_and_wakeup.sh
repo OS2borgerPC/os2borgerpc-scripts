@@ -47,6 +47,7 @@
 set -x
 
 WAKE_PLAN_FILE=/etc/os2borgerpc/plan.json
+SCHEDULED_OFF_SCRIPT="/usr/local/lib/os2borgerpc/scheduled_off.sh"
 
 if [ -f $WAKE_PLAN_FILE ]; then
   echo "Dette script kan ikke anvendes på en PC, der er tilknyttet en tænd/sluk tidsplan."
@@ -65,6 +66,7 @@ if [ "$1" == "--off" ]; then
 
     if [ -f $TCRON ]; then
         sed -i -e "/\/rtcwake/d" $TCRON
+        sed -i "/scheduled_off/d" $TCRON
         crontab $TCRON
     fi
 
@@ -73,9 +75,23 @@ if [ "$1" == "--off" ]; then
         crontab -u user $USERCRON
     fi
 
+    rm --force $SCHEDULED_OFF_SCRIPT
+
 else
 
     if [ $# -gt 2 ]; then
+        cat <<EOF > $SCHEDULED_OFF_SCRIPT
+#!/usr/bin/env bash
+
+MODE=\$1
+DURATION=\$2
+
+pkill -KILL -u user
+pkill -KILL -u superuser
+/usr/sbin/rtcwake --mode \$MODE --seconds \$DURATION
+EOF
+
+        chmod 700 $SCHEDULED_OFF_SCRIPT
         HOURS=$1
         MINUTES=$2
         SECONDS_TO_WAKEUP=$(( 3600 * $3))
@@ -86,12 +102,13 @@ else
         # We still remove shutdown lines, if any
         if [ -f $TCRON ]; then
             sed -i -e "/\/rtcwake/d" $TCRON
+            sed -i "/scheduled_off/d" $TCRON
         fi
         if [ -f $USERCRON ]; then
             sed -i -e "/lukker/d" $USERCRON
         fi
         # Assume the parameters are already validated as integers.
-        echo "$MINUTES $HOURS * * * /usr/sbin/rtcwake --mode $MODE --seconds $SECONDS_TO_WAKEUP" >> $TCRON
+        echo "$MINUTES $HOURS * * * $SCHEDULED_OFF_SCRIPT $MODE $SECONDS_TO_WAKEUP" >> $TCRON
         crontab $TCRON
 
         MINM5P60=$(( $(( MINUTES - 5)) + 60))
