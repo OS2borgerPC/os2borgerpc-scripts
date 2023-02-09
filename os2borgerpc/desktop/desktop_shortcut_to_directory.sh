@@ -11,5 +11,9 @@ set -ex
 DIRECTORY="$1"
 SHORTCUT_NAME="$2"
 
-ln -s  "$DIRECTORY" "/home/.skjult/Skrivebord/$SHORTCUT_NAME"
-ln -s  "$DIRECTORY" "/home/user/Skrivebord/$SHORTCUT_NAME"
+SHADOW_DESKTOP="/home/.skjult/Skrivebord"
+
+mkdir --parents $SHADOW_DESKTOP
+
+# Note: "ln" doesn't care if the destination ($DIRECTORY) exists
+ln --symbolic --force "$DIRECTORY" "$SHADOW_DESKTOP/$SHORTCUT_NAME"
