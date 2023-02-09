@@ -20,5 +20,6 @@ chmod --recursive 700 /var/lib/os2borgerpc
 
 # More restrictive permissions on /home/superuser
 chmod -R 700 /home/superuser
+chown -R superuser:superuser /home/superuser/Skrivebord
 
 pip3 install --upgrade os2borgerpc-client
