@@ -15,6 +15,9 @@ rm --force $ON_OFF_SCHEDULE_SCRIPT \
             $SCHEDULED_OFF_SCRIPT \
             $WAKE_PLAN_FILE
 
+# Disable the alarm meant to wake the machine if it is not shut down by the schedule
+rtcwake -m disable
+
 # Remove related Crontab entries
 TCRON=/tmp/oldcron
 crontab -l > $TCRON

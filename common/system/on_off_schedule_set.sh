@@ -178,18 +178,11 @@ def check_if_date_is_custom_or_regular(plan, date):
 def get_shutdown_and_startup_datetimes(plan, current_datetime):
     """Get the next shutdown/startup date and time
     and return them as datetime.datetime objects"""
-    # Get next shutdown date and time
+    # Get shutdown date and time
     shutdown_date = current_datetime
     shutdown_settings = check_if_date_is_custom_or_regular(plan, shutdown_date)
     shutdown_time = shutdown_settings['stop']
-    # Check whether the machine should already be off today,
-    # i.e. if start is before stop, but current time is after stop
-    startup_time_today = shutdown_settings['start']
-    if shutdown_time != "None":
-        shutdown, startup = convert_to_datetime(shutdown_date, shutdown_time, shutdown_date, startup_time_today)
-        if startup < shutdown and shutdown < current_datetime:
-            shutdown_time = "None"
-    # Get next startup date and time
+    # Get startup date and time
     startup_date = shutdown_date + datetime.timedelta(days=1)
     startup_settings = check_if_date_is_custom_or_regular(plan, startup_date)
     while startup_settings['start'] == "None":
@@ -198,11 +191,45 @@ def get_shutdown_and_startup_datetimes(plan, current_datetime):
         if startup_date > shutdown_date + datetime.timedelta(days=31):
             raise Exception("Ingen gyldig start-dato fundet")
     startup_time = startup_settings['start']
+    # Get the first-coming planned startup
+    # This value is only different from startup when a machine is manually turned on
+    # after its shutdown time
+    planned_startup = convert_to_datetime_helper(startup_date, startup_time)
+    # Get next shutdown date and time
+    next_shutdown_date = shutdown_date + datetime.timedelta(days=1)
+    next_shutdown_settings = check_if_date_is_custom_or_regular(plan, next_shutdown_date)
+    next_shutdown_time = next_shutdown_settings['stop']
+    # Get next startup date and time
+    next_startup_date = next_shutdown_date + datetime.timedelta(days=1)
+    next_startup_settings = check_if_date_is_custom_or_regular(plan, next_startup_date)
+    while next_startup_settings['start'] == "None":
+        next_startup_date = next_startup_date + datetime.timedelta(days=1)
+        next_startup_settings = check_if_date_is_custom_or_regular(plan, next_startup_date)
+    next_startup_time = next_startup_settings['start']
+    startup_time_today = shutdown_settings['start']
+    # Handle None values
+    if shutdown_time == "None" and next_shutdown_time == "None":
+        shutdown_time = f"{current_datetime.hour}:{current_datetime.minute}"
+        shutdown_date = next_shutdown_date
+        startup_time_today = "0:1"
+    elif shutdown_time == "None" and next_shutdown_time != "None":
+        shutdown_date, shutdown_time = next_shutdown_date, next_shutdown_time
+        startup_date, startup_time = next_startup_date, next_startup_time
+        startup_time_today = "0:1"
+    elif shutdown_time != "None" and next_shutdown_time == "None":
+        next_shutdown_time = shutdown_time
+    # Check whether the machine has been turned on manually,
+    # i.e. if start is before stop, but current time is after stop
+    shutdown, startup = convert_to_datetime(shutdown_date, shutdown_time, shutdown_date, startup_time_today)
+    if startup < shutdown and shutdown < current_datetime:
+        startup_date, startup_time = next_startup_date, next_startup_time
+        shutdown_date, shutdown_time = next_shutdown_date, next_shutdown_time
+
     # Convert to datetime.datetime object
     shutdown, startup = convert_to_datetime(shutdown_date, shutdown_time, startup_date, startup_time)
     # Handle shutdown times after 24:00
     shutdown, startup = handle_late_stop(shutdown, startup, current_datetime)
-    return shutdown, startup
+    return shutdown, startup, planned_startup
 
 def convert_to_datetime(shutdown_date, shutdown_time, startup_date, startup_time):
     """Helper method that converts the shutdown/startup date and time
@@ -210,13 +237,16 @@ def convert_to_datetime(shutdown_date, shutdown_time, startup_date, startup_time
     if shutdown_time == "None":
         shutdown = datetime.datetime.now() + datetime.timedelta(minutes=20)
     else:
-        shutdown = datetime.datetime(shutdown_date.year, shutdown_date.month, shutdown_date.day,
-                                     int(shutdown_time[: shutdown_time.index(":")]),
-                                     int(shutdown_time[shutdown_time.index(":") + 1 :]))
-    startup = datetime.datetime(startup_date.year, startup_date.month, startup_date.day,
-                                int(startup_time[: startup_time.index(":")]),
-                                int(startup_time[startup_time.index(":") + 1 :]))
+        shutdown = convert_to_datetime_helper(shutdown_date, shutdown_time)
+    startup = convert_to_datetime_helper(startup_date, startup_time)
     return shutdown, startup
+
+def convert_to_datetime_helper(date, time):
+    """Subfunction for the convert_to_datetime helper method"""
+    value = datetime.datetime(date.year, date.month, date.day,
+                                int(time[: time.index(":")]),
+                                int(time[time.index(":") + 1 :]))
+    return value
 
 def handle_late_stop(shutdown, startup, current_datetime):
     """Helper method to handle late stops"""
@@ -238,7 +268,7 @@ def main():
     current_datetime = datetime.datetime.today()
 
     # Get shutdown and startup datetimes
-    shutdown, startup = get_shutdown_and_startup_datetimes(plan, current_datetime)
+    shutdown, startup, planned_startup = get_shutdown_and_startup_datetimes(plan, current_datetime)
 
     # Refresh the crontab 5 minutes after startup
     # That way, even if a mode such as "mem,"
@@ -247,8 +277,19 @@ def main():
     # To that end, determine the datetime that is 5 minutes after startup
     refresh = startup + datetime.timedelta(minutes=5)
 
+    # Refresh the crontab 5 minutes before planned_startup
+    # This ensures that if a machine is manually turned on
+    # after its shutdown time and then left on, it will not
+    # end in a state where no startup is planned
+    refresh2 = planned_startup - datetime.timedelta(minutes=5)
+
     # Determine off time
     off_time = int((startup - shutdown).total_seconds())
+
+    # Make sure the machine will wake up as planned even if it is not shut down by the schedule
+    startup_string = f"{planned_startup.year}-{planned_startup.month}-{planned_startup.day} "\
+                     f"{planned_startup.hour}:{planned_startup.minute}"
+    subprocess.run(["rtcwake", "-m", "no", "--date", startup_string])
 
     # Update crontab
     # Get current entries
@@ -260,13 +301,16 @@ def main():
         cronentries = cronfile.readlines()
     with open(TCRON, 'w') as cronfile:
         for entry in cronentries:
-            if "scheduled_off" not in entry and "set_on-off_schedule" not in entry:
+            if "scheduled_off" not in entry and "set_on-off_schedule" not in entry and \
+                    "shutdown" not in entry and "rtcwake" not in entry:
                 cronfile.write(entry)
-    # Add entry for next shutdown and refresh
+    # Add entry for next shutdown and refreshes
     with open(TCRON, 'a') as cronfile:
         cronfile.write(f"{shutdown.minute} {shutdown.hour} {shutdown.day} {shutdown.month} *"
                        f" $SCHEDULED_OFF_SCRIPT {MODE} {off_time}\n")
         cronfile.write(f"{refresh.minute} {refresh.hour} {refresh.day} {refresh.month} *"
+                       f" $ON_OFF_SCHEDULE_SCRIPT\n")
+        cronfile.write(f"{refresh2.minute} {refresh2.hour} {refresh2.day} {refresh2.month} *"
                        f" $ON_OFF_SCHEDULE_SCRIPT\n")
     subprocess.run(["crontab", TCRON])
     if os.path.exists(TCRON):
