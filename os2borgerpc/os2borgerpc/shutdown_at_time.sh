@@ -28,54 +28,42 @@ if [ -f $WAKE_PLAN_FILE ]; then
   exit 1
 fi
 
-TCRON=/tmp/oldcron
-USERCRON=/tmp/usercron
+ROOTCRON_TMP=/tmp/oldcron
+USERCRON_TMP=/tmp/usercron
 MESSAGE="Denne computer lukker ned om fem minutter"
 
-crontab -l > $TCRON
-crontab -u user -l > $USERCRON
+# Read and save current cron settings first
+crontab -l > $ROOTCRON_TMP
+crontab -u user -l > $USERCRON_TMP
 
+# Delete current crontab entries related to this script
+sed --in-place "/shutdown/d" $ROOTCRON_TMP
+sed --in-place "/lukker/d" $USERCRON_TMP
 
-if [ "$1" == "--off" ]; then
-
-    if [ -f $TCRON ]; then
-        sed -i -e "/\/sbin\/shutdown/d" $TCRON
-        crontab $TCRON
-    fi
-
-    if [ -f $USERCRON ]; then
-        sed -i -e "/lukker/d" $USERCRON
-        crontab -u user $USERCRON
-    fi
-
-else
+# If not called with --off: Determine the new crontab contents
+if [ "$1" != "--off" ]; then
 
     if [ $# == 2 ]; then
         HOURS=$1
         MINUTES=$2
-        # We still remove shutdown lines, if any
-        if [ -f $TCRON ]; then
-            sed -i -e "/\/sbin\/shutdown/d" $TCRON
-        fi
-        if [ -f $USERCRON ]; then
-            sed -i -e "/lukker/d" $USERCRON
-        fi
         # Assume the parameters are already validated as integers.
-        echo "$MINUTES $HOURS * * * /sbin/shutdown -P now" >> $TCRON
-        crontab $TCRON
+        echo "$MINUTES $HOURS * * * /sbin/shutdown -P now" >> $ROOTCRON_TMP
 
         MINM5P60=$(( $(( MINUTES - 5)) + 60))
         # Rounding minutes
-        MINS=$((MINM5P60 % 60))
+        MINS=$(( MINM5P60 % 60))
         HRCORR=$(( 1 - $(( MINM5P60 / 60))))
         HRS=$(( HOURS - HRCORR))
         HRS=$(( $(( HRS + 24)) % 24))
         # Now output to user's crontab as well
-        echo "$MINS $HRS * * * XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON
-        crontab -u user $USERCRON
+        echo "$MINS $HRS * * * XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON_TMP
     else
         echo "Usage: shutdown_at_time.sh [--off] [hours minutes]"
     fi
 fi
 
-rm --force $TCRON
+# Update crontabs accordingly - either with an empty crontab or updated ones
+crontab $ROOTCRON_TMP
+crontab -u user $USERCRON_TMP
+
+rm --force $ROOTCRON_TMP $USERCRON_TMP
