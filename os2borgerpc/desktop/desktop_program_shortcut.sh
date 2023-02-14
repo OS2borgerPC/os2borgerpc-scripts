@@ -32,7 +32,7 @@ if [ "$ADD" = 'True' ]; then
   fi
 
   # Remove it first as it may be a copy and not symlink (ln --force can't overwrite regular files)
-  rm "$SHADOW_DESKTOP/$PROGRAM.desktop"
+  rm --force "$SHADOW_DESKTOP/$PROGRAM.desktop"
 
   ln --symbolic --force "$DESKTOP_FILE" $SHADOW_DESKTOP/
 else

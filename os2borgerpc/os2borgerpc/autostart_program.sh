@@ -26,7 +26,7 @@ if [ -f "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" ]; the
   INSTALLED_APP_FILE="/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop"
   AUTOSTART_FILE="$AUTOSTART_DIR/${PROGRAM}_$PROGRAM.desktop"
 else
-  INSTALLED_APP_FILE="/usr/share/applications/$PROGRAM"
+  INSTALLED_APP_FILE="/usr/share/applications/$PROGRAM.desktop"
   AUTOSTART_FILE="$AUTOSTART_DIR/$PROGRAM.desktop"
 fi
 
