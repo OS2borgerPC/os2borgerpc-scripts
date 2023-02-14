@@ -45,8 +45,8 @@ MESSAGE="Denne computer lukker ned om fem minutter"
 crontab -l > $ROOTCRON_TMP
 crontab -u user -l > $USERCRON_TMP
 
-# Delete current crontab entries related to this script
-sed --in-place --expression "/rtcwake/d" --expression "/scheduled_off/d" $ROOTCRON_TMP
+# Delete current crontab entries related to this script AND shutdown_at_time
+sed --in-place --expression "/rtcwake/d" --expression "/scheduled_off/d" --expression "/shutdown/d" $ROOTCRON_TMP
 sed --in-place "/lukker/d" $USERCRON_TMP
 
 if [ "$1" == "--off" ]; then
