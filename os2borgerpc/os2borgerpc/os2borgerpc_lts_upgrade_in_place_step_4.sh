@@ -121,10 +121,12 @@ if grep --quiet "auth-polkit=false" $NETWORK_FILE; then
 fi
 
 # Run security-related scripts
-apt-get install --assume-yes git
-git clone --depth 1 https://github.com/OS2borgerPC/os2borgerpc-scripts.git
+BRANCH="master"
+wget https://github.com/OS2borgerPC/os2borgerpc-scripts/archive/refs/heads/$BRANCH.zip
+unzip $BRANCH.zip
+rm $BRANCH.zip
 
-SCRIPT_DIR="os2borgerpc-scripts"
+SCRIPT_DIR="os2borgerpc-scripts-$BRANCH"
 
 # Lock the left-hand menu
 "$SCRIPT_DIR/os2borgerpc/sikkerhed/dconf_gnome_lock_menu_editing.sh" True
@@ -132,7 +134,7 @@ SCRIPT_DIR="os2borgerpc-scripts"
 # Remove lock from the menu
 "$SCRIPT_DIR/os2borgerpc/os2borgerpc/disable_lock_menu_dconf.sh" True
 
-# Remove change user from the menu
+# Remove switch user from the menu
 "$SCRIPT_DIR/os2borgerpc/os2borgerpc/disable_user_switching_dconf.sh" True
 
 # Setup a script to activate the desktop shortcuts for user on login
@@ -141,7 +143,7 @@ SCRIPT_DIR="os2borgerpc-scripts"
 # Remove user write access to desktop
 "$SCRIPT_DIR/os2borgerpc/sikkerhed/desktop_toggle_writable.sh" True
 
-# Set user as the default user
+# Set "user" as the default user
 "$SCRIPT_DIR/os2borgerpc/login/set_user_as_default_lightdm_user.sh" True
 
 # Enable running scripts at login
@@ -153,12 +155,20 @@ SCRIPT_DIR="os2borgerpc-scripts"
 # Fix /etc/hosts
 "$SCRIPT_DIR/os2borgerpc/os2borgerpc/fix_etc_hosts.sh"
 
-# Make sure the client settings are up to date
+# Disable suspend from the menu unless they've explicitly set their own policy for this
+POWER_POLICY="/etc/polkit-1/localauthority/90-mandatory.d/10-os2borgerpc-no-user-shutdown.pkla"
+if [ ! -f $POWER_POLICY ]; then
+  "$SCRIPT_DIR/os2borgerpc/desktop/polkit_policy_shutdown.sh" True False
+fi
+
+# Enable universal access menu by default
+"$SCRIPT_DIR/os2borgerpc/desktop/dconf_policy_a11y.sh" True
+
+# Make sure the client and its settings are up to date
 "$SCRIPT_DIR/common/system/upgrade_client_and_settings.sh"
 
 # Remove cloned script repository
 rm --recursive "$SCRIPT_DIR"
-apt-get remove --assume-yes git
 
 # Restore crontab and reenable potential wake plans
 TMP_CRON=/etc/os2borgerpc/tmp_cronfile
