@@ -31,6 +31,12 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+# Make double sure that the crontab has been emptied
+TMP_CRON=/etc/os2borgerpc/tmp_cronfile
+if [ -f "$TMP_CRON" ]; then
+  crontab -r
+fi
+
 # Reset jobmanager timeout to default value
 set_os2borgerpc_config job_timeout 900
 
@@ -122,11 +128,11 @@ fi
 
 # Run security-related scripts
 BRANCH="master"
+SCRIPT_DIR="os2borgerpc-scripts-$BRANCH"
+rm --recursive --force "$SCRIPT_DIR"
 wget https://github.com/OS2borgerPC/os2borgerpc-scripts/archive/refs/heads/$BRANCH.zip
 unzip $BRANCH.zip
 rm $BRANCH.zip
-
-SCRIPT_DIR="os2borgerpc-scripts-$BRANCH"
 
 # Lock the left-hand menu
 "$SCRIPT_DIR/os2borgerpc/sikkerhed/dconf_gnome_lock_menu_editing.sh" True
@@ -158,11 +164,23 @@ SCRIPT_DIR="os2borgerpc-scripts-$BRANCH"
 # Disable suspend from the menu unless they've explicitly set their own policy for this
 POWER_POLICY="/etc/polkit-1/localauthority/90-mandatory.d/10-os2borgerpc-no-user-shutdown.pkla"
 if [ ! -f $POWER_POLICY ]; then
-  "$SCRIPT_DIR/os2borgerpc/desktop/polkit_policy_shutdown.sh" True False
+  "$SCRIPT_DIR/os2borgerpc/desktop/polkit_policy_shutdown_suspend.sh" True False
 fi
 
 # Enable universal access menu by default
 "$SCRIPT_DIR/os2borgerpc/desktop/dconf_policy_a11y.sh" True
+
+# Add the new firefox policies, if they don't have them
+NEW_FIREFOX_POLICY_FILE=/etc/firefox/policies/policies.json
+if [ ! -f $NEW_FIREFOX_POLICY_FILE ]; then
+  "$SCRIPT_DIR/os2borgerpc/firefox/firefox_global_policies.sh" https://borger.dk
+elif ! grep --quiet "DisableDeveloperTools" $NEW_FIREFOX_POLICY_FILE; then
+  MAIN_URL=$(grep "URL" $NEW_FIREFOX_POLICY_FILE | cut --delimiter ' ' --fields 8)
+  MAIN_URL=${MAIN_URL::-1}
+  EXTRA_URLS=$(grep "Additional" $NEW_FIREFOX_POLICY_FILE | cut --delimiter '[' --fields 2)
+  EXTRA_URLS=$(echo "${EXTRA_URLS::-2}" | sed "s/, /|/g")
+  "$SCRIPT_DIR/os2borgerpc/firefox/firefox_global_policies.sh" "$MAIN_URL" "$EXTRA_URLS"
+fi
 
 # Make sure the client and its settings are up to date
 "$SCRIPT_DIR/common/system/upgrade_client_and_settings.sh"
@@ -172,8 +190,10 @@ rm --recursive "$SCRIPT_DIR"
 
 # Restore crontab and reenable potential wake plans
 TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-crontab $TMP_CRON
-rm -f $TMP_CRON
+if [ -f "$TMP_CRON" ]; then
+  crontab $TMP_CRON
+  rm -f $TMP_CRON
+fi
 if [ -f /etc/os2borgerpc/plan.json ]; then
   systemctl enable --now os2borgerpc-set_on-off_schedule.service
 fi

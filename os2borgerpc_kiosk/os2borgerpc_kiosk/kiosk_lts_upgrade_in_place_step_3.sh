@@ -35,6 +35,12 @@ if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+# Make double sure that the crontab has been emptied
+TMP_CRON=/etc/os2borgerpc/tmp_cronfile
+if [ -f "$TMP_CRON" ]; then
+  crontab -r
+fi
+
 # Prevent the upgrade from removing python while we are using it to run jobmanager
 apt-mark hold python3.8
 

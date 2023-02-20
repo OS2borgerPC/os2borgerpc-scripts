@@ -31,6 +31,12 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+# Make double sure that the crontab has been emptied
+TMP_CRON=/etc/os2borgerpc/tmp_cronfile
+if [ -f "$TMP_CRON" ]; then
+  crontab -r
+fi
+
 # Preserve firefox startpage(s) settings if any have been set
 FIREFOX_POLICY_FILE=/usr/lib/firefox/distribution/policies.json
 NEW_FIREFOX_POLICY_FILE=/etc/firefox/policies/policies.json
@@ -89,6 +95,10 @@ rm -f /usr/share/applications/firefox.desktop
 FAVORITES_FILE="/etc/dconf/db/os2borgerpc.d/02-launcher-favorites"
 sed -i "s/'firefox.desktop'/'firefox_firefox.desktop'/" "$FAVORITES_FILE"
 # sed -i "s/NoDisplay=true/NoDisplay=false/" /usr/share/applications/firefox.desktop
+
+set_os2borgerpc_config job_timeout 1800
+
+os2borgerpc_push_config_keys job_timeout
 
 # reboot to finish the upgrade
 reboot

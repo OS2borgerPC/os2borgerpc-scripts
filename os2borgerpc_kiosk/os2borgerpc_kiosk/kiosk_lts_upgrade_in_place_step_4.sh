@@ -32,6 +32,12 @@ if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+# Make double sure that the crontab has been emptied
+TMP_CRON=/etc/os2borgerpc/tmp_cronfile
+if [ -f "$TMP_CRON" ]; then
+  crontab -r
+fi
+
 # Remove the remainder of the old version of python
 apt-get --assume-yes remove --purge python3.8-minimal || true
 
@@ -49,7 +55,8 @@ dpkg-reconfigure --frontend=noninteractive locales
 update-locale LANG=da_DK.UTF-8
 
 # Update the time accordingly
-DEBIAN_FRONTEND=noninteractive apt-get install -y ntpdate
+export DEBIAN_FRONTEND=noninteractive
+apt-get install -y ntpdate
 ntpdate pool.ntp.org
 
 # Setup Chromium user
@@ -336,6 +343,12 @@ EOF
 chmod 644 /usr/share/onboard/layouts/Compact.onboard
 fi
 
+#Enable automatic security updates if they were not already enabled
+CONF="/etc/apt/apt.conf.d/90os2borgerpc-automatic-upgrades"
+if [ ! -f "$CONF" ]; then
+  wget -O - https://github.com/OS2borgerPC/os2borgerpc-scripts/raw/master/common/system/apt_periodic_control.sh | bash -s -- sikkerhed
+fi
+
 # Reset jobmanager timeout to default value
 set_os2borgerpc_config job_timeout 900
 
@@ -348,8 +361,10 @@ os2borgerpc_push_config_keys distribution
 
 # Restore crontab and reenable potential wake plans
 TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-crontab $TMP_CRON
-rm -f $TMP_CRON
+if [ -f "$TMP_CRON" ]; then
+  crontab $TMP_CRON
+  rm -f $TMP_CRON
+fi
 if [ -f /etc/os2borgerpc/plan.json ]; then
   systemctl enable --now os2borgerpc-set_on-off_schedule.service
 fi

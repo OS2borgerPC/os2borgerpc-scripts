@@ -26,6 +26,12 @@
 
 set -ex
 
+# Make double sure that the crontab has been emptied
+TMP_CRON=/etc/os2borgerpc/tmp_cronfile
+if [ -f "$TMP_CRON" ]; then
+  crontab -r
+fi
+
 # Fix dpkg settings to avoid interactivity.
 cat << EOF > /etc/apt/apt.conf.d/local
 Dpkg::Options {
