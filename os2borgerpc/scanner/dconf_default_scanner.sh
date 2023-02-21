@@ -5,13 +5,14 @@ set -x
 POLICY_VALUE="$2"
 
 # Change these three to set a different policy to another value
-POLICY_PATH="org/gnome/SimpleScan"
+POLICY_PATH="org/gnome/simple-scan"
 POLICY="selected-device"
-# Whatever priority you want for the file. Doesn't matter much but important things should have a low number
+# These two are used to Name the dconf policy file, which can really be whatever you want. Give files lower numbers to load earlier
 POLICY_PRIORITY="05"
+POLICY_READABLE_NAME="default-scanner"
 
-POLICY_FILE="/etc/dconf/db/os2borgerpc.d/$POLICY_PRIORITY-$POLICY"
-POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/$POLICY_PRIORITY-$POLICY"
+POLICY_FILE="/etc/dconf/db/os2borgerpc.d/$POLICY_PRIORITY-$POLICY_READABLE_NAME"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/$POLICY_PRIORITY-$POLICY_READABLE_NAME"
 
 ACTIVATE=$1
 
