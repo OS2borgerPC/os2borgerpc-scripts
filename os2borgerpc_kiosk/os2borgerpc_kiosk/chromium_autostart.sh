@@ -19,7 +19,7 @@ if ! id $USER &>/dev/null; then
 fi
 
 # Autologin default user
-mkdir -p /etc/systemd/system/getty@tty1.service.d
+mkdir --parents /etc/systemd/system/getty@tty1.service.d
 
 # Note: The empty ExecStart is not insignificant!
 # By default the value is appended, so the empty line changes it to an override
@@ -32,12 +32,21 @@ EOF
 
 # Create script to rotate screen
 
-cat << EOF > /usr/local/bin/rotate_screen.sh
+ROTATE_SCREEN_SCRIPT_PATH="/usr/share/os2borgerpc/bin/rotate_screen.sh"
+OLD_ROTATE_SCREEN_SCRIPT_PATH="/usr/local/bin/rotate_screen.sh"
+
+# ...remove the rotate script from its previous location
+rm --force $OLD_ROTATE_SCREEN_SCRIPT_PATH
+
+cat << EOF > $ROTATE_SCREEN_SCRIPT_PATH
 #!/usr/bin/env sh
 
 set -x
 
-sleep $TIME
+TIME=\$1
+ORIENTATION=\$2
+
+sleep \$TIME
 
 export XAUTHORITY=/home/$USER/.Xauthority
 
@@ -50,10 +59,10 @@ OTHER_MONITORS=\$(echo "\$ALL_MONITORS" | tail -n +2)
 echo "\$OTHER_MONITORS" | xargs -I {} xrandr --output {} --same-as "\$PRIMARY_MONITOR"
 
 # Rotate screen - and if more than one monitor, rotate them all.
-echo "\$ALL_MONITORS" | xargs -I {} xrandr --output {} --rotate $ORIENTATION
+echo "\$ALL_MONITORS" | xargs -I {} xrandr --output {} --rotate \$ORIENTATION
 EOF
 
-chmod +x /usr/local/bin/rotate_screen.sh &
+chmod +x $ROTATE_SCREEN_SCRIPT_PATH
 
 
 # Create a script dedicated to launch chromium, which both xinit or any wm
@@ -61,11 +70,11 @@ chmod +x /usr/local/bin/rotate_screen.sh &
 # in multiple files
 # If this script's path/name is changed, remember to change it in
 # wm_keyboard_install.sh as well
-#
-# password-store=basic and enable-offline-auto-reload do not exist as policies so we add them as flags.
 CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
 mkdir --parents "$(dirname "$CHROMIUM_SCRIPT")"
 
+# TODO: Make URL a policy instead ("RestoreOnStarupURLs", see chrome_install.sh)
+# password-store=basic and enable-offline-auto-reload do not exist as policies so we add them as flags.
 cat << EOF > "$CHROMIUM_SCRIPT"
 #!/bin/sh
 
@@ -94,11 +103,11 @@ xset s off
 xset s noblank
 xset -dpms
 
-# Dev note: We used to have "sleep 20" here but we removed it.
+# Dev note: We used to have "sleep 20" hardcoded here but we removed it.
 # Re-add if it causes timing issues. That said such potential issues should be
 # solveable simple by raising the sleep parameter to rotate_screen.sh
 
-/usr/local/bin/rotate_screen.sh
+$ROTATE_SCREEN_SCRIPT_PATH $TIME $ORIENTATION
 
 # Launch chromium with its non-WM settings
 exec $CHROMIUM_SCRIPT nowm

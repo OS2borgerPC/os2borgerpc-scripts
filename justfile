@@ -7,3 +7,6 @@ alias fp := fix-permissions
 
 fix-permissions:
   fd --type f --exclude .git --exec chmod 755
+
+black:
+  black .
