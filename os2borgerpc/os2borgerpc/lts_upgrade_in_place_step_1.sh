@@ -31,10 +31,15 @@ set_os2borgerpc_config job_timeout 800000
 os2borgerpc_push_config_keys job_timeout
 
 # Clear crontab and disable potential wake plans to prevent shutdown while the upgrade is running
-TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-if [ ! -f "$TMP_CRON" ]; then
-  crontab -l > $TMP_CRON
-  crontab -r
+TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
+TMP_USERCRON=/etc/os2borgerpc/tmp_usercronfile
+if [ ! -f "$TMP_ROOTCRON" ]; then
+  crontab -l > $TMP_ROOTCRON
+  crontab -r || true
+  if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+    crontab -u user -l > $TMP_USERCRON
+    crontab -u user -r || true
+  fi
 fi
 if [ -f /etc/os2borgerpc/plan.json ]; then
   systemctl disable os2borgerpc-set_on-off_schedule.service

@@ -33,9 +33,9 @@ if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
 fi
 
 # Make double sure that the crontab has been emptied
-TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-if [ -f "$TMP_CRON" ]; then
-  crontab -r
+TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
+if [ -f "$TMP_ROOTCRON" ]; then
+  crontab -r || true
 fi
 
 # Remove the remainder of the old version of python
@@ -359,11 +359,20 @@ set_os2borgerpc_config distribution ubuntu22.04
 
 os2borgerpc_push_config_keys distribution
 
+# Fix dpkg settings
+cat << EOF > /etc/apt/apt.conf.d/local
+Dpkg::Options {
+   "--force-confdef";
+   "--force-confold";
+};
+Dpkg::Lock {Timeout "300";};
+EOF
+
 # Restore crontab and reenable potential wake plans
-TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-if [ -f "$TMP_CRON" ]; then
-  crontab $TMP_CRON
-  rm -f $TMP_CRON
+TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
+if [ -f "$TMP_ROOTCRON" ]; then
+  crontab $TMP_ROOTCRON
+  rm -f $TMP_ROOTCRON
 fi
 if [ -f /etc/os2borgerpc/plan.json ]; then
   systemctl enable --now os2borgerpc-set_on-off_schedule.service

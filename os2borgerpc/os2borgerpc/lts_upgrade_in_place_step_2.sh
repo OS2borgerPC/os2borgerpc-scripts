@@ -27,9 +27,12 @@
 set -ex
 
 # Make double sure that the crontab has been emptied
-TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-if [ -f "$TMP_CRON" ]; then
-  crontab -r
+TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
+if [ -f "$TMP_ROOTCRON" ]; then
+  crontab -r || true
+  if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+    crontab -u user -r || true
+  fi
 fi
 
 # Fix dpkg settings to avoid interactivity.
@@ -38,7 +41,7 @@ Dpkg::Options {
    "--force-confdef";
    "--force-confold";
 };
-Dpkg::Lock {Timeout "300";};
+Dpkg::Lock {Timeout "3600";};
 EOF
 
 # Prevent timezone issues

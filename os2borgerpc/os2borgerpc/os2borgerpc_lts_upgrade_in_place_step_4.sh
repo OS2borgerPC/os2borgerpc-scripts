@@ -32,9 +32,9 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
 fi
 
 # Make double sure that the crontab has been emptied
-TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-if [ -f "$TMP_CRON" ]; then
-  crontab -r
+TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
+if [ -f "$TMP_ROOTCRON" ]; then
+  crontab -r || true
 fi
 
 # Reset jobmanager timeout to default value
@@ -176,11 +176,19 @@ if [ ! -f $NEW_FIREFOX_POLICY_FILE ]; then
   "$SCRIPT_DIR/os2borgerpc/firefox/firefox_global_policies.sh" https://borger.dk
 elif ! grep --quiet "DisableDeveloperTools" $NEW_FIREFOX_POLICY_FILE; then
   MAIN_URL=$(grep "URL" $NEW_FIREFOX_POLICY_FILE | cut --delimiter ' ' --fields 8)
-  MAIN_URL=${MAIN_URL::-1}
+  MAIN_URL=${MAIN_URL:1:-2}
   EXTRA_URLS=$(grep "Additional" $NEW_FIREFOX_POLICY_FILE | cut --delimiter '[' --fields 2)
-  EXTRA_URLS=$(echo "${EXTRA_URLS::-2}" | sed "s/, /|/g")
+  EXTRA_URLS=${EXTRA_URLS:1:-3}
+  EXTRA_URLS=${EXTRA_URLS//\", \"/|}
   "$SCRIPT_DIR/os2borgerpc/firefox/firefox_global_policies.sh" "$MAIN_URL" "$EXTRA_URLS"
 fi
+
+# Disable libreoffice Tip of the day
+MS_FILE_FORMAT=False
+if grep --quiet "MS Word 2007" /home/.skjult/.config/libreoffice/4/user/registrymodifications.xcu; then
+  MS_FILE_FORMAT=True
+fi
+"$SCRIPT_DIR/os2borgerpc/libreoffice/overwrite_libreoffice_config.sh" True $MS_FILE_FORMAT
 
 # Make sure the client and its settings are up to date
 "$SCRIPT_DIR/common/system/upgrade_client_and_settings.sh"
@@ -188,11 +196,22 @@ fi
 # Remove cloned script repository
 rm --recursive "$SCRIPT_DIR"
 
+# Fix dpkg settings
+cat << EOF > /etc/apt/apt.conf.d/local
+Dpkg::Options {
+   "--force-confdef";
+   "--force-confold";
+};
+Dpkg::Lock {Timeout "300";};
+EOF
+
 # Restore crontab and reenable potential wake plans
-TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-if [ -f "$TMP_CRON" ]; then
-  crontab $TMP_CRON
-  rm -f $TMP_CRON
+TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
+TMP_USERCRON=/etc/os2borgerpc/tmp_usercronfile
+if [ -f "$TMP_ROOTCRON" ]; then
+  crontab $TMP_ROOTCRON
+  crontab -u user $TMP_USERCRON
+  rm -f $TMP_ROOTCRON $TMP_USERCRON
 fi
 if [ -f /etc/os2borgerpc/plan.json ]; then
   systemctl enable --now os2borgerpc-set_on-off_schedule.service

@@ -220,6 +220,26 @@ fi
 # Enable universal access menu by default
 "$SCRIPT_DIR/os2borgerpc/desktop/dconf_policy_a11y.sh" True
 
+# Add the new firefox policies, if they don't have them
+NEW_FIREFOX_POLICY_FILE=/etc/firefox/policies/policies.json
+if [ ! -f $NEW_FIREFOX_POLICY_FILE ]; then
+  "$SCRIPT_DIR/os2borgerpc/firefox/firefox_global_policies.sh" https://borger.dk
+elif ! grep --quiet "DisableDeveloperTools" $NEW_FIREFOX_POLICY_FILE; then
+  MAIN_URL=$(grep "URL" $NEW_FIREFOX_POLICY_FILE | cut --delimiter ' ' --fields 8)
+  MAIN_URL=${MAIN_URL:1:-2}
+  EXTRA_URLS=$(grep "Additional" $NEW_FIREFOX_POLICY_FILE | cut --delimiter '[' --fields 2)
+  EXTRA_URLS=${EXTRA_URLS:1:-3}
+  EXTRA_URLS=${EXTRA_URLS//\", \"/|}
+  "$SCRIPT_DIR/os2borgerpc/firefox/firefox_global_policies.sh" "$MAIN_URL" "$EXTRA_URLS"
+fi
+
+# Disable libreoffice Tip of the day
+MS_FILE_FORMAT=False
+if grep --quiet "MS Word 2007" /home/.skjult/.config/libreoffice/4/user/registrymodifications.xcu; then
+  MS_FILE_FORMAT=True
+fi
+"$SCRIPT_DIR/os2borgerpc/libreoffice/overwrite_libreoffice_config.sh" True $MS_FILE_FORMAT
+
 # Make sure the client settings are up to date
 "$SCRIPT_DIR/common/system/upgrade_client_and_settings.sh"
 

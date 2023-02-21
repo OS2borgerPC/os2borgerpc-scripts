@@ -32,9 +32,10 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
 fi
 
 # Make double sure that the crontab has been emptied
-TMP_CRON=/etc/os2borgerpc/tmp_cronfile
-if [ -f "$TMP_CRON" ]; then
-  crontab -r
+TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
+if [ -f "$TMP_ROOTCRON" ]; then
+  crontab -r || true
+  crontab -u user -r || true
 fi
 
 # Preserve firefox startpage(s) settings if any have been set
@@ -71,11 +72,18 @@ release_upgrades_file=/etc/update-manager/release-upgrades
 
 sed -i "s/Prompt=.*/Prompt=lts/" $release_upgrades_file
 
-# Perform the actual upgrade
-do-release-upgrade -f DistUpgradeViewNonInteractive > /var/log/os2borgerpc_upgrade_1.log
+# Perform the actual upgrade with some error handling
+ERRORS="False"
+do-release-upgrade -f DistUpgradeViewNonInteractive > /var/log/os2borgerpc_upgrade_1.log || ERRORS="True"
 
 # Make sure that jobmanager can still find the client
 pip install -q os2borgerpc_client
+
+if [ "$ERRORS" == "True" ]; then
+  apt-get --assume-yes --fix-broken install
+  apt-get --assume-yes autoremove
+  apt-get --assume-yes clean
+fi
 
 # Remove the old client
 rm -rf /usr/local/lib/python3.8/
