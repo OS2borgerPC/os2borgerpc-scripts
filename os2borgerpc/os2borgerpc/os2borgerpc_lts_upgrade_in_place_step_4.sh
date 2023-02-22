@@ -190,6 +190,12 @@ if grep --quiet "MS Word 2007" /home/.skjult/.config/libreoffice/4/user/registry
 fi
 "$SCRIPT_DIR/os2borgerpc/libreoffice/overwrite_libreoffice_config.sh" True $MS_FILE_FORMAT
 
+# Enable automatic security updates if they have never run the related script before
+UNATTENDED_UPGRADES_FILE="/etc/apt/apt.conf.d/90os2borgerpc-automatic-upgrades"
+if [ ! -f "$UNATTENDED_UPGRADES_FILE" ]; then
+  "$SCRIPT_DIR/common/system/apt_periodic_control.sh" security
+fi
+
 # Make sure the client and its settings are up to date
 "$SCRIPT_DIR/common/system/upgrade_client_and_settings.sh"
 
