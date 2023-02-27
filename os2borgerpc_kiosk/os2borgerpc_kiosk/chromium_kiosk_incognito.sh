@@ -5,33 +5,32 @@
 # cookies after restart. If you don't want that you can enable incognito.
 #
 # Arguments:
-# 1: ACTIVATE_KIOSK: 'True' enables maximizing by default, 'False' disables it.
-# 2: ACTIVATE_INKOG: 'True' enables incognito by default. 'False' disables it.
+# 1: KIOSK: 'True' enables maximizing by default, 'False' disables it.
+# 2: INCOG: 'True' enables incognito by default. 'False' disables it.
 #
 # Author: mfm@magenta.dk
 
 set -ex
 
-USER='chrome'
-ACTIVATE_KIOSK=$1
-ACTIVATE_INCOG=$2
+KIOSK=$1
+INCOG=$2
 
-FILE=/usr/share/os2borgerpc/bin/start_chromium.sh
+LAUNCH_FILE="/usr/share/os2borgerpc/bin/start_chromium.sh"
+POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
+POLICY_NAME_INCOG="IncognitoModeAvailability"
 
-if [ "$ACTIVATE_KIOSK" = 'True' ]; then
-  # Don't add --kiosk multiple times
-  if ! grep -q -- '--kiosk' $FILE; then
-    sed -i 's/KIOSK=""/KIOSK="--kiosk"/' $FILE
-  fi
-else
-  sed -i 's/--kiosk//g' $FILE
+# For removal or idempotency when adding
+# TODO: If kiosk becomes settable via a Policy, use that instead!
+sed --in-place 's/--kiosk//g' $LAUNCH_FILE
+
+if [ "$KIOSK" = 'True' ]; then
+  sed --in-place 's/KIOSK=""/KIOSK="--kiosk"/' $LAUNCH_FILE
 fi
 
-if [ "$ACTIVATE_INCOG" = 'True' ]; then
-  # Don't add --incognito multiple times
-  if ! grep -q -- '--incognito' $FILE; then
-    sed -i 's/INCOGNITO=""/INCOGNITO="--incognito"/' $FILE
-  fi
-else
-  sed -i 's/--incognito//g' $FILE
+# For removal or idempotency when adding
+sed --in-place "/$POLICY_NAME_INCOG/d" $POLICY_FILE
+
+if [ "$INCOG" = 'True' ]; then
+  # Insert this policy on line 2
+  sed --in-place "2i\"$POLICY_NAME_INCOG\": 2," $POLICY_FILE
 fi
