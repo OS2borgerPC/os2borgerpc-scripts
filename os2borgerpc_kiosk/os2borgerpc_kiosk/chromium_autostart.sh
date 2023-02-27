@@ -52,7 +52,7 @@ OLD_ROTATE_SCREEN_SCRIPT_PATH="/usr/local/bin/rotate_screen.sh"
 rm --force $OLD_ROTATE_SCREEN_SCRIPT_PATH
 
 # Make the new folder
-mkdir --parents /usr/share/os2borgerpc/bin
+mkdir --parents "$(dirname $ROTATE_SCREEN_SCRIPT_PATH)"
 
 cat << EOF > $ROTATE_SCREEN_SCRIPT_PATH
 #!/usr/bin/env sh
