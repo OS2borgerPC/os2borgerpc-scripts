@@ -56,3 +56,8 @@ if [ "$ERRORS" == "True" ]; then
   apt-get --assume-yes autoremove
   apt-get --assume-yes clean
 fi
+
+if ! lsb_release -d | grep --quiet 22; then
+  echo "Opgraderingen er ikke blevet gennemført. Prøv at genstarte computeren og køre dette script igen."
+  exit 1
+fi

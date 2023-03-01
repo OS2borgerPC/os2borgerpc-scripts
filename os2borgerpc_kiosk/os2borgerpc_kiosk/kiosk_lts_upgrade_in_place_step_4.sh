@@ -38,14 +38,15 @@ if [ -f "$TMP_ROOTCRON" ]; then
   crontab -r || true
 fi
 
-# Remove the remainder of the old version of python
-apt-get --assume-yes remove --purge python3.8-minimal || true
+# Remove the old client and the remainder of the old version of python
+NEW_CLIENT="/usr/local/lib/python3.10/dist-packages/os2borgerpc/client/jobmanager.py"
+if [ -f $NEW_CLIENT ]; then
+  rm -rf /usr/local/lib/python3.8/
+  apt-get --assume-yes remove --purge python3.8-minimal || true
+fi
 
 # Remove any dependencies of the old version of python that are no longer used
 apt-get --assume-yes autoremove
-
-# Remove the old client
-rm -rf /usr/local/lib/python3.8
 
 # Set danish timezone and language
 timedatectl set-timezone Europe/Copenhagen
@@ -86,6 +87,7 @@ if [ -f $ROTATE_SCREEN ]; then
   sed --in-place "s/local\/bin\/rotate_screen.sh/share\/os2borgerpc\/bin\/rotate_screen.sh $TIME $ORIENTATION/" $XINITRC
   rm $ROTATE_SCREEN
 fi
+mkdir --parents "/usr/share/os2borgerpc/bin"
 cat << EOF > /usr/share/os2borgerpc/bin/rotate_screen.sh
 #!/usr/bin/env sh
 

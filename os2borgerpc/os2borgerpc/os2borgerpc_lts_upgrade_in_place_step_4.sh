@@ -55,6 +55,12 @@ sed -i "s/Prompt=.*/Prompt=never/" $release_upgrades_file
 # Enable FSCK automatic fixes
 sed --in-place "s/FSCKFIX=no/FSCKFIX=yes/" /lib/init/vars.sh
 
+# Remove the old client
+NEW_CLIENT="/usr/local/lib/python3.10/dist-packages/os2borgerpc/client/jobmanager.py"
+if [ -f $NEW_CLIENT ]; then
+  rm -rf /usr/local/lib/python3.8/
+fi
+
 # Overwrite the desktop icons policy file with the new expected format
 DESKTOP_ICONS_POLICY_FILE="/etc/dconf/db/os2borgerpc.d/01-desktop-icons"
 cat > "$DESKTOP_ICONS_POLICY_FILE" <<-END

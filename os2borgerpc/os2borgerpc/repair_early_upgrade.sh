@@ -2,9 +2,14 @@
 
 set -ex
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 if ! lsb_release -d | grep --quiet 22; then
-  echo "This machine has not been upgraded to Ubuntu 22.04. This script will do nothing."
-  exit 0
+  echo "Denne maskine er ikke blevet opgraderet til Ubuntu 22.04. Dette script vil ikke have nogen effekt."
+  exit 1
 fi
 # Fix dpkg settings to avoid interactivity.
 cat << EOF > /etc/apt/apt.conf.d/local
@@ -89,10 +94,10 @@ fi
 apt install gnome-shell-extension-desktop-icons-ng
 
 # Remove the old client
-rm -rf /usr/local/lib/python3.8/
-
-# Remove unnecessary applications
-apt-get --assume-yes remove --purge remmina transmission-gtk apport whoopsie
+NEW_CLIENT="/usr/local/lib/python3.10/dist-packages/os2borgerpc/client/jobmanager.py"
+if [ -f $NEW_CLIENT ]; then
+  rm -rf /usr/local/lib/python3.8/
+fi
 
 # Restore firefox startpage(s) settings if any had been set
 FIREFOX_POLICY_FILE=/usr/lib/firefox/distribution/policies.json
@@ -250,3 +255,12 @@ rm --recursive "$SCRIPT_DIR"
 set_os2borgerpc_config distribution ubuntu22.04
 
 os2borgerpc_push_config_keys distribution
+
+apt-get --assume-yes update
+
+# Remove unnecessary applications
+apt-get --assume-yes remove --purge remmina transmission-gtk apport whoopsie
+
+apt-get --assume-yes autoremove
+
+apt-get --assume-yes clean

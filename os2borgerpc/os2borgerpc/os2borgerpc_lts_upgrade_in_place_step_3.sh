@@ -85,9 +85,6 @@ if [ "$ERRORS" == "True" ]; then
   apt-get --assume-yes clean
 fi
 
-# Remove the old client
-rm -rf /usr/local/lib/python3.8/
-
 # Make sure that the extension responsible for handling desktop icons is installed correctly
 apt install gnome-shell-extension-desktop-icons-ng
 
@@ -103,10 +100,3 @@ rm -f /usr/share/applications/firefox.desktop
 FAVORITES_FILE="/etc/dconf/db/os2borgerpc.d/02-launcher-favorites"
 sed -i "s/'firefox.desktop'/'firefox_firefox.desktop'/" "$FAVORITES_FILE"
 # sed -i "s/NoDisplay=true/NoDisplay=false/" /usr/share/applications/firefox.desktop
-
-set_os2borgerpc_config job_timeout 1800
-
-os2borgerpc_push_config_keys job_timeout
-
-# reboot to finish the upgrade
-reboot
