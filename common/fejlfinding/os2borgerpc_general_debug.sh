@@ -17,6 +17,9 @@ text() {
 
 header "General info:"
 
+text "Information about the computer model:"
+dmidecode --type 1
+
 text "OS2borgerPC configuration file:"
 cat /etc/os2borgerpc/os2borgerpc.conf
 
@@ -65,6 +68,9 @@ cat /usr/share/os2borgerpc/bin/inactive_logout.sh
 
 header "Info about devices and drivers"
 lshw
+
+header "List kernel modules currently loaded (fx. drivers)"
+lsmod
 
 header "Info about printers"
 lpinfo -v
