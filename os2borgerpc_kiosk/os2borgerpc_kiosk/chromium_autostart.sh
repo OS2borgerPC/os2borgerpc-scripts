@@ -22,13 +22,18 @@ WIDTH=$3
 HEIGHT=$4
 ORIENTATION=$5
 
-USER="chrome"
+CUSER="chrome"
+XINITRC="/home/$CUSER/.xinitrc"
+BSPWM_CONFIG="/home/$CUSER/.config/bspwm/bspwmrc"
+CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
+ROTATE_SCREEN_SCRIPT_PATH="/usr/share/os2borgerpc/bin/rotate_screen.sh"
+OLD_ROTATE_SCREEN_SCRIPT_PATH="/usr/local/bin/rotate_screen.sh"
 
 # Create user.
 # TODO: This is now built into the image instead, but for now it's kept here for backwards compatibility with old images
 # useradd will fail on multiple runs, so prevent that
-if ! id $USER &>/dev/null; then
-  useradd $USER --create-home --password 12345 --shell /bin/bash --user-group --comment "Chrome"
+if ! id $CUSER &>/dev/null; then
+  useradd $CUSER --create-home --password 12345 --shell /bin/bash --user-group --comment "Chrome"
 fi
 
 # Autologin default user
@@ -39,14 +44,11 @@ mkdir --parents /etc/systemd/system/getty@tty1.service.d
 cat << EOF > /etc/systemd/system/getty@tty1.service.d/override.conf
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --noissue --autologin $USER %I $TERM
+ExecStart=-/sbin/agetty --noissue --autologin $CUSER %I $TERM
 Type=idle
 EOF
 
 # Create script to rotate screen
-
-ROTATE_SCREEN_SCRIPT_PATH="/usr/share/os2borgerpc/bin/rotate_screen.sh"
-OLD_ROTATE_SCREEN_SCRIPT_PATH="/usr/local/bin/rotate_screen.sh"
 
 # ...remove the rotate script from its previous location
 rm --force $OLD_ROTATE_SCREEN_SCRIPT_PATH
@@ -64,7 +66,7 @@ ORIENTATION=\$2
 
 sleep \$TIME
 
-export XAUTHORITY=/home/$USER/.Xauthority
+export XAUTHORITY=/home/$CUSER/.Xauthority
 
 # --listactivemonitors lists the primary monitor first
 ALL_MONITORS=\$(xrandr --listactivemonitors | tail -n +2 | cut --delimiter ' ' --fields 6)
@@ -86,7 +88,6 @@ chmod +x $ROTATE_SCREEN_SCRIPT_PATH
 # in multiple files
 # If this script's path/name is changed, remember to change it in
 # wm_keyboard_install.sh as well
-CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
 mkdir --parents "$(dirname "$CHROMIUM_SCRIPT")"
 
 # TODO: Make URL a policy instead ("RestoreOnStarupURLs", see chrome_install.sh)
@@ -110,7 +111,7 @@ EOF
 chmod +x "$CHROMIUM_SCRIPT"
 
 # Launch chromium upon starting up X
-cat << EOF > /home/$USER/.xinitrc
+cat << EOF > $XINITRC
 #!/bin/sh
 
 xset s off
@@ -127,6 +128,17 @@ $ROTATE_SCREEN_SCRIPT_PATH $TIME $ORIENTATION
 exec $CHROMIUM_SCRIPT nowm
 EOF
 
+# If bspwm config (for the onscreen keyboard) is found, restore starting it up instead of starting chromium directly
+if [ -f $BSPWM_CONFIG ]; then
+# Don't auto-start chromium from xinitrc
+  sed -i "s,\(.*$CHROMIUM_SCRIPT.*\),#\1," $XINITRC
+
+  # Instead autostart bspwm
+	cat <<- EOF >> $XINITRC
+		exec bspwm
+	EOF
+fi
+
 CHROMIUM_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
 mkdir --parents "$(dirname "$CHROMIUM_POLICY_FILE")"
 cat << EOF > $CHROMIUM_POLICY_FILE
@@ -140,6 +152,6 @@ cat << EOF > $CHROMIUM_POLICY_FILE
 EOF
 
 # Start X upon login
-if ! grep --quiet -- 'startx' /home/$USER/.xinitrc; then # Ensure idempotency
-  echo "startx" >> /home/$USER/.profile
+if ! grep --quiet -- 'startx' $XINITRC; then # Ensure idempotency
+  echo "startx" >> /home/$CUSER/.profile
 fi
