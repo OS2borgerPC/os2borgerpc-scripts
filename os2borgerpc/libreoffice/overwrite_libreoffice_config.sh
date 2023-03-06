@@ -4,6 +4,11 @@
 # Takes two checkboxes as input. The first disables Tip of the day and displaying the changelog when you start the app.
 # The second changes the default fileformats to Microsoft's (.docx, .pptx, .xlsx).
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 REMOVE_TIP_OF_THE_DAY=$1
 SET_FORMATS_TO_MICROSOFTS=$2
 

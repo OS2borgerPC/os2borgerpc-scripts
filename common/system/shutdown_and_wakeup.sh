@@ -41,6 +41,8 @@ ROOTCRON_TMP=/tmp/oldcron
 USERCRON_TMP=/tmp/usercron
 MESSAGE="Denne computer lukker ned om fem minutter"
 
+mkdir --parents "$(dirname $SCHEDULED_OFF_SCRIPT)"
+
 # Read and save current cron settings first
 crontab -l > $ROOTCRON_TMP
 crontab -u user -l > $USERCRON_TMP

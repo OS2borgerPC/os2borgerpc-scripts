@@ -3,6 +3,11 @@
 DEB_FILE=$1
 CERT_FILE_PATH=$2
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 SHADOW_DIR=/home/.skjult
 ICA_DIR=$SHADOW_DIR"/.ICAClient"
 MIMEAPPSLIST_DIR=$SHADOW_DIR"/.local/share/applications"

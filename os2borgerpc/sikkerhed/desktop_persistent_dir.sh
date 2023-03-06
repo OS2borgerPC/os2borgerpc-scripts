@@ -11,6 +11,11 @@
 # Author: mfm@magenta.dk
 # Credits: carstena@magenta.dk
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
 }

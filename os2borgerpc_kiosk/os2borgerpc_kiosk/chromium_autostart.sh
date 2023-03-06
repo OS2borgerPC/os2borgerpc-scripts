@@ -29,6 +29,11 @@ CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
 ROTATE_SCREEN_SCRIPT_PATH="/usr/share/os2borgerpc/bin/rotate_screen.sh"
 OLD_ROTATE_SCREEN_SCRIPT_PATH="/usr/local/bin/rotate_screen.sh"
 
+if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
+  exit 1
+fi
+
 # Create user.
 # TODO: This is now built into the image instead, but for now it's kept here for backwards compatibility with old images
 # useradd will fail on multiple runs, so prevent that

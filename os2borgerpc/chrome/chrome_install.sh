@@ -55,6 +55,11 @@
 
 set -ex
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 export DEBIAN_FRONTEND=noninteractive
 DESKTOP_FILE_PATH_1=/usr/share/applications/google-chrome.desktop
 # In case a Chrome shortcut has been added to the desktop

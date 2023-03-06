@@ -16,6 +16,11 @@
 ADD="$1"
 PROGRAM="$2"
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 SHADOW_DESKTOP="/home/.skjult/Skrivebord"
 SNAP_DESKTOP_FILE_PATH="/var/lib/snapd/desktop/applications"
 APT_DESKTOP_FILE_PATH="/usr/share/applications"

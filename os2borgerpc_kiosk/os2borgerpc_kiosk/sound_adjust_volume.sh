@@ -14,6 +14,11 @@ REQUESTED_VOLUME_PERCENTAGE=$2
 OUR_USER=chrome
 FILE=/home/$OUR_USER/.xinitrc
 
+if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
+  exit 1
+fi
+
 # Remove previous volume line for that sink
 sed --in-place "/pactl set-sink-volume $SINK/d" $FILE
 # Add a new one with the new volume setting

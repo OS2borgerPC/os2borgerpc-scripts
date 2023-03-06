@@ -7,6 +7,11 @@
 # 1: Default is to print programs available/installed. Write 'skrivebord' to list
 #    programs already on the desktop, or "menu" to list programs in the launcher.
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
 }
