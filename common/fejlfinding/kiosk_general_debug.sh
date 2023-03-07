@@ -18,6 +18,10 @@ text() {
 
 header "General information from only a basic setup"
 
+text "Information about the computer model:"
+dmidecode --type 1
+
+text "Files under /usr/share/os2borgerpc/bin"
 ls -la /usr/share/os2borgerpc/bin/
 
 text "OS2borgerPC configuration file:"
@@ -41,6 +45,11 @@ ls -la /home/$USER/
 text ".xinitrc contents:"
 cat /home/$USER/.xinitrc
 
+header "List assorted device info"
+lshw
+
+header "List kernel modules currently loaded (fx. drivers)"
+lsmod
 
 header "Information about monitors"
 
@@ -69,15 +78,6 @@ ls -la /usr/share/os2borgerpc/bin/keyboard-button/
 
 text "bspwm_add_button.sh contents:"
 cat /usr/share/os2borgerpc/bin/keyboard-button/bspwn_add_button.sh
-
-
-header "List assorted device info"
-
-text "List PCI devices:"
-lspci
-
-text "List USB devices:"
-lsusb
 
 
 header "Print Xorg.log excerpt (fx. if Xorg fails to start)"
