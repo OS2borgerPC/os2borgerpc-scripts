@@ -3,14 +3,15 @@
 # HEADER
 #================================================================
 #% SYNOPSIS
-#+    lts_upgrade_in_place_4.sh
+#+    os2borgerpc_lts_upgrade_in_place_step_4.sh
 #%
 #% DESCRIPTION
 #%    Step four of the upgrade from 20.04 to 22.04.
+#%    Designed for regular OS2borgerPC machines
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         lts_upgrade_in_place_step_4.sh 0.0.1
+#-    version         os2borgerpc_lts_upgrade_in_place_step_4.sh 0.0.1
 #-    author          Andreas Poulsen
 #-    copyright       Copyright 2022, Magenta Aps
 #-    license         BSD/MIT
@@ -18,7 +19,7 @@
 #-
 #================================================================
 #  HISTORY
-#     2021/04/14 : ap : Moved this to a new step.
+#     2022/09/15 : ap : Script creation.
 #
 #================================================================
 # END_OF_HEADER

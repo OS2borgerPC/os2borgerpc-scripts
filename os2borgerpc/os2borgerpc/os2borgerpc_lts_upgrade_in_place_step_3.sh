@@ -3,14 +3,15 @@
 # HEADER
 #================================================================
 #% SYNOPSIS
-#+    lts_upgrade_in_place_step_3.sh
+#+    os2borgerpc_lts_upgrade_in_place_step_3.sh
 #%
 #% DESCRIPTION
 #%    Step three of the upgrade from 20.04 to 22.04.
+#%    Designed for regular OS2borgerPC machines
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         lts_upgrade_in_place_step_3.sh 0.0.1
+#-    version         os2borgerpc_lts_upgrade_in_place_step_3.sh 0.0.1
 #-    author          Andreas Poulsen
 #-    copyright       Copyright 2022, Magenta Aps
 #-    license         BSD/MIT
@@ -18,7 +19,7 @@
 #-
 #================================================================
 #  HISTORY
-#     2021/09/15 : ap : Script creation
+#     2022/09/15 : ap : Script creation
 #
 #================================================================
 # END_OF_HEADER
@@ -83,6 +84,11 @@ if [ "$ERRORS" == "True" ]; then
   apt-get --assume-yes --fix-broken install
   apt-get --assume-yes autoremove
   apt-get --assume-yes clean
+fi
+
+if ! lsb_release -d | grep --quiet 22; then
+  echo "Opgraderingen er ikke blevet gennemført. Prøv at genstarte computeren og køre dette script igen."
+  exit 1
 fi
 
 # Make sure that the extension responsible for handling desktop icons is installed correctly

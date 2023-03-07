@@ -3,7 +3,7 @@
 # HEADER
 #================================================================
 #% SYNOPSIS
-#+    kiosk_lts_upgrade_in_place_4.sh
+#+    kiosk_lts_upgrade_in_place_step_4.sh
 #%
 #% DESCRIPTION
 #%    Step four of the upgrade from 20.04 to 22.04.

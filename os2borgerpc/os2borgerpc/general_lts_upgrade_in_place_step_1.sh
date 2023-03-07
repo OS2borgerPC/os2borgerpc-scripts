@@ -3,14 +3,14 @@
 # HEADER
 #================================================================
 #% SYNOPSIS
-#+    lts_upgrade_in_place_step_1.sh
+#+    general_lts_upgrade_in_place_step_1.sh
 #%
 #% DESCRIPTION
 #%    Step one of the upgrade from 20.04 to 22.04.
 #%
 #================================================================
 #- IMPLEMENTATION
-#-    version         lts_upgrade_in_place_step_1.sh 0.0.1
+#-    version         general_lts_upgrade_in_place_step_1.sh 0.0.1
 #-    author          Andreas Poulsen
 #-    copyright       Copyright 2022, Magenta Aps
 #-    license         BSD/MIT
