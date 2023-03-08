@@ -106,3 +106,5 @@ rm -f /usr/share/applications/firefox.desktop
 FAVORITES_FILE="/etc/dconf/db/os2borgerpc.d/02-launcher-favorites"
 sed -i "s/'firefox.desktop'/'firefox_firefox.desktop'/" "$FAVORITES_FILE"
 # sed -i "s/NoDisplay=true/NoDisplay=false/" /usr/share/applications/firefox.desktop
+
+touch /etc/os2borgerpc/third_upgrade_step_done

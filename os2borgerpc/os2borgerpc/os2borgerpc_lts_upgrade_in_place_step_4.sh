@@ -32,6 +32,12 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+PREVIOUS_STEP_DONE="/etc/os2borgerpc/third_upgrade_step_done"
+if [ ! -f "$PREVIOUS_STEP_DONE" ]; then
+  echo "OS2borgerPC - Opgradering til Ubuntu 22.04 trin 3 er ikke blevet gennemført."
+  exit 1
+fi
+
 # Make double sure that the crontab has been emptied
 TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
 if [ -f "$TMP_ROOTCRON" ]; then
@@ -79,6 +85,10 @@ show-trash=false
 END
 
 dconf update
+
+if [ -f "/usr/bin/gnome-control-center.real" ] && ! grep --quiet "zenity" /usr/bin/gnome-control-center; then
+  rm /usr/bin/gnome-control-center.real
+fi
 
 # Remove user access to settings
 if [ ! -f "/usr/bin/gnome-control-center.real" ]; then
@@ -229,3 +239,5 @@ fi
 if [ -f /etc/os2borgerpc/plan.json ]; then
   systemctl enable --now os2borgerpc-set_on-off_schedule.service
 fi
+
+rm --force $PREVIOUS_STEP_DONE

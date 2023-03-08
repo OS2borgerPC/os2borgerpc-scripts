@@ -345,12 +345,6 @@ EOF
 chmod 644 /usr/share/onboard/layouts/Compact.onboard
 fi
 
-#Enable automatic security updates if they were not already enabled
-CONF="/etc/apt/apt.conf.d/90os2borgerpc-automatic-upgrades"
-if [ ! -f "$CONF" ]; then
-  wget -O - https://github.com/OS2borgerPC/os2borgerpc-scripts/raw/master/common/system/apt_periodic_control.sh | bash -s -- sikkerhed
-fi
-
 # Reset jobmanager timeout to default value
 set_os2borgerpc_config job_timeout 900
 
