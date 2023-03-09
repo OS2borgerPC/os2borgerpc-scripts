@@ -213,8 +213,19 @@ if [ ! -f "$UNATTENDED_UPGRADES_FILE" ]; then
   "$SCRIPT_DIR/common/system/apt_periodic_control.sh" security
 fi
 
-# Make sure the client and its settings are up to date
-"$SCRIPT_DIR/common/system/upgrade_client_and_settings.sh"
+# Make sure the client settings are up to date
+rm --force /etc/os2borgerpc/security/securityevent.csv
+
+for j in /var/lib/os2borgerpc/jobs/*; do
+  if [ "$(cat "$j"/status)" = "DONE" ] || [ "$(cat "$j"/status)" = "FAILED" ]; then
+      rm --force "$j/parameters.json"
+  fi
+done
+
+chmod --recursive 700 /var/lib/os2borgerpc
+
+chmod -R 700 /home/superuser
+chown -R superuser:superuser /home/superuser/Skrivebord
 
 # Remove cloned script repository
 rm --recursive "$SCRIPT_DIR"
