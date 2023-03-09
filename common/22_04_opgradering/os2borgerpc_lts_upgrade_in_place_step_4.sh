@@ -34,7 +34,7 @@ fi
 
 PREVIOUS_STEP_DONE="/etc/os2borgerpc/third_upgrade_step_done"
 if [ ! -f "$PREVIOUS_STEP_DONE" ]; then
-  echo "OS2borgerPC - Opgradering til Ubuntu 22.04 trin 3 er ikke blevet gennemført."
+  echo "22.04 opgradering - Opgradering til Ubuntu 22.04 trin 3 er ikke blevet gennemført."
   exit 1
 fi
 

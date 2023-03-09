@@ -47,3 +47,5 @@ fi
 if [ -f /etc/os2borgerpc/plan.json ]; then
   systemctl disable os2borgerpc-set_on-off_schedule.service
 fi
+
+touch /etc/os2borgerpc/first_upgrade_step_done

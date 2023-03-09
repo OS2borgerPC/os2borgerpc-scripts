@@ -26,6 +26,12 @@
 
 set -ex
 
+PREVIOUS_STEP_DONE="/etc/os2borgerpc/first_upgrade_step_done"
+if [ ! -f "$PREVIOUS_STEP_DONE" ]; then
+  echo "22.04 opgradering - Opgradering til Ubuntu 22.04 trin 1 er ikke blevet gennemført."
+  exit 1
+fi
+
 # Make double sure that the crontab has been emptied
 TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
 if [ -f "$TMP_ROOTCRON" ]; then
@@ -69,3 +75,5 @@ apt-get --assume-yes autoremove
 
 # Remove local repository of retrieved package files
 apt-get --assume-yes clean
+
+rm --force $PREVIOUS_STEP_DONE
