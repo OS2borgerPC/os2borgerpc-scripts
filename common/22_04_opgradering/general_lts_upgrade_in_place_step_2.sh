@@ -77,3 +77,5 @@ apt-get --assume-yes autoremove
 apt-get --assume-yes clean
 
 rm --force $PREVIOUS_STEP_DONE
+
+touch /etc/os2borgerpc/second_upgrade_step_done

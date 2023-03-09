@@ -32,6 +32,12 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+PREVIOUS_STEP_DONE="/etc/os2borgerpc/second_upgrade_step_done"
+if [ ! -f "$PREVIOUS_STEP_DONE" ]; then
+  echo "22.04 opgradering - Opgradering til Ubuntu 22.04 trin 2 er ikke blevet gennemført."
+  exit 1
+fi
+
 # Make double sure that the crontab has been emptied
 TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
 if [ -f "$TMP_ROOTCRON" ]; then
@@ -106,5 +112,7 @@ rm -f /usr/share/applications/firefox.desktop
 FAVORITES_FILE="/etc/dconf/db/os2borgerpc.d/02-launcher-favorites"
 sed -i "s/'firefox.desktop'/'firefox_firefox.desktop'/" "$FAVORITES_FILE"
 # sed -i "s/NoDisplay=true/NoDisplay=false/" /usr/share/applications/firefox.desktop
+
+rm --force $PREVIOUS_STEP_DONE
 
 touch /etc/os2borgerpc/third_upgrade_step_done

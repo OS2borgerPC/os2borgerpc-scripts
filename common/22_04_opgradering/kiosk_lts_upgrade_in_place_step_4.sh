@@ -28,7 +28,13 @@
 set -ex
 
 if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
-  echo "Dette script er ikke designet til at blive anvendt på en regulær borgerPC-maskine."
+  echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
+  exit 1
+fi
+
+PREVIOUS_STEP_DONE="/etc/os2borgerpc/third_upgrade_step_done"
+if [ ! -f "$PREVIOUS_STEP_DONE" ]; then
+  echo "22.04 opgradering - Kiosk Opgradering til Ubuntu 22.04 trin 3 er ikke blevet gennemført."
   exit 1
 fi
 
@@ -373,3 +379,5 @@ fi
 if [ -f /etc/os2borgerpc/plan.json ]; then
   systemctl enable --now os2borgerpc-set_on-off_schedule.service
 fi
+
+rm --force $PREVIOUS_STEP_DONE
