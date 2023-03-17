@@ -43,7 +43,7 @@ import time
 
 def main():
   while True:
-    time.sleep(30)
+    time.sleep(20)
     wifi_check = os.system("ping -c 1 google.com")
     # If ping fails, restart systemd-resolved
     if wifi_check != 0:
@@ -67,7 +67,7 @@ ExecStart=$DNS_FIX_SCRIPT
 WantedBy=multi-user.target
 EOF
 
-  systemctl enable --now "$(basename $DNS_FIX_SERVICE)"
+  systemctl enable --now "$(basename "$DNS_FIX_SERVICE")"
 fi
 
 # Chromium is only available as a snap and will also be installed as
@@ -76,5 +76,13 @@ LOG_OUT=$(apt-get install --assume-yes chromium-browser)
 # Save exit status so we get the exit status of apt rather than from base64
 EXIT_STATUS=$?
 echo "$LOG_OUT" | base64
+
+# This section is related to the above workaround
+# and removes the related service once it is no longer needed
+if lsb_release -d | grep --quiet 22; then
+  systemctl disable --now "$(basename "$DNS_FIX_SERVICE")"
+  systemctl restart systemd-resolved
+  rm --force "$DNS_FIX_SCRIPT" "$DNS_FIX_SERVICE"
+fi
 
 exit $EXIT_STATUS
