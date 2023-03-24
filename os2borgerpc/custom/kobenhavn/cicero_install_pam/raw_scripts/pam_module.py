@@ -3,6 +3,7 @@
 
 from subprocess import check_output
 import json
+from os.path import exists
 
 CONF_TIME_VALUE = "timeMinutes"
 
@@ -33,16 +34,18 @@ def pam_sm_authenticate(pamh, flags, argv):
     time = int(cicero_response)
 
     if time > 0:
-        # Set the countdown time for the timers
-        with open("$LOGOUT_TIMER_CONF", "r+") as f:
-            # Read the current config, update it, then overwrite it with the updated contents
-            conf = json.loads(f.read())
-            conf[CONF_TIME_VALUE] = time
+        # They may not be using any of the timer scripts
+        if exists("$LOGOUT_TIMER_CONF"):
+            # Set the countdown time for the timers
+            with open("$LOGOUT_TIMER_CONF", "r+") as f:
+                # Read the current config, update it, then overwrite it with the updated contents
+                conf = json.loads(f.read())
+                conf[CONF_TIME_VALUE] = time
 
-            f.seek(0)
-            f.truncate()
+                f.seek(0)
+                f.truncate()
 
-            f.write(json.dumps(conf, indent=2))
+                f.write(json.dumps(conf, indent=2))
 
         return pamh.PAM_SUCCESS
 

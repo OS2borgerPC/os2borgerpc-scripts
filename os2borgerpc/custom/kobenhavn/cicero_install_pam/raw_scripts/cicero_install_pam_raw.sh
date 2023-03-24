@@ -25,7 +25,9 @@ CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
 if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
-  if ! apt-get install --assume-yes libpam-python; then
+  # TODO: pam_python is currently python2. If it doesn't get updated we should update it ourselves
+  # ...and in that case the module + cicero interface could be joined into one file, as originally planned
+  if ! apt-get install --assume-yes libpam-python python2; then
     echo "Error installing dependencies."
     exit 1
   fi

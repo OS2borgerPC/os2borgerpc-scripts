@@ -25,7 +25,9 @@ CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
 if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
-  if ! apt-get install --assume-yes libpam-python; then
+  # TODO: pam_python is currently python2. If it doesn't get updated we should update it ourselves
+  # ...and in that case the module + cicero interface could be joined into one file, as originally planned
+  if ! apt-get install --assume-yes libpam-python python2; then
     echo "Error installing dependencies."
     exit 1
   fi
@@ -51,7 +53,6 @@ import socket
 
 
 def cicero_validate(cicero_user, cicero_pass):
-
     host_address = (
         check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
     )
@@ -94,12 +95,12 @@ cat << EOF > $PAM_PYTHON_MODULE
 
 from subprocess import check_output
 import json
+from os.path import exists
 
 CONF_TIME_VALUE = "timeMinutes"
 
 
 def pam_sm_authenticate(pamh, flags, argv):
-
     # print(pamh.fail_delay)
     # http://pam-python.sourceforge.net/doc/html/
     username_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Lånernummer eller CPR")
@@ -125,16 +126,20 @@ def pam_sm_authenticate(pamh, flags, argv):
     time = int(cicero_response)
 
     if time > 0:
-        # Set the countdown time for the timers
-        with open("$LOGOUT_TIMER_CONF", "r+") as f:
-            # Read the current config, update it, then overwrite it with the updated contents
-            conf = json.loads(f.read())
-            conf[CONF_TIME_VALUE] = time
 
-            f.seek(0)
-            f.truncate()
+        # They may not be using any of the timer scripts
+        if exists("$LOGOUT_TIMER_CONF"):
 
-            f.write(json.dumps(conf, indent=2))
+            # Set the countdown time for the timers
+            with open("$LOGOUT_TIMER_CONF", "r+") as f:
+                # Read the current config, update it, then overwrite it with the updated contents
+                conf = json.loads(f.read())
+                conf[CONF_TIME_VALUE] = time
+
+                f.seek(0)
+                f.truncate()
+
+                f.write(json.dumps(conf, indent=2))
 
         return pamh.PAM_SUCCESS
 
