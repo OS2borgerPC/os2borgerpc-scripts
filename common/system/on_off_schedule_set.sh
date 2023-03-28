@@ -318,7 +318,7 @@ def main():
 
     # Check the product type and add a notification 5 minutes before shutdown on OS2BorgerPC machines
     if plan['product'] == 'os2borgerpc':
-        Message = 'Denne computer lukker ned om fem minutter'
+        MESSAGE = 'ADVARSEL: Denne computer lukker ned om fem minutter'
         # Find the time 5 minutes before shutdown
         notify_time = shutdown - datetime.timedelta(minutes=5)
         # Get current entries
@@ -335,7 +335,7 @@ def main():
         # Add notification for next shutdown
         with open(USERCRON, 'a') as cronfile:
             cronfile.write(f"{notify_time.minute} {notify_time.hour} {notify_time.day} {notify_time.month} *"
-                           f" XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/notify-send \"{Message}\"\n")
+                           f" XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/zenity --warning --text '<big>{MESSAGE}</big>'\n")
         subprocess.run(["crontab", "-u", "user", USERCRON])
         if os.path.exists(USERCRON):
             os.remove(USERCRON)
