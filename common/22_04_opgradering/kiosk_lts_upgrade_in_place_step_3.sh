@@ -58,7 +58,13 @@ ERRORS="False"
 do-release-upgrade -f DistUpgradeViewNonInteractive >  /var/log/os2borgerpc_upgrade_1.log || ERRORS="True"
 
 # Make sure that jobmanager can still find the client
-pip install -q os2borgerpc_client
+PIP_ERRORS="False"
+pip install -q os2borgerpc_client || PIP_ERRORS="True"
+
+if [ "$PIP_ERRORS" == "True" ]; then
+  mkdir --parents /usr/local/lib/python3.10
+  cp --recursive --no-clobber /usr/local/lib/python3.8/dist-packages/ /usr/local/lib/python3.10/
+fi
 
 if [ "$ERRORS" == "True" ]; then
   apt-get --assume-yes --fix-broken install
