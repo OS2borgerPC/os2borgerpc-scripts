@@ -17,16 +17,23 @@ fi
 
 # Note to future dev: Method attempted which proved unsuccessful:
 # 1. Add user to netdev, systemd-network or network groups
-FILE=/etc/NetworkManager/NetworkManager.conf
-FILE2=/var/lib/polkit-1/localauthority/50-local.d/networkmanager.pkla
+NETWORK_MANAGER_CONF=/etc/NetworkManager/NetworkManager.conf
+# We used to use /var/lib for this one policy, whereas /etc were used for the rest. /etc/ takes precedence over
+# /var/lib, so use that instead
+NM_POLKIT_OLD=/var/lib/polkit-1/localauthority/50-local.d/networkmanager.pkla
+NM_POLKIT_NEW=/etc/polkit-1/localauthority/50-local.d/networkmanager.pkla
+
+if [ -f $NM_POLKIT_OLD ]; then
+  mv $NM_POLKIT_OLD $NM_POLKIT_NEW
+fi
 
 # Cleanup after previous runs of this script - or disable access if previously given (idempotency)
-sed --in-place '/auth-polkit=false/d' $FILE
+sed --in-place '/auth-polkit=false/d' $NETWORK_MANAGER_CONF
 # Only make this replacement for user-related entries
-sed --in-place '/unix-group:user/{ n; n; n; n; s/ResultActive=yes/ResultActive=no/ }' $FILE2
+sed --in-place '/unix-group:user/{ n; n; n; n; s/ResultActive=yes/ResultActive=no/ }' $NM_POLKIT_NEW
 
 if [ "$ACTIVATE" = 'True' ]; then
-  sed --in-place '/\[main\]/a\auth-polkit=false' $FILE
+  sed --in-place '/\[main\]/a\auth-polkit=false' $NETWORK_MANAGER_CONF
   # Only make this replacement for user-related entries
-  sed --in-place '/unix-group:user/{ n; n; n; n; s/ResultActive=no/ResultActive=yes/ }' $FILE2
+  sed --in-place '/unix-group:user/{ n; n; n; n; s/ResultActive=no/ResultActive=yes/ }' $NM_POLKIT_NEW
 fi

@@ -126,10 +126,17 @@ if grep --quiet 'x-scheme-handler/https=firefox' $FILE; then
 fi
 
 # Remove lightdm access to network settings and maintain user access to network settings, if they had been given
+# Also make paths to polkit files consistent, so they aren't divided between /etc/ and /var/lib
 NETWORK_FILE=/etc/NetworkManager/NetworkManager.conf
-NETWORK_FILE2=/var/lib/polkit-1/localauthority/50-local.d/networkmanager.pkla
-if ! grep --quiet "unix-user:lightdm" $NETWORK_FILE2; then
-  cat << EOF >> $NETWORK_FILE2
+NM_POLKIT_OLD=/var/lib/polkit-1/localauthority/50-local.d/networkmanager.pkla
+NM_POLKIT_NEW=/etc/polkit-1/localauthority/50-local.d/networkmanager.pkla
+
+if [ -f $NM_POLKIT_OLD ]; then
+  mv $NM_POLKIT_OLD $NM_POLKIT_NEW
+fi
+
+if ! grep --quiet "unix-user:lightdm" $NM_POLKIT_NEW; then
+  cat << EOF >> $NM_POLKIT_NEW
 [NetworkManager3]
 Identity=unix-user:lightdm
 Action=org.freedesktop.NetworkManager.*
@@ -140,7 +147,7 @@ ResultActive=no
 EOF
 fi
 if grep --quiet "auth-polkit=false" $NETWORK_FILE; then
-  sed --in-place '/unix-group:user/{ n; n; n; n; s/ResultActive=no/ResultActive=yes/ }' $NETWORK_FILE2
+  sed --in-place '/unix-group:user/{ n; n; n; n; s/ResultActive=no/ResultActive=yes/ }' $NM_POLKIT_NEW
 fi
 
 # Run security-related scripts
