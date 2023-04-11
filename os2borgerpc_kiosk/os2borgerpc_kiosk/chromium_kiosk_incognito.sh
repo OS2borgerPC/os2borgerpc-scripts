@@ -19,6 +19,11 @@ LAUNCH_FILE="/usr/share/os2borgerpc/bin/start_chromium.sh"
 POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
 POLICY_NAME_INCOG="IncognitoModeAvailability"
 
+if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
+  exit 1
+fi
+
 # For removal or idempotency when adding
 # TODO: If kiosk becomes settable via a Policy, use that instead!
 sed --in-place 's/--kiosk//g' $LAUNCH_FILE

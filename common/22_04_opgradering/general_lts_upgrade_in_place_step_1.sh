@@ -24,14 +24,14 @@
 # END_OF_HEADER
 #================================================================
 
+# Update client
+pip install --upgrade os2borgerpc-client
+
 # Patch jobmanager and config to avoid early stoppage.
 
 set_os2borgerpc_config job_timeout 800000
 
 os2borgerpc_push_config_keys job_timeout
-
-# Update client
-pip install --upgrade os2borgerpc-client
 
 # Clear crontab and disable potential wake plans to prevent shutdown while the upgrade is running
 TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile

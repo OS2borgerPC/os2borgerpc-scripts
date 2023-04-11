@@ -4,6 +4,11 @@
 #
 # Expect exactly two input parameters
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 if [ $# -ne 2 ]
 then
     printf '%s\n' "usage: $(basename "$0") <password> <confirmation>"

@@ -11,6 +11,11 @@ set -x
 # Why not use a .config/autostart file? Because the user isn't allowed to chown to root
 # ...even if they are the current owner.
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 USER="user"
 DESKTOP="Skrivebord"
 USER_CLEANUP=/usr/share/os2borgerpc/bin/user-cleanup.bash

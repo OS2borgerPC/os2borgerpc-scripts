@@ -11,6 +11,11 @@
 ENABLE_LIGHTDM_GREETER_SETUP_SCRIPTS=$1
 CLEANUP_LIGHTDM_GREETER_SETUP_SCRIPTS_DIR=$2
 
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
+
 LIGHTDM_DIR="/etc/lightdm"
 FILE_PATH="$LIGHTDM_DIR""/lightdm.conf"
 SCRIPT_DIR="$LIGHTDM_DIR""/greeter-setup-scripts"
