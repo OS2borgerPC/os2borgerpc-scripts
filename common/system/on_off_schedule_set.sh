@@ -335,7 +335,7 @@ def main():
         # Add notification for next shutdown
         with open(USERCRON, 'a') as cronfile:
             cronfile.write(f"{notify_time.minute} {notify_time.hour} {notify_time.day} {notify_time.month} *"
-                           f" XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/zenity --warning --text '<big>{MESSAGE}</big>'\n")
+                           f" export DISPLAY=:0 && /usr/bin/zenity --warning --text '<big>{MESSAGE}</big>'\n")
         subprocess.run(["crontab", "-u", "user", USERCRON])
         if os.path.exists(USERCRON):
             os.remove(USERCRON)
