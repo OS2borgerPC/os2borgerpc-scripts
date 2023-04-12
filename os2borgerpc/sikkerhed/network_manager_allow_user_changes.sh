@@ -22,6 +22,7 @@ NETWORK_MANAGER_CONF=/etc/NetworkManager/NetworkManager.conf
 # /var/lib, so use that instead
 NM_POLKIT_OLD=/var/lib/polkit-1/localauthority/50-local.d/networkmanager.pkla
 NM_POLKIT_NEW=/etc/polkit-1/localauthority/50-local.d/networkmanager.pkla
+mkdir --parents "$(dirname $NM_POLKIT_NEW)"
 
 if [ -f $NM_POLKIT_OLD ]; then
   mv $NM_POLKIT_OLD $NM_POLKIT_NEW
