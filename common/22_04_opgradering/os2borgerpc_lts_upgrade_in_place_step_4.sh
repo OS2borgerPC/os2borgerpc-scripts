@@ -114,8 +114,10 @@ DESKTOP_LOGOUT_FILE="/home/.skjult/Skrivebord/logout.desktop"
 OLD_DESKTOP_LOGOUT_FILE="/home/.skjult/Skrivebord/Logout.desktop"
 if [ -f $DESKTOP_LOGOUT_FILE ] && ! grep --quiet "no-prompt" $DESKTOP_LOGOUT_FILE; then
   sed --in-place 's/Exec=gnome-session-quit --logout/Exec=sh -c "sleep 0.1 \&\& gnome-session-quit --logout"/' $DESKTOP_LOGOUT_FILE
+  sed --in-place 's/Exec=gnome-session-quit/Exec=sh -c "sleep 0.1 \&\& gnome-session-quit"/' $DESKTOP_LOGOUT_FILE
 elif [ -f $OLD_DESKTOP_LOGOUT_FILE ] && ! grep --quiet "no-prompt" $OLD_DESKTOP_LOGOUT_FILE; then
   sed --in-place 's/Exec=gnome-session-quit --logout/Exec=sh -c "sleep 0.1 \&\& gnome-session-quit --logout"/' $OLD_DESKTOP_LOGOUT_FILE
+  sed --in-place 's/Exec=gnome-session-quit/Exec=sh -c "sleep 0.1 \&\& gnome-session-quit"/' $OLD_DESKTOP_LOGOUT_FILE
 fi
 
 # Maintain default browser settings

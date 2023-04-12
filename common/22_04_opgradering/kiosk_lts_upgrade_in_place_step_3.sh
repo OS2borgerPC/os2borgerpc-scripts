@@ -54,8 +54,12 @@ release_upgrades_file=/etc/update-manager/release-upgrades
 sed -i "s/Prompt=.*/Prompt=lts/" $release_upgrades_file
 
 # Perform the actual upgrade with some error handling
-ERRORS="False"
-do-release-upgrade -f DistUpgradeViewNonInteractive >  /var/log/os2borgerpc_upgrade_1.log || ERRORS="True"
+do-release-upgrade -f DistUpgradeViewNonInteractive >  /var/log/os2borgerpc_upgrade_1.log || true
+
+apt-get --assume-yes --fix-broken install || true
+apt-get --assume-yes autoremove || true
+apt-get --assume-yes clean || true
+apt-get --assume-yes install --upgrade python3-pip || true
 
 # Make sure that jobmanager can still find the client
 PIP_ERRORS="False"
@@ -64,12 +68,6 @@ pip install -q os2borgerpc_client || PIP_ERRORS="True"
 if [ "$PIP_ERRORS" == "True" ]; then
   mkdir --parents /usr/local/lib/python3.10
   cp --recursive --no-clobber /usr/local/lib/python3.8/dist-packages/ /usr/local/lib/python3.10/
-fi
-
-if [ "$ERRORS" == "True" ]; then
-  apt-get --assume-yes --fix-broken install
-  apt-get --assume-yes autoremove
-  apt-get --assume-yes clean
 fi
 
 if ! lsb_release -d | grep --quiet 22; then
