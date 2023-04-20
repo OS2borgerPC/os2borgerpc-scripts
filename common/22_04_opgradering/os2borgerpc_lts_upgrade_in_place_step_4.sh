@@ -110,6 +110,8 @@ EOF
 chmod +x /usr/bin/gnome-control-center
 
 # Fix any potential desktop logout buttons with prompts
+# The first sed in each case handles our own desktop logout buttons
+# The second sed in each case handles custom logout buttons used by e.g. Århus
 DESKTOP_LOGOUT_FILE="/home/.skjult/Skrivebord/logout.desktop"
 OLD_DESKTOP_LOGOUT_FILE="/home/.skjult/Skrivebord/Logout.desktop"
 if [ -f $DESKTOP_LOGOUT_FILE ] && ! grep --quiet "no-prompt" $DESKTOP_LOGOUT_FILE; then
@@ -151,6 +153,20 @@ EOF
 fi
 if grep --quiet "auth-polkit=false" $NETWORK_FILE; then
   sed --in-place '/unix-group:user/{ n; n; n; n; s/ResultActive=no/ResultActive=yes/ }' $NM_POLKIT_NEW
+fi
+
+# Prevent the scanner program from asking for superuser password
+# if network printer search is disabled
+if systemctl status avahi-daemon | grep masked; then
+  POLKIT_POLICY="/etc/polkit-1/localauthority/10-vendor.d/01-os2borgerpc-deny-user-managing-units.pkla"
+  cat <<- EOF > $POLKIT_POLICY
+[User shan't manage units, to prevent simple-scan/saned from prompting for password trying to start avahi-daemon]
+Identity=unix-user:user
+Action=org.freedesktop.systemd1.manage-units
+ResultAny=no
+ResultInactive=no
+ResultActive=no
+EOF
 fi
 
 # Run security-related scripts
