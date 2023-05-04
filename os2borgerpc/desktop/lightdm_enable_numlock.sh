@@ -37,6 +37,9 @@ if [ "$NUMLOCK_ON" = "True" ]; then
 
 numlockx on
 EOF
+    # Set the correct permissions on the file, so it can be executed by lightdm and lightdm only
+    chown lightdm:lightdm "$SCRIPT"
+    chmod u+x "$SCRIPT"
     echo "Added the script: $SCRIPT"
 
 
@@ -49,10 +52,10 @@ Exec=/usr/bin/numlockx on
 Terminal=False
 NoDisplay=true
 END
-    echo "Added the numlock policy as: $POLICY" 
+    echo "Added the numlock policy as: $POLICY"
 
-else 
-    if [ -f "/usr/bin/numlockx" ]; then 
+else
+    if [ -f "/usr/bin/numlockx" ]; then
         apt-get remove -yqq numlockx
     fi
     rm -f "$POLICY" "$SCRIPT"
