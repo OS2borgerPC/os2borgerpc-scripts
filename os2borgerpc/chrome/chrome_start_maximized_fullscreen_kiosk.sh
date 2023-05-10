@@ -29,7 +29,15 @@ SETTING="$1"
 USER=".skjult"
 DESKTOP_FILE_1=/usr/share/applications/google-chrome.desktop
 # In case they've also added Chrome to their desktop
-DESKTOP_FILE_2=/home/$USER/Skrivebord/google-chrome.desktop
+# Determine the name of the user desktop directory. This is done via xdg-user-dir,
+# which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
+# we run xdg-user-dirs-update, which generates it based on the environment variable
+# LANG. This variable is empty in lightdm so we first export it
+# based on the value stored in /etc/default/locale
+export "$(grep LANG= /etc/default/locale)"
+runuser -u user xdg-user-dirs-update
+DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
+DESKTOP_FILE_2=/home/$USER/$DESKTOP/google-chrome.desktop
 # TODO: Delete DESKTOP_FILE_3 later on as its now a symlink to DESKTOP_FILE_1 - as it should be
 # In case they've run chrome_autostart.sh.
 # The name is no mistake, that one is not called google-chrome.desktop

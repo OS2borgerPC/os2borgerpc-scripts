@@ -63,7 +63,15 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 DESKTOP_FILE_PATH_1=/usr/share/applications/google-chrome.desktop
 # In case a Chrome shortcut has been added to the desktop
-DESKTOP_FILE_PATH_2=/home/$USER/Skrivebord/google-chrome.desktop
+# Determine the name of the user desktop directory. This is done via xdg-user-dir,
+# which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
+# we run xdg-user-dirs-update, which generates it based on the environment variable
+# LANG. This variable is empty in lightdm so we first export it
+# based on the value stored in /etc/default/locale
+export "$(grep LANG= /etc/default/locale)"
+runuser -u user xdg-user-dirs-update
+DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
+DESKTOP_FILE_PATH_2=/home/$USER/$DESKTOP/google-chrome.desktop
 # In case chrome_autostart.sh has been executed
 DESKTOP_FILE_PATH_3=/home/$USER/.config/autostart/chrome.desktop
 FILES="$DESKTOP_FILE_PATH_1 $DESKTOP_FILE_PATH_2 $DESKTOP_FILE_PATH_3"

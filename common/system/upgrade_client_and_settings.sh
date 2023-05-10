@@ -18,8 +18,11 @@ done
 # Set the correct, more restrictive permissions on all previous jobs
 chmod --recursive 700 /var/lib/os2borgerpc
 
+# Determine the name of the superuser desktop directory.
+DESKTOP=$(runuser -u superuser xdg-user-dir DESKTOP)
+
 # More restrictive permissions on /home/superuser
 chmod -R 700 /home/superuser
-chown -R superuser:superuser /home/superuser/Skrivebord
+chown -R superuser:superuser "$DESKTOP"
 
 pip3 install --upgrade os2borgerpc-client
