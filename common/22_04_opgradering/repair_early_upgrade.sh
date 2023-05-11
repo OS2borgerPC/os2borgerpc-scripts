@@ -218,10 +218,10 @@ rm $BRANCH.zip
 "$SCRIPT_DIR/os2borgerpc/sikkerhed/dconf_gnome_lock_menu_editing.sh" True
 
 # Remove lock from the menu
-"$SCRIPT_DIR/os2borgerpc/os2borgerpc/dconf_disable_lock_menu.sh" True
+"$SCRIPT_DIR/os2borgerpc/desktop/dconf_disable_lock_menu.sh" True
 
 # Remove switch user from the menu
-"$SCRIPT_DIR/os2borgerpc/os2borgerpc/dconf_disable_user_switching.sh" True
+"$SCRIPT_DIR/os2borgerpc/desktop/dconf_disable_user_switching.sh" True
 
 # Setup a script to activate the desktop shortcuts for user on login
 "$SCRIPT_DIR/os2borgerpc/desktop/desktop_activate_shortcuts.sh"
