@@ -181,10 +181,10 @@ rm $BRANCH.zip
 "$SCRIPT_DIR/os2borgerpc/sikkerhed/dconf_gnome_lock_menu_editing.sh" True
 
 # Remove lock from the menu
-"$SCRIPT_DIR/os2borgerpc/desktop/disable_lock_menu_dconf.sh" True
+"$SCRIPT_DIR/os2borgerpc/desktop/dconf_disable_lock_menu.sh" True
 
 # Remove switch user from the menu
-"$SCRIPT_DIR/os2borgerpc/desktop/disable_user_switching_dconf.sh" True
+"$SCRIPT_DIR/os2borgerpc/desktop/dconf_disable_user_switching.sh" True
 
 # Setup a script to activate the desktop shortcuts for user on login
 "$SCRIPT_DIR/os2borgerpc/desktop/desktop_activate_shortcuts.sh"
@@ -211,7 +211,7 @@ if [ ! -f $POWER_POLICY ]; then
 fi
 
 # Enable universal access menu by default
-"$SCRIPT_DIR/os2borgerpc/desktop/dconf_policy_a11y.sh" True
+"$SCRIPT_DIR/os2borgerpc/desktop/dconf_a11y.sh" True
 
 # Add the new firefox policies, if they don't have them
 NEW_FIREFOX_POLICY_FILE=/etc/firefox/policies/policies.json
