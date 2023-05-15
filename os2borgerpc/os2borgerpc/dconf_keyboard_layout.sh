@@ -24,10 +24,15 @@ fi
 ACTIVATE=$1
 LANGUAGE_TO_ADD=$2 # Example: ua for Ukrainian
 
+# Determine the default language by checking LANG in /etc/default/locale
+# The equal sign is there to prevent matching LANGUAGE if it is present in the file
+DEFAULT_LANGUAGE=$(grep LANG= /etc/default/locale | cut --delimiter '_' --fields 2 | cut --delimiter '.' --fields 1)
+DEFAULT_LANGUAGE=$(echo "$DEFAULT_LANGUAGE" | tr '[:upper:]' '[:lower:]')
+
 # Change these three to set a different policy to another value
 POLICY_PATH="org/gnome/desktop/input-sources"
 POLICY="sources"
-POLICY_VALUE="[('xkb','dk'),('xkb','$LANGUAGE_TO_ADD')]"
+POLICY_VALUE="[('xkb','$DEFAULT_LANGUAGE'),('xkb','$LANGUAGE_TO_ADD')]"
 
 POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-keyboard-layout"
 POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-keyboard-layout"

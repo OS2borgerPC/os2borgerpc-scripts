@@ -24,7 +24,15 @@ find_desktop_files_path() {
 
 LOCATION="$(lower "$1")"
 
-SHADOW_DESKTOP=/home/.skjult/Skrivebord
+# Determine the name of the user desktop directory. This is done via xdg-user-dir,
+# which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
+# we run xdg-user-dirs-update, which generates it based on the environment variable
+# LANG. This variable is empty in lightdm so we first export it
+# based on the value stored in /etc/default/locale
+export "$(grep LANG= /etc/default/locale)"
+runuser -u user xdg-user-dirs-update
+DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
+SHADOW_DESKTOP=/home/.skjult/$DESKTOP
 SNAP_DESKTOP_FILE_PATH="/var/lib/snapd/desktop/applications"
 APT_DESKTOP_FILE_PATH="/usr/share/applications"
 
@@ -32,7 +40,7 @@ if [ "$LOCATION" = "menu" ]; then
   # Print only the last line only and format it a bit more nicely
   tail -n 1 /etc/dconf/db/os2borgerpc.d/02-launcher-favorites | sed "s/favorite-apps=\[\|'\|\]\ \|.desktop//g" | tr ',' '\n'
   exit
-elif [ "$LOCATION" = "skrivebord" ]; then
+elif [ "$LOCATION" = "skrivebord" ] || [ "$LOCATION" = "$DESKTOP" ]; then
   PTH="$SHADOW_DESKTOP/"
 else
   PTH=$APT_DESKTOP_FILE_PATH/

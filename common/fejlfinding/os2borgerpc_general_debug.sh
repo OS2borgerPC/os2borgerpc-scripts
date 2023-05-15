@@ -15,6 +15,15 @@ text() {
   printf "\n%s\n" "### $MSG ###"
 }
 
+# Determine the name of the user desktop directory. This is done via xdg-user-dir,
+# which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
+# we run xdg-user-dirs-update, which generates it based on the environment variable
+# LANG. This variable is empty in lightdm so we first export it
+# based on the value stored in /etc/default/locale
+export "$(grep LANG= /etc/default/locale)"
+runuser -u user xdg-user-dirs-update
+DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
+
 header "General info:"
 
 text "Information about the computer model:"
@@ -39,10 +48,10 @@ text "Check permissions on files in /usr/share/os2borgerpc/bin/"
 ls -l /usr/share/os2borgerpc/bin/
 
 text "List programs/files on the desktop:"
-ls -l /home/user/Skrivebord/
+ls -l /home/user/"$DESKTOP"/
 
 text "Verify this matches what's in the user template (after logout):"
-ls -l /home/.skjult/Skrivebord/
+ls -l /home/.skjult/"$DESKTOP"/
 
 text "Check the contents of /home/.skjult/"
 ls -la /home/.skjult/
@@ -94,13 +103,13 @@ text "Check chrome policies"
 cat /etc/opt/chrome/policies/managed/os2borgerpc-defaults.json
 
 USER=".skjult"
-DESKTOP_FILE_1=/usr/share/applications/google-chrome.desktop
+DESKTOP_FILE_1="/usr/share/applications/google-chrome.desktop"
 # In case they've also added Chrome to their desktop
-DESKTOP_FILE_2=/home/$USER/Skrivebord/google-chrome.desktop
+DESKTOP_FILE_2="/home/$USER/$DESKTOP/google-chrome.desktop"
 # In case they've run chrome_autostart.sh.
 # The name is no mistake, that one is unfortunately not called google-chrome.desktop
-DESKTOP_FILE_3=/home/$USER/.config/autostart/chrome.desktop
-DESKTOP_FILE_4=/home/$USER/.local/share/applications/google-chrome.desktop
+DESKTOP_FILE_3="/home/$USER/.config/autostart/chrome.desktop"
+DESKTOP_FILE_4="/home/$USER/.local/share/applications/google-chrome.desktop"
 
 text "File at $DESKTOP_FILE_1:"
 cat "$DESKTOP_FILE_1"

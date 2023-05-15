@@ -27,15 +27,25 @@ DIR=/var/local/$NAME
 USERNAME=user
 SHADOW=.skjult
 
+# Determine the name of the user desktop directory. This is done via xdg-user-dir,
+# which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
+# we run xdg-user-dirs-update, which generates it based on the environment variable
+# LANG. This variable is empty in lightdm so we first export it
+# based on the value stored in /etc/default/locale
+export "$(grep LANG= /etc/default/locale)"
+runuser -u user xdg-user-dirs-update
+DESKTOP=$(basename "$(runuser -u $USERNAME xdg-user-dir DESKTOP)")
+
 if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
    [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
 
   mkdir --parents "$DIR"
+  mkdir --parents "/home/$SHADOW/$DESKTOP"
   chown $USERNAME:$USERNAME "$DIR"
-  ln --symbolic "$DIR" "/home/$SHADOW/Skrivebord/$NAME"
+  ln --symbolic "$DIR" "/home/$SHADOW/$DESKTOP/$NAME"
 
 else # Delete the persistent dir with the specified NAME
 
-  rm --recursive "$DIR"
-  rm "/home/$SHADOW/Skrivebord/$NAME"
+  rm --force --recursive "$DIR"
+  rm --force "/home/$SHADOW/$DESKTOP/$NAME"
 fi

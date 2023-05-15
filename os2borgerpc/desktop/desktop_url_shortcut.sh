@@ -25,8 +25,17 @@ URL=$2
 SHORTCUT_NAME="$3"
 ICON_UPLOAD="$4"
 
+# Determine the name of the user desktop directory. This is done via xdg-user-dir,
+# which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
+# we run xdg-user-dirs-update, which generates it based on the environment variable
+# LANG. This variable is empty in lightdm so we first export it
+# based on the value stored in /etc/default/locale
+export "$(grep LANG= /etc/default/locale)"
+runuser -u user xdg-user-dirs-update
+DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
+
 SHADOW=".skjult"
-DESKTOP_FILE="/home/$SHADOW/Skrivebord/$SHORTCUT_NAME.desktop"
+DESKTOP_FILE="/home/$SHADOW/$DESKTOP/$SHORTCUT_NAME.desktop"
 
 if [ "$ACTIVATE" = 'True' ]; then
 
@@ -53,7 +62,7 @@ if [ "$ACTIVATE" = 'True' ]; then
     fi
   fi
 
-  mkdir --parents /home/$SHADOW/Skrivebord
+  mkdir --parents /home/$SHADOW/"$DESKTOP"
 
 	#	Originally used: Type=Link and URL=$URL and no Exec line, but seemingly that doesn't work in 20.04
 	cat <<- EOF > "$DESKTOP_FILE"

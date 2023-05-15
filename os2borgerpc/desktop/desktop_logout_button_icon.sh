@@ -18,14 +18,23 @@ SHORTCUT_NAME="$2"
 PROMPT=$3
 ICON_UPLOAD="$4"
 
-OLD_DESKTOP_FILE=/home/.skjult/Skrivebord/Logout.desktop
-DESKTOP_FILE=/home/.skjult/Skrivebord/logout.desktop
+# Determine the name of the user desktop directory. This is done via xdg-user-dir,
+# which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
+# we run xdg-user-dirs-update, which generates it based on the environment variable
+# LANG. This variable is empty in lightdm so we first export it
+# based on the value stored in /etc/default/locale
+export "$(grep LANG= /etc/default/locale)"
+runuser -u user xdg-user-dirs-update
+DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
+
+OLD_DESKTOP_FILE=/home/.skjult/"$DESKTOP"/Logout.desktop
+DESKTOP_FILE=/home/.skjult/"$DESKTOP"/logout.desktop
 
 rm --force "$OLD_DESKTOP_FILE"
 
 if [ "$ACTIVATE" = 'True' ]; then
 
-  mkdir --parents "$(dirname $DESKTOP_FILE)"
+  mkdir --parents "$(dirname "$DESKTOP_FILE")"
 
   TO_PROMPT_OR_NOT=--no-prompt
 
@@ -56,7 +65,7 @@ if [ "$ACTIVATE" = 'True' ]; then
     fi
   fi
 
-cat <<- EOF > $DESKTOP_FILE
+cat <<- EOF > "$DESKTOP_FILE"
 	[Desktop Entry]
 	Version=1.0
 	Type=Application
