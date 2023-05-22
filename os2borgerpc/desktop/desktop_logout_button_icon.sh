@@ -23,7 +23,7 @@ ICON_UPLOAD="$4"
 # we run xdg-user-dirs-update, which generates it based on the environment variable
 # LANG. This variable is empty in lightdm so we first export it
 # based on the value stored in /etc/default/locale
-export "$(grep LANG= /etc/default/locale)"
+export "$(grep LANG= /etc/default/locale | tr -d '"')"
 runuser -u user xdg-user-dirs-update
 DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
 
