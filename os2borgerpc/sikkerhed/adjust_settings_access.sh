@@ -41,8 +41,20 @@ else # Remove access to settings
 
 USER=\$(id -un)
 
+# Extract the line in /etc/default/locale where LANG is set
+LOCALE_VAR=\$(grep LANG= /etc/default/locale)
+
+# Set the info text based on the chosen language
+if echo \$LOCALE_VAR | grep sv; then
+  INFO="Systeminställningarna är inte tillgängliga för allmänheten.\n\nKontakta personalen om det uppstår problem."
+elif echo \$LOCALE_VAR | grep en; then
+  INFO="The settings are not accessible to the public.\n\nContact the staff if there are issues."
+else
+  INFO="Systemindstillingerne er ikke tilgængelige for publikum.\n\nKontakt personalet, hvis der er problemer."
+fi
+
 if [ \$USER == "user" ]; then
-  zenity --info --text="Systemindstillingerne er ikke tilgængelige for publikum.\n\n Kontakt personalet, hvis der er problemer."
+  zenity --info --text="\$INFO"
 else
   /usr/bin/gnome-control-center.real
 fi
