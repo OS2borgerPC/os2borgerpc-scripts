@@ -39,16 +39,25 @@ else # Deny access
   fi
 
 	cat <<- EOF > "$PROGRAM_OLD_PATH"
-		#!/bin/bash
+#!/bin/bash
 
-		USER=\$(id -un)
+USER=\$(id -un)
 
-		if [ \$USER == "user" ]; then
-		  zenity --info --text="Terminalen er ikke tilgængelig for publikum."
-		else
-		  "$PROGRAM_NEW_PATH"
-		fi
-	EOF
+# Set the info text based on the chosen language
+if echo \$LANG | grep sv; then
+  INFO="Terminalen är inte tillgänglig för allmänheten."
+elif echo \$LANG | grep en; then
+  INFO="The terminal is not accessible to the public."
+else
+  INFO="Terminalen er ikke tilgængelig for publikum."
+fi
+
+if [ \$USER == "user" ]; then
+  zenity --info --text="\$INFO"
+else
+  "$PROGRAM_NEW_PATH"
+fi
+EOF
 
   chmod +x "$PROGRAM_OLD_PATH"
 
