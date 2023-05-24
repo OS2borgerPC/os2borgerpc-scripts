@@ -53,7 +53,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 	# Prepend temporarily setting DESKTOP mutable before copying new files in, as otherwise that will fail
 	# We first determine the name of the user desktop directory as before
 	sed -i "/USERNAME=\"$USERNAME\"/a \
-export \$(grep LANG= \/etc\/default\/locale)\n\
+export \$(grep LANG= \/etc\/default\/locale | tr -d \'\"\')\n\
 runuser -u $USERNAME xdg-user-dirs-update\n\
 DESKTOP=\$(runuser -u $USERNAME xdg-user-dir DESKTOP)\n\
 chattr -i \$DESKTOP" $USER_CLEANUP
