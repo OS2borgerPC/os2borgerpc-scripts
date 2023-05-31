@@ -147,6 +147,7 @@ import os
 
 FILE = "$WAKE_PLAN_FILE" # "/etc/os2borgerpc/" + "$PLAN_NAME"
 MODE = "$MODE".lower()
+LOCALE_FILE = "/etc/default/locale"
 
 def check_weekday(plan, date):
     """Helper method that returns the week plan settings for the week day
@@ -318,7 +319,17 @@ def main():
 
     # Check the product type and add a notification 5 minutes before shutdown on OS2BorgerPC machines
     if plan['product'] == 'os2borgerpc':
-        MESSAGE = 'ADVARSEL: Denne computer lukker ned om fem minutter'
+        # Set the notification text based on the chosen language
+        locale = "None"
+        if os.path.exists(LOCALE_FILE):
+            with open(LOCALE_FILE, "r") as file:
+                locale = file.read()
+        if 'LANG=sv' in locale or 'LANG="sv' in locale:
+            MESSAGE = 'VARNING: Den här datorn stängs av om fem minuter'
+        elif 'LANG=en' in locale or 'LANG="en' in locale:
+            MESSAGE = 'WARNING: This computer will shut down in five minutes'
+        else:
+            MESSAGE = 'ADVARSEL: Denne computer lukker ned om fem minutter'
         # Find the time 5 minutes before shutdown
         notify_time = shutdown - datetime.timedelta(minutes=5)
         # Get current entries
@@ -330,7 +341,7 @@ def main():
             cronentries = cronfile.readlines()
         with open(USERCRON, 'w') as cronfile:
             for entry in cronentries:
-                if "lukker" not in entry:
+                if "zenity" not in entry and "notify-send" not in entry:
                     cronfile.write(entry)
         # Add notification for next shutdown
         with open(USERCRON, 'a') as cronfile:

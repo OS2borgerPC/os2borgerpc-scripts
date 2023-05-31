@@ -33,7 +33,7 @@ if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   USERCRON=/tmp/usercron
   crontab -u user -l > $USERCRON
   if [ -f $USERCRON ]; then
-    sed --in-place "/lukker/d" $USERCRON
+    sed --in-place "/zenity/d" $USERCRON
     crontab -u user $USERCRON
   fi
   rm --force $USERCRON
