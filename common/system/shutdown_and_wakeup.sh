@@ -39,7 +39,13 @@ fi
 
 ROOTCRON_TMP=/tmp/oldcron
 USERCRON_TMP=/tmp/usercron
-MESSAGE="Denne computer lukker ned om fem minutter"
+if grep "LANG=" /etc/default/locale | grep "sv"; then
+  MESSAGE="Den här datorn stängs av om fem minuter"
+elif grep "LANG=" /etc/default/locale | grep "en"; then
+  MESSAGE="This computer will shut down in five minutes"
+else
+  MESSAGE="Denne computer lukker ned om fem minutter"
+fi
 
 mkdir --parents "$(dirname $SCHEDULED_OFF_SCRIPT)"
 
@@ -49,7 +55,7 @@ crontab -u user -l > $USERCRON_TMP
 
 # Delete current crontab entries related to this script AND shutdown_at_time
 sed --in-place --expression "/rtcwake/d" --expression "/scheduled_off/d" --expression "/shutdown/d" $ROOTCRON_TMP
-sed --in-place "/lukker/d" $USERCRON_TMP
+sed --in-place "/notify-send/d" $USERCRON_TMP
 
 if [ "$1" == "--off" ]; then
     rm --force $SCHEDULED_OFF_SCRIPT

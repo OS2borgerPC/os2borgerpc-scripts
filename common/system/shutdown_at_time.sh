@@ -30,7 +30,13 @@ fi
 
 ROOTCRON_TMP=/tmp/oldcron
 USERCRON_TMP=/tmp/usercron
-MESSAGE="Denne computer lukker ned om fem minutter"
+if grep "LANG=" /etc/default/locale | grep "sv"; then
+  MESSAGE="Den här datorn stängs av om fem minuter"
+elif grep "LANG=" /etc/default/locale | grep "en"; then
+  MESSAGE="This computer will shut down in five minutes"
+else
+  MESSAGE="Denne computer lukker ned om fem minutter"
+fi
 
 # Read and save current cron settings first
 crontab -l > $ROOTCRON_TMP
@@ -38,7 +44,7 @@ crontab -u user -l > $USERCRON_TMP
 
 # Delete current crontab entries related to this script AND shutdown_and_wakeup.sh
 sed --in-place --expression "/shutdown/d" --expression "/rtcwake/d" --expression "/scheduled_off/d" $ROOTCRON_TMP
-sed --in-place "/lukker/d" $USERCRON_TMP
+sed --in-place "/notify-send/d" $USERCRON_TMP
 
 # If not called with --off: Determine the new crontab contents
 if [ "$1" != "--off" ]; then
