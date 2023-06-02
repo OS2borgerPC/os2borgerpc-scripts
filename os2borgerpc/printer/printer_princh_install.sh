@@ -19,7 +19,7 @@ PRINCH_VERSION_INSTALLED="$(dpkg --status princh-cloud-printer | grep Version | 
 # Remove the older versions of Princh, ignore if not existing
 apt-get remove --assume-yes princh || true
 # Remove their old PPA
-add-apt-repository --remove --yes ppa:princh/stable
+add-apt-repository --remove --yes ppa:princh/stable || true
 
 # No princh-cloud-printer binary in path, so checking for princh-setup
 if  [ "$PRINCH_VERSION_AVAILABLE" != "$PRINCH_VERSION_INSTALLED" ]; then
