@@ -20,11 +20,6 @@ SCRIPT_DIR="$LIGHTDM_DIR/greeter-setup-scripts"
 
 mkdir --parents "$SCRIPT_DIR"
 
-if [ "$CLEANUP_LIGHTDM_GREETER_SETUP_SCRIPTS_DIR" = "True" ]; then
-    rm -r "$SCRIPT_DIR"
-    echo Emptied directory "$SCRIPT_DIR"
-fi
-
 # This script executes all scripts in SCRIPT_DIR when called
 GREETER_SETUP_SCRIPT="$LIGHTDM_DIR/greeter_setup_script.sh"
 cat << EOF > $GREETER_SETUP_SCRIPT
@@ -36,6 +31,12 @@ if [ \$(ls -A "$SCRIPT_DIR"/) ]; then
     done
 fi
 EOF
+
+if [ "$CLEANUP_LIGHTDM_GREETER_SETUP_SCRIPTS_DIR" = "True" ]; then
+    rm -r "$SCRIPT_DIR"
+    echo Emptied directory "$SCRIPT_DIR"
+    exit 0
+fi
 
 # Set the correct permissions
 chown lightdm:lightdm $GREETER_SETUP_SCRIPT

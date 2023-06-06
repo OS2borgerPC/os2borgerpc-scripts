@@ -36,6 +36,7 @@ SUSPEND_SCRIPT_LOG="/usr/share/os2borgerpc/bin/inactive_logout.log"
 LIGHTDM_SUSPEND_SCRIPT="/etc/lightdm/greeter-setup-scripts/suspend_after_time.sh"
 LIGHTDM_SUSPEND_SCRIPT_LOG="/etc/lightdm/scriptlogs/suspend_after_time.log"
 LIGHTDM_GREETER_SETUP_SCRIPT="/etc/lightdm/greeter_setup_script.sh"
+LIGHTDM_GREETER_SCRIPTS_DIR="/etc/lightdm/greeter-setup-scripts"
 
 # Stop Debconf from interrupting when interacting with the package system
 export DEBIAN_FRONTEND=noninteractive
@@ -73,14 +74,17 @@ LOGOUT_TIME_MS=$(( LOGOUT_TIME_MINS * 60 * 1000 ))
 DIALOG_TIME_MS=$(( DIALOG_TIME_MINS * 60 * 1000 ))
 
 # Older versions of this script used sh, but our lightdm suspend script uses
-# bash specifics
+# bash specifics. Change it to run the script directly with whatever interpreter it has.
+# This requires ensuring that lightdm has execute permissions on all those scripts.
 # The & after bash "$file" is necessary to prevent the lightdm suspend script from
 # blocking the login screen. It has to be escaped in sed
 # The spaces before sh and bash are necessary to prevent repeated runs of the script
 # from changing the file content to babash "$file" & & or similar
 if [ -f "$LIGHTDM_GREETER_SETUP_SCRIPT" ]; then
+  chown -R lightdm:lightdm $LIGHTDM_GREETER_SCRIPTS_DIR
+  chmod u+x $LIGHTDM_GREETER_SCRIPTS_DIR
   # shellcheck disable=SC2016
-  sed --in-place 's/ sh "$file"/ bash "$file" \&/' "$LIGHTDM_GREETER_SETUP_SCRIPT"
+  sed --in-place 's/ sh "$file"/ ./"$file" \&/' "$LIGHTDM_GREETER_SETUP_SCRIPT"
 fi
 
 mkdir --parents "$(dirname $LIGHTDM_SUSPEND_SCRIPT)" "$(dirname $SUSPEND_SCRIPT_LOG)"
@@ -216,4 +220,4 @@ cat <<- EOF > $SUSPEND_SCRIPT
 	fi
 EOF
 
-chmod +x $SUSPEND_SCRIPT
+chmod u+x $SUSPEND_SCRIPT

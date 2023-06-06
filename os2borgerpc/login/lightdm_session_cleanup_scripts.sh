@@ -20,11 +20,6 @@ SCRIPT_DIR="$LIGHTDM_DIR/session-cleanup-scripts"
 
 mkdir --parents "$SCRIPT_DIR"
 
-if [ "$CLEANUP_LIGHTDM_SESSION_CLEANUP_SCRIPTS_DIR" = "True" ]; then
-    rm -r "$SCRIPT_DIR"
-    echo Emptied directory "$SCRIPT_DIR"
-fi
-
 # This script executes all scripts in SCRIPT_DIR when called
 SESSION_CLEANUP_SCRIPT="$LIGHTDM_DIR/session_cleanup_script.sh"
 cat << EOF > $SESSION_CLEANUP_SCRIPT
@@ -41,8 +36,14 @@ if [ \$(ls -A "$SCRIPT_DIR"/) ]; then
 fi
 EOF
 
+if [ "$CLEANUP_LIGHTDM_SESSION_CLEANUP_SCRIPTS_DIR" = "True" ]; then
+    rm -r "$SCRIPT_DIR"
+    echo Emptied directory "$SCRIPT_DIR"
+    exit 0
+fi
+
 # Set the correct permissions
-chmod lightdm:lightdm $SESSION_CLEANUP_SCRIPT
+chown lightdm:lightdm $SESSION_CLEANUP_SCRIPT
 chmod u+x $SESSION_CLEANUP_SCRIPT
 chown --recursive lightdm:lightdm "$SCRIPT_DIR"
 chmod --recursive u+x "$SCRIPT_DIR"
