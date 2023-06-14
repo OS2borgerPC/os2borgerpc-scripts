@@ -13,7 +13,7 @@ def csv_writer(security_events):
 
 
 now = datetime.now()
-timestamp = datetime.strftime(now, "%Y%m%d%H%M")
+timestamp = datetime.strftime(now, "%Y%m%d%H%M%S")
 security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 log_event = "Ping warning."
 complete_log = "Nothing to worry about. Just a ping warning."
