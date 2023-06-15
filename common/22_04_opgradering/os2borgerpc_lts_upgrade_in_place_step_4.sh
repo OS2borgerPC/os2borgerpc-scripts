@@ -256,6 +256,50 @@ chown -R superuser:superuser /home/superuser/Skrivebord
 # Remove cloned script repository
 rm --recursive "$SCRIPT_DIR"
 
+# Update chrome policies
+# This is done without running chrome_install to reduce the possible points of failure
+CHROME_POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-defaults.json"
+if [ -f "$CHROME_POLICY" ]; then
+  rm --force /etc/opt/chrome/policies/managed/os2borgerpc-default-hp.json /etc/opt/chrome/policies/managed/os2borgerpc-login.json
+  cat > "$CHROME_POLICY" <<- END
+{
+    "AutofillAddressEnabled": false,
+    "AutofillCreditCardEnabled": false,
+    "BrowserAddPersonEnabled": false,
+    "BrowserGuestModeEnabled": true,
+    "BrowserSignin": 0,
+    "BrowsingDataLifetime": [
+      {
+        "data_types": [
+          "autofill",
+          "browsing_history",
+          "cached_images_and_files",
+          "download_history",
+          "hosted_app_data",
+          "site_settings"
+        ],
+        "time_to_live_in_hours": 1
+      }
+    ],
+    "DefaultBrowserSettingEnabled": false,
+    "DeveloperToolsAvailability": 2,
+    "EnableMediaRouter": false,
+    "ExtensionInstallBlocklist": [
+      "*"
+    ],
+    "ForceEphemeralProfiles": true,
+    "MetricsReportingEnabled": false,
+    "PasswordManagerEnabled": false,
+    "PaymentMethodQueryEnabled": false,
+    "URLBlocklist": [
+      "chrome://accessibility",
+      "chrome://extensions",
+      "chrome://flags"
+    ]
+}
+END
+fi
+
 # Fix dpkg settings
 cat << EOF > /etc/apt/apt.conf.d/local
 Dpkg::Options {
