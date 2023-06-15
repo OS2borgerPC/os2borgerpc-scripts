@@ -57,6 +57,7 @@ import subprocess
 import datetime
 
 PIPE = "/var/lib/os2borgerpc/usb-event"
+USB_EVENT_LOG = "/var/log/usb-events.log"
 
 
 # Old versions of this script expired to 1970-01-02 like hard_shutdown_lockdown.sh
@@ -74,17 +75,12 @@ def get_current_devices():
     device_ids = []
     for info in lsusb_output.split(b'\n'):
         if info:
-            device_ids.append(info)
-    device_ids = list(dict.fromkeys(device_ids))
-    device_ids = [str(device_id, encoding) for device_id in device_ids]
+            device_ids.append(str(info, encoding))
     return device_ids
 
 def make_log_entry(device):
     current_datetime = datetime.datetime.now()
-    months = ["January", "February", "March", "April", "May", "June", "July", "August",
-              "September", "October", "November", "December"]
-    month = months[current_datetime.month - 1]
-    entry = f"{current_datetime.day} {month} {current_datetime.year} " \
+    entry = f"{current_datetime.day} {current_datetime.strftime('%B')} {current_datetime.year} " \
             f"{current_datetime.hour}:{current_datetime.minute} - USB-event caused by {device}\n"
     return entry
 
@@ -109,7 +105,7 @@ def main():
                 changed_device = list(set(devices_before_event).symmetric_difference(set(devices_after_event)))
                 for device in changed_device:
                     entry = make_log_entry(changed_device)
-                    with open("/var/log/usb-events.log", "a") as log:
+                    with open(USB_EVENT_LOG, "a") as log:
                         log.write(entry)
     finally:
         unlink(PIPE)
