@@ -5,6 +5,7 @@ set -x
 LOGIN_COUNT_SCRIPT="/usr/local/lib/os2borgerpc/count_daily_logins.sh"
 LOGIN_COUNT_SERVICE="/etc/systemd/system/os2borgerpc-count_daily_logins.service"
 CONFIG_NAME="login_counts"
+DATA_LIMIT=89 # This is one less than the number of days that are stored
 ROOTCRON_TMP="/etc/rootcron"
 
 mkdir --parents "$(dirname $LOGIN_COUNT_SCRIPT)"
@@ -37,6 +38,10 @@ LOGIN_COUNT=\$(grep --text "\$YESTERDAY_DATE" "\$LOG_FILE" | grep -c "New sessio
 if [ -z "\$OLD_LOGIN_COUNTS" ]; then
   CONFIG_VALUE=\$(echo "\$YESTERDAY_FULL_DATE: \$LOGIN_COUNT")
 else
+  IFS="," read -ra OLD_COUNTS_ARRAY <<< "\$(echo "\$OLD_LOGIN_COUNTS" | sed "s/, /,/g")"
+  if [ \${#OLD_COUNTS_ARRAY[@]} -gt $DATA_LIMIT ]; then
+    OLD_LOGIN_COUNTS=\$(IFS="," ; echo "\${OLD_COUNTS_ARRAY[*]: -$DATA_LIMIT}" | sed "s/,/, /g")
+  fi
   CONFIG_VALUE=\$(echo "\$OLD_LOGIN_COUNTS, \$YESTERDAY_FULL_DATE: \$LOGIN_COUNT")
 fi
 
