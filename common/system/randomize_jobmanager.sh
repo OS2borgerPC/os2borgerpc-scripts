@@ -43,13 +43,29 @@ fi
 
 RANDOM_NUMBER=$((RANDOM%INTERVAL+0))
 CRON_COMMAND="$RANDOM_NUMBER,"
+CHECKIN_SCRIPT="/usr/share/os2borgerpc/bin/check-in_delay.sh"
+# Generate a pseudo-random number between 0 and 59
+DELAY_IN_SECONDS=$((RANDOM%60))
+
+# Make sure the folder for the check-in script exists
+mkdir --parents "$(dirname "$CHECKIN_SCRIPT")"
+
+cat <<EOF > "$CHECKIN_SCRIPT"
+#!/usr/bin/env bash
+
+sleep $DELAY_IN_SECONDS
+
+/usr/local/bin/jobmanager
+EOF
+
+chmod u+x "$CHECKIN_SCRIPT"
 
 while [ $((RANDOM_NUMBER+INTERVAL)) -lt 60 ]
 do
     RANDOM_NUMBER=$((RANDOM_NUMBER+INTERVAL))
     if [ $((RANDOM_NUMBER+INTERVAL)) -ge 60 ]
     then
-        CRON_COMMAND="$CRON_COMMAND$RANDOM_NUMBER * * * * root /usr/local/bin/jobmanager"
+        CRON_COMMAND="$CRON_COMMAND$RANDOM_NUMBER * * * * root $CHECKIN_SCRIPT"
     else
         CRON_COMMAND="$CRON_COMMAND$RANDOM_NUMBER,"
     fi
