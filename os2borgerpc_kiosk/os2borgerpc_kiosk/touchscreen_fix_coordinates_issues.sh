@@ -5,10 +5,10 @@
 
 set -x
 
-if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
-  echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
-  exit 1
-fi
+#if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+#  echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
+#  exit 1
+#fi
 
 ACTIVATE="$1"
 INVERT="$2"
@@ -25,7 +25,18 @@ if [ "$INVERT" = "True" ]; then
 fi
 
 if [ "$SWAP" = "True" ]; then
-  SWAP_TEXT='Option "SwapAxes" "true"'
+  SWAP_TEXT='Option "TransformationMatrix" "0 1 0 -1 0 1 0 0 1"'
+fi
+
+if [ "$INVERT" = "True" ] && [ "$SWAP" = "True" ]; then
+  TEXT="$INVERT_TEXT
+        $SWAP_TEXT"
+elif [ "$INVERT" = "True" ] && [ "$SWAP" = "False" ]; then
+  TEXT="$INVERT_TEXT"
+elif [ "$INVERT" = "False" ] && [ "$SWAP" = "True" ]; then
+  TEXT="$SWAP_TEXT"
+else
+  TEXT=""
 fi
 
 mkdir --parents "$(dirname $OS2BPC_EVDEV_FILE)"
@@ -38,8 +49,7 @@ Section "InputClass"
         MatchIsTouchscreen "on"
         MatchDevicePath "/dev/input/event*"
         Driver "evdev"
-        $INVERT_TEXT
-        $SWAP_TEXT
+        $TEXT
 EndSection
 EOF
 
