@@ -29,7 +29,7 @@ USERNAME="user"
 # based on the value stored in /etc/default/locale
 export "$(grep LANG= /etc/default/locale | tr -d '"')"
 runuser -u $USERNAME xdg-user-dirs-update
-DESKTOP=$(basename "$(runuser -u $USERNAME xdg-user-dir DESKTOP)")
+DESKTOP="$(runuser -u $USERNAME xdg-user-dir DESKTOP)"
 USER_CLEANUP=/usr/share/os2borgerpc/bin/user-cleanup.bash
 COMMENT="# Make the desktop read only to user"
 

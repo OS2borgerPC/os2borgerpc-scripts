@@ -24,6 +24,12 @@
 # END_OF_HEADER
 #================================================================
 
+# Fail on machines that have already been upgraded
+if lsb_release -d | grep --quiet 22; then
+  echo "Denne maskine er allerede blevet opgraderet til Ubuntu 22.04."
+  exit 1
+fi
+
 # Update client
 pip install --upgrade os2borgerpc-client
 
