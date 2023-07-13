@@ -144,18 +144,6 @@ if [ -f $BSPWM_CONFIG ]; then
 	EOF
 fi
 
-CHROMIUM_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
-mkdir --parents "$(dirname "$CHROMIUM_POLICY_FILE")"
-cat << EOF > $CHROMIUM_POLICY_FILE
-{
-  "AutofillAddressEnabled": false,
-  "AutofillCreditCardEnabled": false,
-  "AutoplayAllowed": true,
-  "PasswordManagerEnabled": false,
-  "TranslateEnabled": false
-}
-EOF
-
 # Start X upon login
 PROFILE="/home/$CUSER/.profile"
 if ! grep --quiet -- 'startx' $PROFILE; then # Ensure idempotency

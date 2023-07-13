@@ -77,6 +77,18 @@ LOG_OUTPUT=$(apt-get install --assume-yes chromium-browser)
 EXIT_STATUS=$?
 echo "$LOG_OUTPUT" | base64
 
+CHROMIUM_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
+mkdir --parents "$(dirname "$CHROMIUM_POLICY_FILE")"
+cat << EOF > $CHROMIUM_POLICY_FILE
+{
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "AutoplayAllowed": true,
+  "PasswordManagerEnabled": false,
+  "TranslateEnabled": false
+}
+EOF
+
 # This section is related to the above workaround
 # and removes the related service once it is no longer needed
 if lsb_release -d | grep --quiet 22; then
