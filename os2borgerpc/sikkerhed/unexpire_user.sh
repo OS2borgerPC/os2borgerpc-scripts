@@ -33,4 +33,14 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+# Check if we should run user-cleanup.bash,
+# i.e. if the user account has actually been expired
+EXPIRED=$(chage -l user | grep 1970)
+
+# Unexpire user
 usermod -e '' user
+
+# Run user-cleanup.bash after unexpiring user to avoid issues with gio
+if [ -n "$EXPIRED" ]; then
+  /usr/share/os2borgerpc/bin/user-cleanup.bash
+fi
