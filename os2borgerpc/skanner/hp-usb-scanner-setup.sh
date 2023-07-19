@@ -15,17 +15,13 @@ set timeout -1
  
 spawn hp-plugin -i
  
-expect "Do you wish to download and install the plug-in? (y=yes*, no=no, q=quit) ? \r"
+expect -re "Enter option \\\\(d\\\\=download\\\\*, p\\\\=specify path, q\\\\=quit\\\\) \\\\? "
  
 send -- "\r"
  
-expect "Enter option (d=download*, p=specify path, q=quit) ? \r"
+expect -re "Do you accept the license terms for the plug-in \\\\(y\\\\=yes\\\\*, n\\\\=no, q\\\\=quit\\\\) \\\\? "
  
 send -- "\r"
- 
-expect "Do you accept the license terms for the plug-in (y=yes*, n=no, q=quit) ? \r"
- 
-send -- ""
  
 expect eof
 EOF
