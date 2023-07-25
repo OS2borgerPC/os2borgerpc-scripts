@@ -55,18 +55,26 @@ ACTIVATE=$1
 APPEND=$2
 UNLOCK=$3
 
+SERVICE_FILE="/etc/systemd/system/os2borgerpc-usb-monitor.service"
+APPROVE_DEVICES="/usr/share/os2borgerpc/lib/approve-devices.py"
+USB_MONITOR="/usr/share/os2borgerpc/lib/usb-monitor.py"
+ON_USB_EVENT="/usr/share/os2borgerpc/lib/on-usb-event.sh"
+USB_RULES="/etc/udev/rules.d/99-os2borgerpc-usb-event.rules"
+
+if [ -f "$SERVICE_FILE" ]; then
+  systemctl disable --now os2borgerpc-usb-monitor.service
+fi
+
+rm --force /usr/local/lib/os2borgerpc/usb-monitor /usr/local/lib/os2borgerpc/on-usb-event
+
 if [ "$UNLOCK" = "True" ]; then
     usermod -e '' user
 fi
 
 if [ "$ACTIVATE" = "True" ]; then
-    FILE=/etc/systemd/system/os2borgerpc-usb-monitor.service
-    if [ -f "$FILE" ]; then
-        systemctl disable --now os2borgerpc-usb-monitor.service
-    fi
-    mkdir -p /usr/share/os2borgerpc/lib
+    mkdir --parents "$(dirname $APPROVE_DEVICES)"
 
-    cat << EOF > /usr/share/os2borgerpc/lib/approve-devices.py
+    cat << EOF > $APPROVE_DEVICES
 #!/usr/bin/env python3
 
 import subprocess
@@ -109,22 +117,20 @@ def approve_devices(append=False):
         new_ids = [id for id in device_ids if id not in current_list]
         if new_ids:
             with open(APPROVED_LIST, 'a') as file:
-                file.write('\n'.join(new_ids))
-                file.write('\n')
+                file.write('\n'.join(new_ids) + '\n')
     else:
         with open(APPROVED_LIST, 'w') as file:
-            file.write('\n'.join(device_ids))
-            file.write('\n')
+            file.write('\n'.join(device_ids) + '\n')
 
 if __name__ == "__main__":
     # Pre-approve currently connected usb devices
     approve_devices(APPEND)
 EOF
-    chmod 700 /usr/share/os2borgerpc/lib/approve-devices.py
-    /usr/share/os2borgerpc/lib/approve-devices.py
-    rm -f /usr/share/os2borgerpc/lib/approve-devices.py
+    chmod 700 $APPROVE_DEVICES
+    $APPROVE_DEVICES
+    rm --force $APPROVE_DEVICES
 
-    cat << EOF > /usr/share/os2borgerpc/lib/usb-monitor.py
+    cat << EOF > $USB_MONITOR
 #!/usr/bin/env python3
 
 from os import mkfifo, unlink
@@ -205,15 +211,15 @@ def main():
 if __name__ == "__main__":
     main()
 EOF
-    chmod 700 /usr/share/os2borgerpc/lib/usb-monitor.py
+    chmod 700 $USB_MONITOR
 
-    cat <<"END" > /etc/systemd/system/os2borgerpc-usb-monitor.service
+    cat <<"END" > $SERVICE_FILE
 [Unit]
 Description=OS2borgerPC USB monitoring service
 
 [Service]
 Type=simple
-ExecStart=/usr/share/os2borgerpc/lib/usb-monitor.py
+ExecStart=$USB_MONITOR
 # It's important that we stop the Python process, stuck in a blocking read,
 # with SIGINT rather than SIGTERM so that its finaliser has a chance to run
 KillSignal=SIGINT
@@ -223,7 +229,7 @@ WantedBy=display-manager.service
 END
     systemctl enable --now os2borgerpc-usb-monitor.service
 
-    cat <<"END" > /usr/share/os2borgerpc/lib/on-usb-event.sh
+    cat <<"END" > $ON_USB_EVENT
 #!/bin/sh
 
 if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
@@ -233,17 +239,14 @@ if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
             of=/var/lib/os2borgerpc/usb-event status=none
 fi
 END
-    chmod 700 /usr/share/os2borgerpc/lib/on-usb-event.sh
+    chmod 700 $ON_USB_EVENT
 
-    cat <<"END" > /etc/udev/rules.d/99-os2borgerpc-usb-event.rules
-SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="/usr/share/os2borgerpc/lib/on-usb-event.sh '%E{ACTION}' '$sys$devpath'"
+    cat <<"END" > $USB_RULES
+SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="$ON_USB_EVENT '%E{ACTION}' '$sys$devpath'"
 END
 else
     systemctl disable --now os2borgerpc-usb-monitor.service
-    rm -f /usr/share/os2borgerpc/lib/on-usb-event.sh \
-            /etc/udev/rules.d/99-os2borgerpc-usb-event.rules \
-            /usr/share/os2borgerpc/lib/usb-monitor.py \
-            /etc/systemd/system/os2borgerpc-usb-monitor.service \
+    rm --force $ON_USB_EVENT $USB_RULES $USB_MONITOR $SERVICE_FILE \
             /etc/os2borgerpc/approved_usb_ids.txt
 fi
 

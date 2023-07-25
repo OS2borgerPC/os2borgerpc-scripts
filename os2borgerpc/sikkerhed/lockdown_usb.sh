@@ -41,14 +41,21 @@ fi
 
 ACTIVATE=$1
 
-if [ "$ACTIVATE" = "True" ]; then
-    FILE=/etc/systemd/system/os2borgerpc-usb-monitor.service
-    if [ -f "$FILE" ]; then
-        systemctl disable --now os2borgerpc-usb-monitor.service
-    fi
-    mkdir -p /usr/local/lib/os2borgerpc
+SERVICE_FILE="/etc/systemd/system/os2borgerpc-usb-monitor.service"
+USB_MONITOR="/usr/share/os2borgerpc/lib/usb-monitor.py"
+ON_USB_EVENT="/usr/share/os2borgerpc/lib/on-usb-event.sh"
+USB_RULES="/etc/udev/rules.d/99-os2borgerpc-usb-event.rules"
 
-    cat <<"END" > /usr/local/lib/os2borgerpc/usb-monitor.py
+if [ -f "$SERVICE_FILE" ]; then
+  systemctl disable --now os2borgerpc-usb-monitor.service
+fi
+
+rm --force /usr/local/lib/os2borgerpc/usb-monitor /usr/local/lib/os2borgerpc/on-usb-event
+
+if [ "$ACTIVATE" = "True" ]; then
+    mkdir --parents "$(dirname $USB_MONITOR)"
+
+    cat <<"END" > $USB_MONITOR
 #!/usr/bin/env python3
 
 from os import mkfifo, unlink
@@ -103,10 +110,12 @@ def main():
                 lockdown()
                 devices_after_event = get_current_devices()
                 changed_device = list(set(devices_before_event).symmetric_difference(set(devices_after_event)))
+                entries = ""
                 for device in changed_device:
                     entry = make_log_entry(changed_device)
-                    with open(USB_EVENT_LOG, "a") as log:
-                        log.write(entry)
+                    entries += entry
+                with open(USB_EVENT_LOG, "a") as log:
+                    log.write(entries)
     finally:
         unlink(PIPE)
 
@@ -114,15 +123,15 @@ def main():
 if __name__ == "__main__":
     main()
 END
-    chmod 700 /usr/local/lib/os2borgerpc/usb-monitor.py
+    chmod 700 $USB_MONITOR
 
-    cat <<"END" > /etc/systemd/system/os2borgerpc-usb-monitor.service
+    cat <<"END" > $SERVICE_FILE
 [Unit]
 Description=OS2borgerPC USB monitoring service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/lib/os2borgerpc/usb-monitor.py
+ExecStart=$USB_MONITOR
 # It's important that we stop the Python process, stuck in a blocking read,
 # with SIGINT rather than SIGTERM so that its finaliser has a chance to run
 KillSignal=SIGINT
@@ -132,7 +141,7 @@ WantedBy=display-manager.service
 END
     systemctl enable --now os2borgerpc-usb-monitor.service
 
-    cat <<"END" > /usr/local/lib/os2borgerpc/on-usb-event.sh
+    cat <<"END" > $ON_USB_EVENT
 #!/bin/sh
 
 if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
@@ -142,17 +151,13 @@ if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
             of=/var/lib/os2borgerpc/usb-event status=none
 fi
 END
-    chmod 700 /usr/local/lib/os2borgerpc/on-usb-event.sh
+    chmod 700 $ON_USB_EVENT
 
-    cat <<"END" > /etc/udev/rules.d/99-os2borgerpc-usb-event.rules
-SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="/usr/local/lib/os2borgerpc/on-usb-event.sh '%E{ACTION}' '$sys$devpath'"
+    cat <<"END" > $USB_RULES
+SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="$ON_USB_EVENT '%E{ACTION}' '$sys$devpath'"
 END
 else
-    systemctl disable --now os2borgerpc-usb-monitor.service
-    rm -f /usr/local/lib/os2borgerpc/on-usb-event.sh \
-            /etc/udev/rules.d/99-os2borgerpc-usb-event.rules \
-            /usr/local/lib/os2borgerpc/usb-monitor.py \
-            /etc/systemd/system/os2borgerpc-usb-monitor.service
+    rm --force $ON_USB_EVENT $USB_RULES $USB_MONITOR $SERVICE_FILE
 fi
 
 udevadm control -R
