@@ -1,6 +1,6 @@
-# OS2borgerPC Scripts
+# OS2borgerPC: Scripts
 
-Scripts for OS2borgerPC and OS2borgerPC Kiosk.
+This repository contains scripts designed to be used with OS2borgerPC and/or OS2borgerPC Kiosk.
 
 The top level categories are as follows:
 
@@ -43,3 +43,18 @@ Below `os2borgerpc_kiosk` we have the following categories
 | ------------------| ---------------------------------------------------------------------------|
 | custom            | Local scripts for customers                                                |
 | os2borgerpc_kiosk | Uncategorized scripts that are only designed to work on OS2borgerPC Kiosk  |
+
+The scripts were developed by Magenta Aps (https://www.magenta.dk) and is part of the
+OS2borgerPC project.
+
+For more info about the OS2borgerPC project, please see the
+official home page:
+
+    https://os2.eu/produkt/os2borgerpc
+
+and the offical Github project:
+
+    https://github.com/OS2borgerPC/
+
+All code is made available under Version 3 of the GNU General Public
+License - see the LICENSE and COPYRIGHT files for details.
