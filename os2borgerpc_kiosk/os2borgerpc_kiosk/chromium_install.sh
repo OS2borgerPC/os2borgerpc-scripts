@@ -18,10 +18,6 @@ apt-get update --assume-yes
 
 apt-get install --assume-yes xinit xserver-xorg-core x11-xserver-utils --no-install-recommends --no-install-suggests
 apt-get install --assume-yes xdg-utils xserver-xorg-video-qxl xserver-xorg-video-intel xserver-xorg-video-all xserver-xorg-input-all libleveldb-dev
-printf '%s\n' "The following output from chromium install is base64 encoded. Why?:" \
-              "Chromium-install writes 'scroll'-comments to keep progress to a single line instead of taking up the entire screen," \
-              "and this currently results in invalid XML, when the answer is sent back to the server"
-printf '\n'
 
 # This section is a workaround to handle an error in Ubuntu server 22.04
 # that causes certain snap installs to trigger DNS problems on wifi.
@@ -69,6 +65,11 @@ EOF
 
   systemctl enable --now "$(basename "$DNS_FIX_SERVICE")"
 fi
+
+printf '%s\n' "The following output from chromium install is base64 encoded. Why?:" \
+              "Chromium-install writes 'scroll'-comments to keep progress to a single line instead of taking up the entire screen," \
+              "and this currently results in invalid XML, when the answer is sent back to the server"
+printf '\n'
 
 # Chromium is only available as a snap and will also be installed as
 # a snap when using apt-get install
