@@ -18,10 +18,6 @@ apt-get update --assume-yes
 
 apt-get install --assume-yes xinit xserver-xorg-core x11-xserver-utils --no-install-recommends --no-install-suggests
 apt-get install --assume-yes xdg-utils xserver-xorg-video-qxl xserver-xorg-video-intel xserver-xorg-video-all xserver-xorg-input-all libleveldb-dev
-printf '%s\n' "The following output from chromium install is base64 encoded. Why?:" \
-              "Chromium-install writes 'scroll'-comments to keep progress to a single line instead of taking up the entire screen," \
-              "and this currently results in invalid XML, when the answer is sent back to the server"
-printf '\n'
 
 # This section is a workaround to handle an error in Ubuntu server 22.04
 # that causes certain snap installs to trigger DNS problems on wifi.
@@ -70,12 +66,29 @@ EOF
   systemctl enable --now "$(basename "$DNS_FIX_SERVICE")"
 fi
 
+printf '%s\n' "The following output from chromium install is base64 encoded. Why?:" \
+              "Chromium-install writes 'scroll'-comments to keep progress to a single line instead of taking up the entire screen," \
+              "and this currently results in invalid XML, when the answer is sent back to the server"
+printf '\n'
+
 # Chromium is only available as a snap and will also be installed as
 # a snap when using apt-get install
-LOG_OUT=$(apt-get install --assume-yes chromium-browser)
+LOG_OUTPUT=$(apt-get install --assume-yes chromium-browser)
 # Save exit status so we get the exit status of apt rather than from base64
 EXIT_STATUS=$?
-echo "$LOG_OUT" | base64
+echo "$LOG_OUTPUT" | base64
+
+CHROMIUM_POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
+mkdir --parents "$(dirname "$CHROMIUM_POLICY_FILE")"
+cat << EOF > $CHROMIUM_POLICY_FILE
+{
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "AutoplayAllowed": true,
+  "PasswordManagerEnabled": false,
+  "TranslateEnabled": false
+}
+EOF
 
 # This section is related to the above workaround
 # and removes the related service once it is no longer needed
