@@ -6,6 +6,7 @@
 #    - prevents Google Chrome from asking if it should be default browser and about browser metrics
 #    - prevents the user logging in to the browser
 #    - disables the remember password prompt feature.
+#    - configures Ecosia as the Default Search Provider 
 # 3. Add a launch option to Chrome that prevents it
 #    from checking for updates and showing it's out of date to whoever
 
