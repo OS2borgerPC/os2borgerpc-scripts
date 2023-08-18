@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from subprocess import check_output
+import json
+from os.path import exists
+
+CONF_TIME_VALUE = "timeMinutes"
 
 
 def pam_sm_authenticate(pamh, flags, argv):
@@ -24,18 +28,33 @@ def pam_sm_authenticate(pamh, flags, argv):
             pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Prøv senere."
         )
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
 
     time = int(cicero_response)
 
     if time > 0:
-        with open("$LOGOUT_TIMER_CONF", "w") as f:
-            f.write("TIME_MINUTES=" + str(time))
+        # They may not be using any of the timer scripts
+        if exists("$LOGOUT_TIMER_CONF"):
+            # Set the countdown time for the timers
+            with open("$LOGOUT_TIMER_CONF", "r+") as f:
+                # Read the current config, update it, then overwrite it with the updated contents
+                conf = json.loads(f.read())
+                conf[CONF_TIME_VALUE] = time
+
+                f.seek(0)
+                f.truncate()
+
+                f.write(json.dumps(conf, indent=2))
+
         return pamh.PAM_SUCCESS
+
     elif time == 0:
         result_msg = pamh.Message(pamh.PAM_ERROR_MSG, "Login mislykkedes.")
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
+
     elif time < 0:
         time_pos = abs(time)
         hours = str(time_pos // 60)
@@ -45,6 +64,7 @@ def pam_sm_authenticate(pamh, flags, argv):
             "Du kan først logge ind igen om " + hours + "t " + minutes + "m.",
         )
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
 
 

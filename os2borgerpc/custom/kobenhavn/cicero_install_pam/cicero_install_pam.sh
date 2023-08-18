@@ -10,24 +10,24 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 
 export DEBIAN_FRONTEND=noninteractive
 LIGHTDM_PAM=/etc/pam.d/lightdm
 # Put our module where PAM modules normally are
 PAM_PYTHON_MODULE=/usr/lib/x86_64-linux-gnu/security/os2borgerpc-cicero-pam-module.py
-# shellcheck disable=SC2034   # It exists in the included file
-LOGOUT_TIMER_CONF=/usr/share/os2borgerpc/logout_timer.conf
+# Keep this in sync with the extensions name as given in the os2borgerpc-gnome-extensions repo!
+# shellcheck disable=SC2034   # It exists in an included file
+EXTENSION_NAME='logout-timer@os2borgerpc.magenta.dk'
+# shellcheck disable=SC2034   # It exists in an included file
+LOGOUT_TIMER_CONF="/usr/share/gnome-shell/extensions/$EXTENSION_NAME/config.json"
 CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
-  if ! apt-get install --assume-yes libpam-python; then
+  # TODO: pam_python is currently python2. If it doesn't get updated we should update it ourselves
+  # ...and in that case the module + cicero interface could be joined into one file, as originally planned
+  if ! apt-get install --assume-yes libpam-python python2; then
     echo "Error installing dependencies."
     exit 1
   fi
@@ -53,7 +53,6 @@ import socket
 
 
 def cicero_validate(cicero_user, cicero_pass):
-
     host_address = (
         check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
     )
@@ -95,10 +94,13 @@ cat << EOF > $PAM_PYTHON_MODULE
 # -*- coding: utf-8 -*-
 
 from subprocess import check_output
+import json
+from os.path import exists
+
+CONF_TIME_VALUE = "timeMinutes"
 
 
 def pam_sm_authenticate(pamh, flags, argv):
-
     # print(pamh.fail_delay)
     # http://pam-python.sourceforge.net/doc/html/
     username_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Lånernummer eller CPR")
@@ -118,18 +120,35 @@ def pam_sm_authenticate(pamh, flags, argv):
             pamh.PAM_ERROR_MSG, "Forbindelse kunne ikke oprettes. Prøv senere."
         )
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
 
     time = int(cicero_response)
 
     if time > 0:
-        with open('$LOGOUT_TIMER_CONF', 'w') as f:
-            f.write("TIME_MINUTES=" + str(time))
+
+        # They may not be using any of the timer scripts
+        if exists("$LOGOUT_TIMER_CONF"):
+
+            # Set the countdown time for the timers
+            with open("$LOGOUT_TIMER_CONF", "r+") as f:
+                # Read the current config, update it, then overwrite it with the updated contents
+                conf = json.loads(f.read())
+                conf[CONF_TIME_VALUE] = time
+
+                f.seek(0)
+                f.truncate()
+
+                f.write(json.dumps(conf, indent=2))
+
         return pamh.PAM_SUCCESS
+
     elif time == 0:
         result_msg = pamh.Message(pamh.PAM_ERROR_MSG, "Login mislykkedes.")
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
+
     elif time < 0:
         time_pos = abs(time)
         hours = str(time_pos // 60)
@@ -139,6 +158,7 @@ def pam_sm_authenticate(pamh, flags, argv):
             "Du kan først logge ind igen om " + hours + "t " + minutes + "m.",
         )
         pamh.conversation(result_msg)
+
         return pamh.PAM_AUTH_ERR
 
 

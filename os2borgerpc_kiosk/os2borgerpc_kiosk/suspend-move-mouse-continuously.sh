@@ -11,24 +11,24 @@
 
 set -ex
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 INTERVAL=$2 # Example: 10 for every 10 minutes
 
 SCRIPT_PATH="/usr/share/os2borgerpc/bin/move-mouse-continuously.sh"
-mkdir -p "$(dirname "$SCRIPT_PATH")"
 USER=chrome
 
+# Take the current crontab, remove the line matching SCRIPT_PATH,
+# make the result the new crontab
+# When using a nonstandard character as delimiter (,) it must be escaped the
+# first time:
+# https://stackoverflow.com/a/25173311/1172409
 delete_entry_crontab() {
   (crontab -u $USER -l || true ) | sed "\,$SCRIPT_PATH,d" | crontab -u $USER -
 }
 
+mkdir --parents "$(dirname "$SCRIPT_PATH")"
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = "True" ]; then
 
   export DEBIAN_FRONTEND=noninteractive
   apt-get install -y xdotool
@@ -48,15 +48,10 @@ EOF
 
   # Append to crontab: Take the current crontab, add the new line, make that
   # the new crontab
-  # "|| true" is there if crontab is empty 
+  # "|| true" is there if crontab is empty
   # as otherwise set -e, if enabled, will stop execution there
   (crontab -u $USER -l || true; echo "*/$INTERVAL * * * * $SCRIPT_PATH") | crontab -u $USER -
 
 else
-  # Take the current crontab, remove the line matching SCRIPT_PATH, 
-  # make the result the new crontab
-  # When using a nonstandard character as delimiter (,) it must be escaped the
-  # first time:
-  # https://stackoverflow.com/a/25173311/1172409
   delete_entry_crontab
 fi

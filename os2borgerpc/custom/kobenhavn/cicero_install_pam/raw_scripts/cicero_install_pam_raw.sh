@@ -10,24 +10,24 @@
 
 set -x
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE=$1
 
 export DEBIAN_FRONTEND=noninteractive
 LIGHTDM_PAM=/etc/pam.d/lightdm
 # Put our module where PAM modules normally are
 PAM_PYTHON_MODULE=/usr/lib/x86_64-linux-gnu/security/os2borgerpc-cicero-pam-module.py
-# shellcheck disable=SC2034   # It exists in the included file
-LOGOUT_TIMER_CONF=/usr/share/os2borgerpc/logout_timer.conf
+# Keep this in sync with the extensions name as given in the os2borgerpc-gnome-extensions repo!
+# shellcheck disable=SC2034   # It exists in an included file
+EXTENSION_NAME='logout-timer@os2borgerpc.magenta.dk'
+# shellcheck disable=SC2034   # It exists in an included file
+LOGOUT_TIMER_CONF="/usr/share/gnome-shell/extensions/$EXTENSION_NAME/config.json"
 CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
-  if ! apt-get install --assume-yes libpam-python; then
+  # TODO: pam_python is currently python2. If it doesn't get updated we should update it ourselves
+  # ...and in that case the module + cicero interface could be joined into one file, as originally planned
+  if ! apt-get install --assume-yes libpam-python python2; then
     echo "Error installing dependencies."
     exit 1
   fi
