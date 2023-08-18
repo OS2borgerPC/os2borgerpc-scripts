@@ -42,6 +42,8 @@
 # DefaultBrowserSettingEnabled: Don't check if it's default browser. Irrelevant for visitors, and maybe you want Firefox as default.
 # MetricsReportingEnabled: Disable some of Googles metrics, for privacy reasons
 # PasswordManagerEnabled: Don't try to save passwords on a public machine used by many people
+# PrivacySandboxPromptEnabled: Don't prompt about enabling (some) ad tracking
+# PrivacySandboxSiteEnabledAdsEnabled: Disable (some) ad tracking
 # ShowHomeButton: A button to go back to the home page. Not crucial.
 
 # Additional info on the many policies that can be set:
@@ -140,6 +142,8 @@ cat > "$POLICY" <<- END
     "MetricsReportingEnabled": false,
     "PasswordManagerEnabled": false,
     "PaymentMethodQueryEnabled": false,
+    "PrivacySandboxPromptEnabled": false,
+    "PrivacySandboxSiteEnabledAdsEnabled": false,
     "URLBlocklist": [
       "chrome://accessibility",
       "chrome://extensions",
