@@ -213,7 +213,7 @@ if __name__ == "__main__":
 EOF
     chmod 700 $USB_MONITOR
 
-    cat <<"END" > $SERVICE_FILE
+    cat <<END > $SERVICE_FILE
 [Unit]
 Description=OS2borgerPC USB monitoring service
 
@@ -229,20 +229,20 @@ WantedBy=display-manager.service
 END
     systemctl enable --now os2borgerpc-usb-monitor.service
 
-    cat <<"END" > $ON_USB_EVENT
+    cat <<END > $ON_USB_EVENT
 #!/bin/sh
 
 if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
     # Use dd with oflag=nonblock to make sure that we don't append to the pipe
     # if the reader isn't yet running
-    echo "$@" | dd oflag=nonblock \
+    echo "\$@" | dd oflag=nonblock \
             of=/var/lib/os2borgerpc/usb-event status=none
 fi
 END
     chmod 700 $ON_USB_EVENT
 
-    cat <<"END" > $USB_RULES
-SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="$ON_USB_EVENT '%E{ACTION}' '$sys$devpath'"
+    cat <<END > $USB_RULES
+SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="$ON_USB_EVENT '%E{ACTION}' '\$sys\$devpath'"
 END
 else
     systemctl disable --now os2borgerpc-usb-monitor.service

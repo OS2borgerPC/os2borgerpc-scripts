@@ -55,7 +55,7 @@ rm --force /usr/local/lib/os2borgerpc/usb-monitor /usr/local/lib/os2borgerpc/on-
 if [ "$ACTIVATE" = "True" ]; then
     mkdir --parents "$(dirname $USB_MONITOR)"
 
-    cat <<"END" > $USB_MONITOR
+    cat <<END > $USB_MONITOR
 #!/usr/bin/env python3
 
 from os import mkfifo, unlink
@@ -112,7 +112,7 @@ def main():
                 changed_device = list(set(devices_before_event).symmetric_difference(set(devices_after_event)))
                 entries = ""
                 for device in changed_device:
-                    entry = make_log_entry(changed_device)
+                    entry = make_log_entry(device)
                     entries += entry
                 with open(USB_EVENT_LOG, "a") as log:
                     log.write(entries)
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 END
     chmod 700 $USB_MONITOR
 
-    cat <<"END" > $SERVICE_FILE
+    cat <<END > $SERVICE_FILE
 [Unit]
 Description=OS2borgerPC USB monitoring service
 
@@ -141,20 +141,20 @@ WantedBy=display-manager.service
 END
     systemctl enable --now os2borgerpc-usb-monitor.service
 
-    cat <<"END" > $ON_USB_EVENT
+    cat <<END > $ON_USB_EVENT
 #!/bin/sh
 
 if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
     # Use dd with oflag=nonblock to make sure that we don't append to the pipe
     # if the reader isn't yet running
-    echo "$@" | dd oflag=nonblock \
+    echo "\$@" | dd oflag=nonblock \
             of=/var/lib/os2borgerpc/usb-event status=none
 fi
 END
     chmod 700 $ON_USB_EVENT
 
-    cat <<"END" > $USB_RULES
-SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="$ON_USB_EVENT '%E{ACTION}' '$sys$devpath'"
+    cat <<END > $USB_RULES
+SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="$ON_USB_EVENT '%E{ACTION}' '\$sys\$devpath'"
 END
 else
     rm --force $ON_USB_EVENT $USB_RULES $USB_MONITOR $SERVICE_FILE
