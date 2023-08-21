@@ -41,17 +41,30 @@ fi
 
 ACTIVATE=$1
 
-if [ "$ACTIVATE" = "True" ]; then
-    mkdir -p /usr/local/lib/os2borgerpc
+SERVICE_FILE="/etc/systemd/system/os2borgerpc-usb-monitor.service"
+USB_MONITOR="/usr/share/os2borgerpc/lib/usb-monitor.py"
+ON_USB_EVENT="/usr/share/os2borgerpc/lib/on-usb-event.sh"
+USB_RULES="/etc/udev/rules.d/99-os2borgerpc-usb-event.rules"
 
-    cat <<"END" > /usr/local/lib/os2borgerpc/usb-monitor
+if [ -f "$SERVICE_FILE" ]; then
+  systemctl disable --now os2borgerpc-usb-monitor.service
+fi
+
+rm --force /usr/local/lib/os2borgerpc/usb-monitor /usr/local/lib/os2borgerpc/on-usb-event
+
+if [ "$ACTIVATE" = "True" ]; then
+    mkdir --parents "$(dirname $USB_MONITOR)"
+
+    cat <<END > $USB_MONITOR
 #!/usr/bin/env python3
 
 from os import mkfifo, unlink
 from os.path import exists
 import subprocess
+import datetime
 
 PIPE = "/var/lib/os2borgerpc/usb-event"
+USB_EVENT_LOG = "/var/log/usb-events.log"
 
 
 # Old versions of this script expired to 1970-01-02 like hard_shutdown_lockdown.sh
@@ -62,6 +75,21 @@ def lockdown():
     subprocess.run(["usermod", "-e", "1970-01-05", "user"])
     subprocess.run(["loginctl", "terminate-user", "user"])
 
+def get_current_devices():
+    """Get the ids of the currently connected usb devices."""
+    encoding = 'utf-8'
+    lsusb_output = subprocess.check_output("lsusb")
+    device_ids = []
+    for info in lsusb_output.split(b'\n'):
+        if info:
+            device_ids.append(str(info, encoding))
+    return device_ids
+
+def make_log_entry(device):
+    current_datetime = datetime.datetime.now()
+    entry = f"{current_datetime.day} {current_datetime.strftime('%B')} {current_datetime.year} " \
+            f"{current_datetime.hour}:{current_datetime.minute} - USB-event caused by {device}\n"
+    return entry
 
 def main():
     # Make sure we always start with a fresh FIFO
@@ -73,12 +101,21 @@ def main():
     mkfifo(PIPE)
     try:
         while True:
+            devices_before_event = get_current_devices()
             with open(PIPE, "rt") as fp:
                 # Reading from a FIFO should block until the udev helper script
                 # gives us a signal. Lock the system immediately when that
-                # happens
+                # happens and then write the log
                 content = fp.read()
                 lockdown()
+                devices_after_event = get_current_devices()
+                changed_device = list(set(devices_before_event).symmetric_difference(set(devices_after_event)))
+                entries = ""
+                for device in changed_device:
+                    entry = make_log_entry(device)
+                    entries += entry
+                with open(USB_EVENT_LOG, "a") as log:
+                    log.write(entries)
     finally:
         unlink(PIPE)
 
@@ -86,15 +123,15 @@ def main():
 if __name__ == "__main__":
     main()
 END
-    chmod 700 /usr/local/lib/os2borgerpc/usb-monitor
+    chmod 700 $USB_MONITOR
 
-    cat <<"END" > /etc/systemd/system/os2borgerpc-usb-monitor.service
+    cat <<END > $SERVICE_FILE
 [Unit]
 Description=OS2borgerPC USB monitoring service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/lib/os2borgerpc/usb-monitor
+ExecStart=$USB_MONITOR
 # It's important that we stop the Python process, stuck in a blocking read,
 # with SIGINT rather than SIGTERM so that its finaliser has a chance to run
 KillSignal=SIGINT
@@ -104,27 +141,23 @@ WantedBy=display-manager.service
 END
     systemctl enable --now os2borgerpc-usb-monitor.service
 
-    cat <<"END" > /usr/local/lib/os2borgerpc/on-usb-event
+    cat <<END > $ON_USB_EVENT
 #!/bin/sh
 
 if [ -p "/var/lib/os2borgerpc/usb-event" ]; then
     # Use dd with oflag=nonblock to make sure that we don't append to the pipe
     # if the reader isn't yet running
-    echo "$@" | dd oflag=nonblock \
+    echo "\$@" | dd oflag=nonblock \
             of=/var/lib/os2borgerpc/usb-event status=none
 fi
 END
-    chmod 700 /usr/local/lib/os2borgerpc/on-usb-event
+    chmod 700 $ON_USB_EVENT
 
-    cat <<"END" > /etc/udev/rules.d/99-os2borgerpc-usb-event.rules
-SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="/usr/local/lib/os2borgerpc/on-usb-event '%E{ACTION}' '$sys$devpath'"
+    cat <<END > $USB_RULES
+SUBSYSTEM=="usb", TEST=="/var/lib/os2borgerpc/usb-event", RUN{program}="$ON_USB_EVENT '%E{ACTION}' '\$sys\$devpath'"
 END
 else
-    systemctl disable --now os2borgerpc-usb-monitor.service
-    rm -f /usr/local/lib/os2borgerpc/on-usb-event \
-            /etc/udev/rules.d/99-os2borgerpc-usb-event.rules \
-            /usr/local/lib/os2borgerpc/usb-monitor \
-            /etc/systemd/system/os2borgerpc-usb-monitor.service
+    rm --force $ON_USB_EVENT $USB_RULES $USB_MONITOR $SERVICE_FILE
 fi
 
 udevadm control -R
