@@ -87,6 +87,16 @@ lpinfo -v
 header "Info about scanners"
 scanimage -L
 
+# Firefox related
+
+header "Firefox related info"
+
+text "Firefox version:"
+snap list | grep firefox
+
+text "Firefox policies (if any):"
+cat /etc/firefox/policies/policies.json
+
 ### CHROME / CHROMIUM RELATED INFO ###
 
 header "Chrome/Chromium related info"
