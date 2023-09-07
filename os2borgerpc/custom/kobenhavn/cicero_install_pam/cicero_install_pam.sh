@@ -25,9 +25,7 @@ CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
 
 if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
-  # TODO: pam_python is currently python2. If it doesn't get updated we should update it ourselves
-  # ...and in that case the module + cicero interface could be joined into one file, as originally planned
-  if ! apt-get install --assume-yes libpam-python python2; then
+  if ! apt-get install --assume-yes libpam-python; then
     echo "Error installing dependencies."
     exit 1
   fi
@@ -42,7 +40,7 @@ if [ "$ACTIVATE" = 'True' ]; then
     sed -i "/include common-account/i# OS2borgerPC Cicero\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
   fi
 
-  # Separated out because pam_python is python2 while our client is python3
+# Separated out because the pam module cannot run if you import the admin_client
 cat << EOF > $CICERO_INTERFACE_PYTHON3
 #! /usr/bin/env python3
 
@@ -88,9 +86,8 @@ EOF
 
   chmod u+x $CICERO_INTERFACE_PYTHON3
 
-  # Note: pam_python currently runs on python 2.7.18, not python3!
 cat << EOF > $PAM_PYTHON_MODULE
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from subprocess import check_output
@@ -161,25 +158,8 @@ def pam_sm_authenticate(pamh, flags, argv):
 
         return pamh.PAM_AUTH_ERR
 
-
-# TODO: Maybe these other functions could be removed?
+# This function needs to be here for the module to work
 def pam_sm_setcred(pamh, flags, argv):
-    return pamh.PAM_SUCCESS
-
-
-def pam_sm_acct_mgmt(pamh, flags, argv):
-    return pamh.PAM_SUCCESS
-
-
-def pam_sm_open_session(pamh, flags, argv):
-    return pamh.PAM_SUCCESS
-
-
-def pam_sm_close_session(pamh, flags, argv):
-    return pamh.PAM_SUCCESS
-
-
-def pam_sm_chauthtok(pamh, flags, argv):
     return pamh.PAM_SUCCESS
 EOF
 
