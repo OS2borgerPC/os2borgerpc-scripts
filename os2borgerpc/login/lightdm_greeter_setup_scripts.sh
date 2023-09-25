@@ -24,25 +24,21 @@ mkdir --parents "$SCRIPT_DIR"
 GREETER_SETUP_SCRIPT="$LIGHTDM_DIR/greeter_setup_script.sh"
 cat << EOF > $GREETER_SETUP_SCRIPT
 #!/bin/sh
-if [ \$(ls -A "$SCRIPT_DIR"/) ]; then
-    for file in "$SCRIPT_DIR"/*
-    do
-        ./"\$file" &
-    done
-fi
+greeter_setup_scripts=\$(find $SCRIPT_DIR -mindepth 1)
+for file in \$greeter_setup_scripts
+do
+    ./"\$file" &
+done
 EOF
 
-if [ "$CLEANUP_LIGHTDM_GREETER_SETUP_SCRIPTS_DIR" = "True" ]; then
-    rm -r "$SCRIPT_DIR"
-    echo Emptied directory "$SCRIPT_DIR"
-    exit 0
-fi
-
 # Set the correct permissions
-chown lightdm:lightdm $GREETER_SETUP_SCRIPT
-chmod u+x $GREETER_SETUP_SCRIPT
-chown --recursive lightdm:lightdm "$SCRIPT_DIR"
-chmod --recursive u+x "$SCRIPT_DIR"
+chmod 700 $GREETER_SETUP_SCRIPT
+chmod --recursive 700 "$SCRIPT_DIR"
+
+if [ "$CLEANUP_LIGHTDM_GREETER_SETUP_SCRIPTS_DIR" = "True" ]; then
+    rm --force "$SCRIPT_DIR"/*
+    echo Emptied directory "$SCRIPT_DIR"
+fi
 
 # Idempotency: First delete any line with session-cleanup-script
 sed --in-place "/greeter-setup-script=*/d" $LIGHTDM_CONF

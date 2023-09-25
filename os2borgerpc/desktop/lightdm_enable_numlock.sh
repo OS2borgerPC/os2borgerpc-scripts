@@ -37,9 +37,8 @@ if [ "$NUMLOCK_ON" = "True" ]; then
 
 numlockx on
 EOF
-    # Set the correct permissions on the file, so it can be executed by lightdm and lightdm only
-    chown lightdm:lightdm "$SCRIPT"
-    chmod u+x "$SCRIPT"
+    # Set the correct permissions on the file, so it can be executed by lightdm
+    chmod 700 "$SCRIPT"
     echo "Added the script: $SCRIPT"
 
 

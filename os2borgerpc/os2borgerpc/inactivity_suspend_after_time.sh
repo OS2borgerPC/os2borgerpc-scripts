@@ -76,16 +76,17 @@ DIALOG_TIME_MS=$(( DIALOG_TIME_MINS * 60 * 1000 ))
 # Older versions of this script used sh, but our lightdm suspend script uses
 # bash specifics. Change it to run the script directly with whatever interpreter it has.
 # This requires ensuring that lightdm has execute permissions on all those scripts.
-# The & after bash "$file" is necessary to prevent the lightdm suspend script from
-# blocking the login screen. It has to be escaped in sed
-# The spaces before sh and bash are necessary to prevent repeated runs of the script
-# from changing the file content to babash "$file" & & or similar
-if [ -f "$LIGHTDM_GREETER_SETUP_SCRIPT" ]; then
-  chown -R lightdm:lightdm $LIGHTDM_GREETER_SCRIPTS_DIR
-  chmod u+x $LIGHTDM_GREETER_SCRIPTS_DIR
-  # shellcheck disable=SC2016
-  sed --in-place 's/ sh "$file"/ ./"$file" \&/' "$LIGHTDM_GREETER_SETUP_SCRIPT"
-fi
+chmod --rescursive 700 $LIGHTDM_GREETER_SCRIPTS_DIR
+cat << EOF > $LIGHTDM_GREETER_SETUP_SCRIPT
+#!/bin/sh
+greeter_setup_scripts=\$(find $LIGHTDM_GREETER_SCRIPTS_DIR -mindepth 1)
+for file in \$greeter_setup_scripts
+do
+    ./"\$file" &
+done
+EOF
+
+chmod 700 $LIGHTDM_GREETER_SETUP_SCRIPT
 
 mkdir --parents "$(dirname $LIGHTDM_SUSPEND_SCRIPT)" "$(dirname $SUSPEND_SCRIPT_LOG)"
 
@@ -133,6 +134,8 @@ done
 echo "exited loop" >> \$LOG
 exit 0
 EOF
+
+chmod 700 $LIGHTDM_SUSPEND_SCRIPT
 
 # Install xprintidle
 apt-get update --assume-yes
@@ -220,4 +223,4 @@ cat <<- EOF > $SUSPEND_SCRIPT
 	fi
 EOF
 
-chmod u+x $SUSPEND_SCRIPT
+chmod 700 $SUSPEND_SCRIPT
