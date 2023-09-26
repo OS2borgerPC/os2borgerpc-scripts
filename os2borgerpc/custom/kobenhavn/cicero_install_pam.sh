@@ -22,6 +22,11 @@ EXTENSION_NAME='logout-timer@os2borgerpc.magenta.dk'
 # shellcheck disable=SC2034   # It exists in an included file
 LOGOUT_TIMER_CONF="/usr/share/gnome-shell/extensions/$EXTENSION_NAME/config.json"
 CICERO_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/cicero_interface_python3.py
+CITIZEN_HASH_FILE="/etc/os2borgerpc/citizen_hash.txt"
+CICERO_LOGOUT_SCRIPT="/etc/lightdm/greeter-setup-scripts/cicero_logout.py"
+CICERO_LOGOUT_SERVICE="/etc/systemd/system/cicero_logout.service"
+GREETER_SETUP_SCRIPT="/etc/lightdm/greeter_setup_script.sh"
+GREETER_SETUP_DIR="/etc/lightdm/greeter-setup-scripts"
 
 if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
@@ -72,12 +77,13 @@ def cicero_validate(cicero_user, cicero_pass):
     #   r > 0: The user is allowed r minutes of login time.
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     try:
-        time = admin.citizen_login(cicero_user, cicero_pass, site)
+        time, citizen_hash = admin.citizen_login(cicero_user, cicero_pass, site, prevent_dual_login=True)
     except (socket.gaierror, TimeoutError, ConnectionError):
         time = ""
+        citizen_hash = ""
 
     # Time is received in minutes
-    return time
+    return time, citizen_hash
 
 
 if __name__ == "__main__":
@@ -85,6 +91,66 @@ if __name__ == "__main__":
 EOF
 
   chmod u+x $CICERO_INTERFACE_PYTHON3
+
+# Ensure that the greeter_setup_script has the correct form
+# and that the relevant directory exists
+mkdir --parents $GREETER_SETUP_DIR
+cat << EOF > $GREETER_SETUP_SCRIPT
+#!/bin/sh
+greeter_setup_scripts=\$(find $GREETER_SETUP_DIR -mindepth 1)
+for file in \$greeter_setup_scripts
+do
+    ./"\$file" &
+done
+EOF
+
+chmod 700 $GREETER_SETUP_SCRIPT
+
+cat << EOF > $CICERO_LOGOUT_SCRIPT
+#! /usr/bin/env python3
+
+from subprocess import check_output
+import os2borgerpc.client.admin_client as admin_client
+from os.path import exists
+import socket
+
+def cicero_logout():
+    if exists("$CITIZEN_HASH_FILE"):
+        with open("$CITIZEN_HASH_FILE", "r") as f:
+            citizen_hash = f.read()
+        host_address = (
+            check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
+        )
+        admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
+        try:
+            result = admin.citizen_logout(citizen_hash)
+        except (socket.gaierror, TimeoutError, ConnectionError):
+            result = ""
+
+
+if __name__ == "__main__":
+    cicero_logout()
+EOF
+
+  chmod 700 "$CICERO_LOGOUT_SCRIPT"
+
+# This service ensures that the citizen is logged out
+# even if they shut down or reboot the machine
+cat << EOF > $CICERO_LOGOUT_SERVICE
+[Unit]
+Description=Cicero logout service
+DefaultDependencies=no
+Before=shutdown.target
+
+[Service]
+Type=simple
+ExecStart=$CICERO_LOGOUT_SCRIPT
+
+[Install]
+WantedBy=halt.target reboot.target shutdown.target
+EOF
+
+systemctl enable "$(basename $CICERO_LOGOUT_SERVICE)"
 
 cat << EOF > $PAM_PYTHON_MODULE
 #! /usr/bin/env python3
@@ -120,9 +186,25 @@ def pam_sm_authenticate(pamh, flags, argv):
 
         return pamh.PAM_AUTH_ERR
 
-    time = int(cicero_response)
+    # cicero_response is a binary string containing (time, 'citizen_hash')
+    # This format determines the necessary commands to extract time and citizen_hash
+    time = int(cicero_response.split(b", ")[0][1:])
+    citizen_hash = str(cicero_response.split(b", ")[1][:-1])[1:-1]
+
+    if citizen_hash == "logged_in":
+        result_msg = pamh.Message(
+            pamh.PAM_ERROR_MSG,
+            "Du er allerede logget ind på en anden maskine."
+        )
+        pamh.conversation(result_msg)
+
+        return pamh.PAM_AUTH_ERR
 
     if time > 0:
+
+        # Only remember the logged in citizen if login succeeds, i.e. time > 0
+        with open("$CITIZEN_HASH_FILE", "w") as f:
+            f.write(citizen_hash)
 
         # They may not be using any of the timer scripts
         if exists("$LOGOUT_TIMER_CONF"):
@@ -170,7 +252,10 @@ else # Cleanup and remove the Cicero integration
   sed -i '/pam_succeed_if.so user != user/d' $LIGHTDM_PAM
   sed -i "\@auth required pam_python.so@d" $LIGHTDM_PAM
 
-  rm $CICERO_INTERFACE_PYTHON3 $PAM_PYTHON_MODULE
+  systemctl disable "$(basename $CICERO_LOGOUT_SERVICE)"
+
+  rm --force $CICERO_INTERFACE_PYTHON3 $PAM_PYTHON_MODULE \
+  $CICERO_LOGOUT_SCRIPT $CITIZEN_HASH_FILE $CICERO_LOGOUT_SERVICE
 
   # Possibly remove libpam-python as we don't need it anymore
   # - at least this functionality no longer does
