@@ -5,22 +5,15 @@
 #
 # Arguments
 #   1: Whether to add or remove the shared dir
-#      'yes' adds, 'no' removes
+#      'True' adds, 'False' removes
 #   2: The name of the shared dir to add or remove
-#
-# Author: mfm@magenta.dk
-# Credits: carstena@magenta.dk
 
 if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
   exit 1
 fi
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE="$1"
 NAME="$2"
 
 DIR=/var/local/$NAME
@@ -36,11 +29,9 @@ export "$(grep LANG= /etc/default/locale | tr -d '"')"
 runuser -u user xdg-user-dirs-update
 DESKTOP=$(basename "$(runuser -u $USERNAME xdg-user-dir DESKTOP)")
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = "True" ]; then
 
-  mkdir --parents "$DIR"
-  mkdir --parents "/home/$SHADOW/$DESKTOP"
+  mkdir --parents "$DIR" "/home/$SHADOW/$DESKTOP"
   chown $USERNAME:$USERNAME "$DIR"
   ln --symbolic "$DIR" "/home/$SHADOW/$DESKTOP/$NAME"
 
