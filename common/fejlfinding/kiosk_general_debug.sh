@@ -45,6 +45,9 @@ ls -la /home/$USER/
 text ".xinitrc contents:"
 cat /home/$USER/.xinitrc
 
+text "Check files in /tmp/ (this directory contains auth-files and lock-files)"
+ls -al /tmp/
+
 header "List assorted device info"
 lshw
 
@@ -54,10 +57,15 @@ lsmod
 header "Information about monitors"
 
 text "rotate_screen.sh's permissions:"
-# This file really ought to be in /usr/share/os2borgerpc/bin...:
-ls -l /usr/local/bin/rotate_screen.sh
+ls -l /usr/share/os2borgerpc/bin/rotate_screen.sh
 
 text "rotate_screen.sh's contents:"
+cat /usr/share/os2borgerpc/bin/rotate_screen.sh
+
+text "Old rotate_screen.sh's permissions:"
+ls -l /usr/local/bin/rotate_screen.sh
+
+text "Old rotate_screen.sh's contents:"
 cat /usr/local/bin/rotate_screen.sh
 
 text "Run xrandr to get info about monitors:"
