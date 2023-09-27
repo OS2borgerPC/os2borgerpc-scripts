@@ -27,38 +27,52 @@
 # END_OF_HEADER
 #================================================================
 
-if [ $# -ne 1 ]
-then
+INTERVAL=$1
+
+CHECKIN_SCRIPT="/usr/share/os2borgerpc/bin/check-in.sh"
+CRON_PATH="/etc/cron.d/os2borgerpc-jobmanager"
+
+if [ $# -ne 1 ]; then
     echo "This job takes exactly one parameter."
     exit 1
 fi
 
-INTERVAL=$1
-
-if [ "$INTERVAL" -gt 59 ]
-then
-    echo "Interval cannot be larger than 59."
+if [ "$INTERVAL" -gt 59 ] || [ "$INTERVAL" -lt 3 ]; then
+    echo "Interval must be between 3 and 59 inclusive."
     exit 1
 fi
 
 RANDOM_NUMBER=$((RANDOM%INTERVAL+0))
 CRON_COMMAND="$RANDOM_NUMBER,"
+# Generate a pseudo-random number between 0 and 59
+DELAY_IN_SECONDS=$((RANDOM%60))
+
+# Make sure the folder for the check-in script exists
+mkdir --parents "$(dirname "$CHECKIN_SCRIPT")"
+
+cat <<EOF > "$CHECKIN_SCRIPT"
+#!/usr/bin/env sh
+
+sleep $DELAY_IN_SECONDS
+
+/usr/local/bin/jobmanager
+EOF
+
+chmod 700 "$CHECKIN_SCRIPT"
 
 while [ $((RANDOM_NUMBER+INTERVAL)) -lt 60 ]
 do
     RANDOM_NUMBER=$((RANDOM_NUMBER+INTERVAL))
     if [ $((RANDOM_NUMBER+INTERVAL)) -ge 60 ]
     then
-        CRON_COMMAND="$CRON_COMMAND$RANDOM_NUMBER * * * * root /usr/local/bin/jobmanager"
+        CRON_COMMAND="$CRON_COMMAND$RANDOM_NUMBER * * * * root $CHECKIN_SCRIPT"
     else
         CRON_COMMAND="$CRON_COMMAND$RANDOM_NUMBER,"
     fi
 done
 echo "$CRON_COMMAND"
 
-CRON_PATH=/etc/cron.d/os2borgerpc-jobmanager
 
-cat <<EOT > "$CRON_PATH"
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+cat <<EOF > "$CRON_PATH"
 $CRON_COMMAND
-EOT
+EOF
