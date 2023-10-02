@@ -30,8 +30,8 @@ lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
 }
 
-[ $# != 3 ] \
-  && printf "This script needs exactly three arguments which it wasn't given. Exiting." \
+[ $# != 4 ] \
+  && printf "This script needs exactly four arguments which it wasn't given. Exiting." \
   && exit 1
 
 ACTIVATE=$1
@@ -39,7 +39,10 @@ ACTIVATE=$1
 # Tested values: chromium
 BROWSER="$(lower "$2")"
 BUTTON_ICON_PATH="$3"
+BUTTON_Y_OFFSET="$4"
 
+# The input is just a number, but if it's positive we want a "+" prepended for the calculation
+[ "$BUTTON_Y_OFFSET" -ge 0 ] && BUTTON_Y_OFFSET="+ $BUTTON_Y_OFFSET"
 
 CUSER=chrome
 BSPWM_CONFIG="/home/$CUSER/.config/bspwm/bspwmrc"
@@ -183,7 +186,7 @@ if [ "$ACTIVATE" = 'True' ]; then
 		# Adjusting Y_OFFSET based off subtracting button height * 2 (set in btn.py)
 		# Update: Would LIKE to adjust based off button height, but GTK/bspwm is not
 		# respecting the sizes I've set, so...
-		Y_OFFSET_ADJUSTED=\$((Y_OFFSET - 26))
+		Y_OFFSET_ADJUSTED=\$((Y_OFFSET - 26 $BUTTON_Y_OFFSET))
 
 		for line in \$(bspc query -N -n .leaf | xargs -n 1 bspc query -T -n); do
 		  if echo "\$line" | grep -q "\$WINDOW_TO_MOVE"; then
