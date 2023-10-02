@@ -3,7 +3,8 @@
 # General information script for OS2borgerPC, useful for debugging
 # Feel very free to add steps that gather additional, relevant information and commit the changes!
 
-set -x
+USER="user"
+SKELETON=".skjult"
 
 header() {
   MSG=$1
@@ -21,13 +22,16 @@ text() {
 # LANG. This variable is empty in lightdm so we first export it
 # based on the value stored in /etc/default/locale
 export "$(grep LANG= /etc/default/locale | tr -d '"')"
-runuser -u user xdg-user-dirs-update
-DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
+runuser -u $USER xdg-user-dirs-update
+DESKTOP=$(basename "$(runuser -u $USER xdg-user-dir DESKTOP)")
 
 header "General info:"
 
 text "Information about the computer model:"
 dmidecode --type 1
+
+text "LAN or Wi-Fi?"
+ip link
 
 text "OS2borgerPC configuration file:"
 cat /etc/os2borgerpc/os2borgerpc.conf
@@ -48,19 +52,19 @@ text "Check permissions on files in /usr/share/os2borgerpc/bin/"
 ls -l /usr/share/os2borgerpc/bin/
 
 text "List programs/files on the desktop:"
-ls -l /home/user/"$DESKTOP"/
+ls -l /home/$USER/"$DESKTOP"/
 
 text "Verify this matches what's in the user template (after logout):"
-ls -l /home/.skjult/"$DESKTOP"/
+ls -l /home/$SKELETON/"$DESKTOP"/
 
-text "Check the contents of /home/.skjult/"
-ls -la /home/.skjult/
+text "Check the contents of /home/$SKELETON/"
+ls -la /home/$SKELETON/
 
-text "Check the contents of /home/.skjult/.config/"
-ls -la /home/.skjult/.config/
+text "Check the contents of /home/$SKELETON/.config/"
+ls -la /home/$SKELETON/.config/
 
-text "Check the contents of /home/.skjult/.local/"
-ls -la /home/.skjult/.local/
+text "Check the contents of /home/$SKELETON/.local/"
+ls -la /home/$SKELETON/.local/
 
 text "List programs in the launcher:"
 cat /etc/dconf/db/os2borgerpc.d/02-launcher-favorites
@@ -70,7 +74,7 @@ cat /etc/dconf/db/os2borgerpc.d/00-background
 
 text "Check the crontab"
 crontab -l
-crontab -u user -l
+crontab -u $USER -l
 
 text "Check the inactive logout file"
 cat /usr/share/os2borgerpc/bin/inactive_logout.sh
@@ -112,14 +116,13 @@ google-chrome --version
 text "Check chrome policies"
 cat /etc/opt/chrome/policies/managed/os2borgerpc-defaults.json
 
-USER=".skjult"
 DESKTOP_FILE_1="/usr/share/applications/google-chrome.desktop"
 # In case they've also added Chrome to their desktop
-DESKTOP_FILE_2="/home/$USER/$DESKTOP/google-chrome.desktop"
+DESKTOP_FILE_2="/home/$SKELETON/$DESKTOP/google-chrome.desktop"
 # In case they've run chrome_autostart.sh.
 # The name is no mistake, that one is unfortunately not called google-chrome.desktop
-DESKTOP_FILE_3="/home/$USER/.config/autostart/chrome.desktop"
-DESKTOP_FILE_4="/home/$USER/.local/share/applications/google-chrome.desktop"
+DESKTOP_FILE_3="/home/$SKELETON/.config/autostart/chrome.desktop"
+DESKTOP_FILE_4="/home/$SKELETON/.local/share/applications/google-chrome.desktop"
 
 text "File at $DESKTOP_FILE_1:"
 cat "$DESKTOP_FILE_1"

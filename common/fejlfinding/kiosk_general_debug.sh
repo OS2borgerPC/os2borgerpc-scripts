@@ -3,7 +3,7 @@
 # General information script for OS2borgerPC Kiosk, useful for debugging
 # Please add more commands to this script as needed and commit the changes
 
-USER=chrome
+USER="chrome"
 
 header() {
   MSG=$1
@@ -20,6 +20,9 @@ header "General information from only a basic setup"
 
 text "Information about the computer model:"
 dmidecode --type 1
+
+text "LAN or Wi-Fi?"
+ip link
 
 text "Files under /usr/share/os2borgerpc/bin"
 ls -la /usr/share/os2borgerpc/bin/
