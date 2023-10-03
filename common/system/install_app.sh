@@ -5,6 +5,9 @@ set -x
 INSTALL=$1
 APPNAME=$2
 
+# Stop Debconf from doing anything
+export DEBIAN_FRONTEND=noninteractive
+
 # Resync the local package index from its remote counterpart
 apt-get --assume-yes update
 # Attempt to fix broken or interrupted installations
