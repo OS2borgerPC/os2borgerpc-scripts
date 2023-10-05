@@ -3,8 +3,10 @@
 set -x
 
 REBOOT_SCRIPT="/usr/share/os2borgerpc/bin/chromium_error_reboot.sh"
-REBOOT_SERVICE="/etc/systemd/system/chromium_error_reboot.service"
-COUNTER_FILE="/etc/os2borgerpc/reboot_counter.txt"
+RESET_COUNTER_SCRIPT="/usr/share/os2borgerpc/bin/chromium_reboot_counter_reset.sh"
+RESET_COUNTER_SERVICE="/etc/systemd/system/chromium_reboot_counter_reset.service"
+PROFILE="/home/chrome/.profile"
+COUNTER_FILE="/home/chrome/reboot_counter.txt"
 MAXIMUM_CONSECUTIVE_REBOOTS=5
 
 ACTIVATE=$1
@@ -15,45 +17,64 @@ if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
 fi
 
 mkdir --parents "$(dirname $REBOOT_SCRIPT)"
-mkdir --parents "$(dirname $COUNTER_FILE)"
+
+# Ensure idempotency
+sed --in-place --expression "/startx/d" --expression "/for i in/d" --expression "/sleep/d" \
+    --expression "/done/d" --expression "/$(basename $REBOOT_SCRIPT)/d" $PROFILE
 
 if [ "$ACTIVATE" = "False" ]; then
-  systemctl disable "$(basename $REBOOT_SERVICE)"
-  rm --force $REBOOT_SCRIPT $REBOOT_SERVICE $COUNTER_FILE
+  systemctl disable "$(basename $RESET_COUNTER_SERVICE)"
+  rm --force $REBOOT_SCRIPT $RESET_COUNTER_SCRIPT $RESET_COUNTER_SERVICE $COUNTER_FILE
+  echo "startx" >> $PROFILE
   exit 0
 fi
 
 echo "0" > $COUNTER_FILE
+chmod 666 $COUNTER_FILE
+
+cat <<EOF >> $PROFILE
+for i in 1 2 3; do
+  startx
+  sleep 10
+done
+$REBOOT_SCRIPT
+EOF
 
 cat <<EOF > $REBOOT_SCRIPT
 #! /usr/bin/env bash
 
+COUNTER=\$(cat $COUNTER_FILE)
+COUNTER=\$((COUNTER+1))
+echo \$COUNTER > $COUNTER_FILE
+if [ \$COUNTER -le $MAXIMUM_CONSECUTIVE_REBOOTS ]; then
+  reboot
+fi
+EOF
+
+chmod 755 $REBOOT_SCRIPT
+
+cat <<EOF > $RESET_COUNTER_SCRIPT
+#! /usr/bin/env bash
+
 sleep 120
 
-if [ -z "\$(pgrep --list-full chrome)" ]; then
-  COUNTER=\$(cat $COUNTER_FILE)
-  COUNTER=\$((COUNTER+1))
-  echo \$COUNTER > $COUNTER_FILE
-  if [ \$COUNTER -le $MAXIMUM_CONSECUTIVE_REBOOTS ]; then
-    reboot
-  fi
-else
+if [ -n "\$(pgrep --list-full chrome)" ]; then
   echo "0" > $COUNTER_FILE
 fi
 EOF
 
-chmod 700 $REBOOT_SCRIPT
+chmod 700 $RESET_COUNTER_SCRIPT
 
-cat <<EOF > $REBOOT_SERVICE
+cat <<EOF > $RESET_COUNTER_SERVICE
 [Unit]
-Description=Chromium error reboot service
+Description=OS2borgerPC chromium error reboot service
 
 [Service]
 Type=simple
-ExecStart=$REBOOT_SCRIPT
+ExecStart=$RESET_COUNTER_SCRIPT
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-systemctl enable "$(basename $REBOOT_SERVICE)"
+systemctl enable "$(basename $RESET_COUNTER_SERVICE)"
