@@ -6,6 +6,7 @@
 #    - prevents Google Chrome from asking if it should be default browser and about browser metrics
 #    - prevents the user logging in to the browser
 #    - disables the remember password prompt feature.
+#    - configures Ecosia as the Default Search Provider 
 # 3. Add a launch option to Chrome that prevents it
 #    from checking for updates and showing it's out of date to whoever
 
@@ -34,6 +35,13 @@
 # RestoreOnStartup: Controls what happens on startup. Also prevents users from changing the startup URLs when reopening the browser without logging out of the OS first. Possibly not needed with Guest mode, incognito or ephemeral.
 # RestoreOnStartupURLs: This is, confusingly, what can actually control the homepage, but only if RestoreOnStartup is set to "4".
 #
+# Search:
+# DefaultSearchProviderEnabled: Default search is performed when a user enters non-URL text in the address bar. The default search provider can not be changed by a user.
+# DefaultSearchProviderIconURL: Specifies the default search provider's favorite icon URL.
+# DefaultSearchProviderName: Specifies the default search provider's name.
+# DefaultSearchProviderSearchURL: Specifies the URL of the search provider used during a default search.
+# DefaultSearchProviderSuggestURL: Specifies the URL of the search provider to provide search suggestions.
+# 
 # Various:
 # BrowserGuestModeEnabled: Allow people to start a guest session, if they want, so history isn't even temporarily recorded. Not crucial.
 # BrowsingDataLifetime: Continuously remove all browsing data after 1 hour (the minimum possible),
@@ -133,6 +141,11 @@ cat > "$POLICY" <<- END
       }
     ],
     "DefaultBrowserSettingEnabled": false,
+    "DefaultSearchProviderEnabled": true,
+    "DefaultSearchProviderIconURL": "https://cdn-static.ecosia.org/static/icons/favicon.ico",
+    "DefaultSearchProviderName": "Ecosia",
+    "DefaultSearchProviderSearchURL": "https://ecosia.org/search?q={searchTerms}",
+    "DefaultSearchProviderSuggestURL": "https://ac.ecosia.org/autocomplete?q={searchTerms}&type=list",
     "DeveloperToolsAvailability": 2,
     "EnableMediaRouter": false,
     "ExtensionInstallBlocklist": [
