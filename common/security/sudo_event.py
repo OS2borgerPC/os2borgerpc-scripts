@@ -79,8 +79,8 @@ delta_sec = (now - last_security_check).total_seconds()
 log_event_tuples = log_read(delta_sec, log_name)
 
 security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
-# Ignore if not a sudo event
-regexes = [r"sudo:.*COMMAND"]
+# Ignore if not a sudo event or if a sudo event from root
+regexes = [r"sudo:(?!\s*root).*COMMAND"]
 
 # Filter log_event_tuples based on regex matches and put them
 # on the form the admin site expects:
