@@ -1,18 +1,16 @@
 #! /usr/bin/env sh
 
-set -x
-
 header() {
   MSG=$1
-  printf "\n\n\n%s\n\n\n" "### $MSG ###"
+  printf "\n\n\n%s\n\n\n" "### $MSG: ###"
 }
 
 text() {
   MSG=$1
-  printf "\n%s\n" "### $MSG ###"
+  printf "\n%s\n" "### $MSG: ###"
 }
 
-header "Information about the computer model:"
+header "Information about the computer model"
 dmidecode --type 1
 
 header "Info about devices and drivers"

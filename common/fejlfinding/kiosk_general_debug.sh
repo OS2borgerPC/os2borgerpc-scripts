@@ -7,18 +7,18 @@ USER="chrome"
 
 header() {
   MSG=$1
-  printf "\n\n\n%s\n\n\n" "### $MSG ###"
+  printf "\n\n\n%s\n\n\n" "### $MSG: ###"
 }
 
 text() {
   MSG=$1
-  printf "\n%s\n" "### $MSG ###"
+  printf "\n%s\n" "### $MSG: ###"
 }
 
 
 header "General information from only a basic setup"
 
-text "Information about the computer model:"
+text "Information about the computer model"
 dmidecode --type 1
 
 text "LAN or Wi-Fi?"
@@ -27,54 +27,64 @@ ip link
 text "Files under /usr/share/os2borgerpc/bin"
 ls -la /usr/share/os2borgerpc/bin/
 
-text "OS2borgerPC configuration file:"
+text "OS2borgerPC configuration file"
 cat /etc/os2borgerpc/os2borgerpc.conf
 
-text "OS2borgerPC client version:"
+text "OS2borgerPC client version"
 pip3 list installed | grep os2borgerpc-client
 
 
 header "Chromium / Xorg info"
 
-text "Is Chromium running?:"
+text "Is Chromium running?"
 pgrep --list-full chrome  # yes, the binary is called 'chrome'
 
-text "The version of Chromium:"
+text "The version of Chromium"
 chromium-browser --version
 
-text "Contents of chrome's home directory:"
+text "Contents of chrome's home directory"
 ls -la /home/$USER/
 
 text "Contents of chrome's .profile-file:"
 cat /home/$USER/.profile
 
-text ".xinitrc contents:"
+text ".xinitrc contents"
 cat /home/$USER/.xinitrc
 
 text "Check files in /tmp/ (this directory contains auth-files and lock-files)"
 ls -al /tmp/
 
-header "List assorted device info"
+
+header "Info about kernel, devices and drivers"
+
+text "List currently active kernel version"
+uname -a
+
+text "List all installed kernels"
+dpkg --get-selections | grep --invert-match deinstall | grep linux-image
+
+text "List kernel modules currently loaded (fx. drivers)"
+lsmod
+
+text "List info on connected hardware"
 lshw
 
-header "List kernel modules currently loaded (fx. drivers)"
-lsmod
 
 header "Information about monitors"
 
-text "rotate_screen.sh's permissions:"
+text "rotate_screen.sh's permissions"
 ls -l /usr/share/os2borgerpc/bin/rotate_screen.sh
 
-text "rotate_screen.sh's contents:"
+text "rotate_screen.sh's contents"
 cat /usr/share/os2borgerpc/bin/rotate_screen.sh
 
-text "Old rotate_screen.sh's permissions:"
+text "Old rotate_screen.sh's permissions"
 ls -l /usr/local/bin/rotate_screen.sh
 
-text "Old rotate_screen.sh's contents:"
+text "Old rotate_screen.sh's contents"
 cat /usr/local/bin/rotate_screen.sh
 
-text "Run xrandr to get info about monitors:"
+text "Run xrandr to get info about monitors"
 export DISPLAY=:0
 export XAUTHORITY=/home/$USER/.Xauthority
 xrandr
@@ -90,7 +100,7 @@ cat /usr/share/os2borgerpc/bin/start_chromium.sh
 
 ls -la /usr/share/os2borgerpc/bin/keyboard-button/
 
-text "bspwm_add_button.sh contents:"
+text "bspwm_add_button.sh contents"
 cat /usr/share/os2borgerpc/bin/keyboard-button/bspwn_add_button.sh
 
 

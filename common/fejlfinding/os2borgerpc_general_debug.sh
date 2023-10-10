@@ -8,12 +8,12 @@ SKELETON=".skjult"
 
 header() {
   MSG=$1
-  printf "\n\n\n%s\n\n\n" "### $MSG ###"
+  printf "\n\n\n%s\n\n\n" "### $MSG: ###"
 }
 
 text() {
   MSG=$1
-  printf "\n%s\n" "### $MSG ###"
+  printf "\n%s\n" "### $MSG: ###"
 }
 
 # Determine the name of the user desktop directory. This is done via xdg-user-dir,
@@ -25,36 +25,36 @@ export "$(grep LANG= /etc/default/locale | tr -d '"')"
 runuser -u $USER xdg-user-dirs-update
 DESKTOP=$(basename "$(runuser -u $USER xdg-user-dir DESKTOP)")
 
-header "General info:"
+header "General info"
 
-text "Information about the computer model:"
+text "Information about the computer model"
 dmidecode --type 1
 
 text "LAN or Wi-Fi?"
 ip link
 
-text "OS2borgerPC configuration file:"
+text "OS2borgerPC configuration file"
 cat /etc/os2borgerpc/os2borgerpc.conf
 
-text "OS2borgerPC client version:"
+text "OS2borgerPC client version"
 pip3 list installed | grep os2borgerpc-client
 
-text "Info on lightdm, the display manager:"
+text "Info on lightdm, the display manager"
 cat /etc/lightdm/lightdm.conf
 
-text "Info on automatic updates:"
+text "Info on automatic updates"
 cat /etc/apt/apt.conf.d/90os2borgerpc-automatic-upgrades
 
-text "User cleanup file contents:"
+text "User cleanup file contents"
 cat /usr/share/os2borgerpc/bin/user-cleanup.bash
 
 text "Check permissions on files in /usr/share/os2borgerpc/bin/"
 ls -l /usr/share/os2borgerpc/bin/
 
-text "List programs/files on the desktop:"
+text "List programs/files on the desktop"
 ls -l /home/$USER/"$DESKTOP"/
 
-text "Verify this matches what's in the user template (after logout):"
+text "Verify this matches what's in the user template (after logout)"
 ls -l /home/$SKELETON/"$DESKTOP"/
 
 text "Check the contents of /home/$SKELETON/"
@@ -69,7 +69,7 @@ ls -la /home/$SKELETON/.local/
 text "List programs in the launcher:"
 cat /etc/dconf/db/os2borgerpc.d/02-launcher-favorites
 
-text "Info about the current background image:"
+text "Info about the current background image"
 cat /etc/dconf/db/os2borgerpc.d/00-background
 
 text "Check the crontab"
@@ -79,26 +79,36 @@ crontab -u $USER -l
 text "Check the inactive logout file"
 cat /usr/share/os2borgerpc/bin/inactive_logout.sh
 
-header "Info about devices and drivers"
-lshw
 
-header "List kernel modules currently loaded (fx. drivers)"
+header "Info about kernel, devices and drivers"
+
+text "List currently active kernel version"
+uname -a
+
+text "List all installed kernels"
+dpkg --get-selections | grep --invert-match deinstall | grep linux-image
+
+text "List kernel modules currently loaded (fx. drivers)"
 lsmod
 
-header "Info about printers"
+text "List info on connected hardware"
+lshw
+
+text "Info about printers"
 lpinfo -v
 
-header "Info about scanners"
+text "Info about scanners"
 scanimage -L
+
 
 # Firefox related
 
 header "Firefox related info"
 
-text "Firefox version:"
+text "Firefox version"
 snap list | grep firefox
 
-text "Firefox policies (if any):"
+text "Firefox policies (if any)"
 cat /etc/firefox/policies/policies.json
 
 ### CHROME / CHROMIUM RELATED INFO ###
@@ -124,13 +134,13 @@ DESKTOP_FILE_2="/home/$SKELETON/$DESKTOP/google-chrome.desktop"
 DESKTOP_FILE_3="/home/$SKELETON/.config/autostart/chrome.desktop"
 DESKTOP_FILE_4="/home/$SKELETON/.local/share/applications/google-chrome.desktop"
 
-text "File at $DESKTOP_FILE_1:"
+text "File at $DESKTOP_FILE_1"
 cat "$DESKTOP_FILE_1"
-text "File at $DESKTOP_FILE_2:"
+text "File at $DESKTOP_FILE_2"
 cat "$DESKTOP_FILE_2"
-text "File at $DESKTOP_FILE_3:"
+text "File at $DESKTOP_FILE_3"
 cat "$DESKTOP_FILE_3"
-text "File at $DESKTOP_FILE_4:"
+text "File at $DESKTOP_FILE_4"
 cat "$DESKTOP_FILE_4"
 
 # Launch from TTY
