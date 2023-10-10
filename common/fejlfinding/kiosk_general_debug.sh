@@ -45,6 +45,9 @@ chromium-browser --version
 text "Contents of chrome's home directory:"
 ls -la /home/$USER/
 
+text "Contents of chrome's .profile-file:"
+cat /home/$USER/.profile
+
 text ".xinitrc contents:"
 cat /home/$USER/.xinitrc
 
