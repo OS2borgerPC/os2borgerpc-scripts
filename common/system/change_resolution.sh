@@ -34,8 +34,7 @@ Section "Screen"
   EndSubSection
 EndSection
 EOF
-elif [ "$ACTIVATE" = "True" ]; then
-  run_xrandr && exit
-else
+elif [ "$ACTIVATE" = "False" ]; then
   rm --force $RESOLUTION_FILE
 fi
+run_xrandr
