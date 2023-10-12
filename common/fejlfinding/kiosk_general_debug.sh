@@ -24,6 +24,9 @@ dmidecode --type 1
 text "LAN or Wi-Fi?"
 ip link
 
+text "List disk space usage"
+df -h
+
 text "Files under /usr/share/os2borgerpc/bin"
 ls -la /usr/share/os2borgerpc/bin/
 
