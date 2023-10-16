@@ -1,10 +1,6 @@
 #!/usr/bin/env sh
 
-lower() {
-    echo "$@" | tr '[:upper:]' '[:lower:]'
-}
-
-ACTIVATE="$(lower "$1")"
+ACTIVATE="$1"
 
 export DEBIAN_FRONTEND=noninteractive
 FILE="/home/chrome/.xinitrc"
@@ -17,8 +13,7 @@ fi
 
 apt-get update --assume-yes
 
-if [ "$ACTIVATE" != 'false' ] && [ "$ACTIVATE" != 'falsk' ] && \
-   [ "$ACTIVATE" != 'no' ] && [ "$ACTIVATE" != 'nej' ]; then
+if [ "$ACTIVATE" = "True" ]; then
 
   apt-get install --assume-yes $PROGRAM
 
