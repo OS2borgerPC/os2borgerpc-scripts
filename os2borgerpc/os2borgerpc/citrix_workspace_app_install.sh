@@ -17,8 +17,8 @@ then
     echo "##########################################################"
     echo "# Removing already installed icaclient and configuration #"
     echo "##########################################################"
-    apt-get purge icaclient -y
-    rm -R $ICA_DIR
+    apt-get purge icaclient --assume-yes
+    rm --recursive $ICA_DIR
     rm $MIMEAPPSLIST_DIR"/mimeapps.list"
     rm $SHADOW_DIR"/Skrivebord/wfica.desktop"
     rm /opt/AppProtectionremove.sh
@@ -27,7 +27,7 @@ if [ -d "$ICA_DIR" ]; then
     echo "####################################################################################"
     echo "# Old ICAClient configuration detected in \"$ICA_DIR\". Removing it. #"
     echo "####################################################################################"
-    rm -r "$ICA_DIR"
+    rm --recursive "$ICA_DIR"
 fi
 
 echo "#########################"
@@ -36,21 +36,21 @@ echo "#########################"
 export DEBIAN_FRONTEND="noninteractive"
 debconf-set-selections <<< "icaclient app_protection/install_app_protection select yes"
 debconf-show icaclient 2>&1
-apt-get -o DPkg::Lock::Timeout=900 install -f "$DEB_FILE" --allow-unauthenticated -y
+apt-get --option DPkg::Lock::Timeout=900 install --fix-broken "$DEB_FILE" --allow-unauthenticated --assume-yes
 rm "$DEB_FILE"
 
-apt-get update -y
-apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" --with-new-pkgs upgrade -y
-apt autoremove -y
+apt-get update --assume-yes
+apt-get --option Dpkg::Options::="--force-confdef" --option Dpkg::Options::="--force-confold" --with-new-pkgs upgrade --assume-yes
+apt autoremove --assume-yes
 
 # AcceptEULA agreement
 mkdir $ICA_DIR && touch "$ICA_DIR/.eula_accepted"
 
 # Handle end-user being prompted with error reports
-apt-get purge apport -y
+apt-get purge apport --assume-yes
 
 # Remove user 'citrixlog' from login screen
-usermod -s /usr/sbin/nologin citrixlog
+usermod --shell /usr/sbin/nologin citrixlog
 
 # https://docs.citrix.com/en-us/citrix-workspace-app-for-linux/get-started.html
 xdg-mime query default application/x-ica
@@ -59,9 +59,9 @@ xdg-icon-resource install --size 64 $ICAROOT"/icons/000_Receiver_64.png" "Citrix
 xdg-mime default wfica.desktop application/x-ica
 xdg-mime default new_store.desktop application/vnd.citrix.receiver.configure
 
-mkdir -p $MIMEAPPSLIST_DIR
+mkdir --parents $MIMEAPPSLIST_DIR
 touch $MIMEAPPSLIST_DIR"/mimeapps.list"
-if ! grep -q -- "x-ica wfica" $MIMEAPPSLIST_DIR"/mimeapps.list"; then
+if ! grep --quiet -- "x-ica wfica" $MIMEAPPSLIST_DIR"/mimeapps.list"; then
     echo "application/x-ica=wfica.desktop;" >> $MIMEAPPSLIST_DIR"/mimeapps.list"
     echo "application/vnd.citrix.receiver.configure=new_store.desktop;" >> $MIMEAPPSLIST_DIR"/mimeapps.list"
 fi
@@ -72,3 +72,15 @@ ICA_KEYSTORE_PATH="/opt/Citrix/ICAClient/keystore/cacerts"
 cp "$CERT_FILE_PATH" "$ICA_KEYSTORE_PATH/"
 chmod 644 "$ICA_KEYSTORE_PATH/$CERT_FILE_NAME"
 /opt/Citrix/ICAClient/util/ctx_rehash
+
+if [ -d /etc/dconf/db/local.d ]; then
+    echo "Bugfix: Some part of installing citrix creates a separate dconf db called local and switches /etc/dconf/profile/user over" \
+         "to using it, breaking the various borgerpc dconf changes/scripts" \
+         "Move the dconf changes to our db and restore the dconf profile to normal"
+    DCONF_PROFILE="/etc/dconf/profile/user"
+    cp /etc/dconf/db/local.d/* /etc/dconf/db/os2borgerpc.d/
+    cp /etc/dconf/db/local.d/locks/* /etc/dconf/db/os2borgerpc.d/locks/
+    rm --recursive --force /etc/dconf/db/local /etc/dconf/db/local.d
+    sed --in-place "s/system-db.*/system-db:os2borgerpc/" $DCONF_PROFILE
+    dconf update
+fi
