@@ -16,12 +16,15 @@
 set -ex
 
 # Fix dpkg settings to avoid interactivity.
-cat <<- EOF > /etc/apt/apt.conf.d/local
+if ! grep --quiet "Dpkg::Lock" /etc/apt/apt.conf.d/local; then
+  cat <<- EOF > /etc/apt/apt.conf.d/local
 	Dpkg::Options {
 	   "--force-confdef";
 	   "--force-confold";
-	}
+	};
+	Dpkg::Lock {Timeout "300";};
 EOF
+fi
 
 # Stop Debconf from doing anything
 export DEBIAN_FRONTEND=noninteractive
