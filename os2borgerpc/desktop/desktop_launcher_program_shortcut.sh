@@ -10,6 +10,8 @@
 ADD=$1
 PROGRAM=$2
 
+CONFIG="/etc/dconf/db/os2borgerpc.d/02-launcher-favorites"
+
 if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
   exit 1
@@ -23,12 +25,14 @@ if [ "$ADD" = "True" ]; then
 
   # Append the program specified above to the menu/launcher
   # Why ']? To not also match the first (title) line.
-  sed -i "s/'\]/', '$PROGRAM.desktop'\]/" /etc/dconf/db/os2borgerpc.d/02-launcher-favorites
+  sed --in-place "s/'\]/', '$PROGRAM.desktop'\]/" $CONFIG
 
 else
 
   # Remove the program specified above from the menu/launcher
-  sed -i "s/, '$PROGRAM.desktop'//" /etc/dconf/db/os2borgerpc.d/02-launcher-favorites
+  # First handle the case where it's the first program in the list
+  # Then handle the cases where it's anything except the first
+  sed --in-place --expression "s/\['$PROGRAM.desktop', /\[/" --expression "s/, '$PROGRAM.desktop'//g" $CONFIG
 
 fi
 
