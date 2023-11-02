@@ -12,12 +12,13 @@
 # 1. String. The given file's name, e.g. firefox, without the .desktop extension.
 #            This parameter IS case-sensitive as some applications have
 #            capitalized characters in their filename.
-# 2. Checkbox. Check this box to delete a file from the autostart folder instead.
+# 2. Checkbox. Check this box to add the file to the autostart folder.
+#              Leave it empty to delete the file from the autostart folder instead.
 
 set -x
 
 PROGRAM="$1"
-DELETE="$2"
+ADD="$2"
 
 AUTOSTART_DIR="/home/.skjult/.config/autostart"
 
@@ -40,7 +41,7 @@ mkdir --parents $AUTOSTART_DIR
 # Remove it first, partially because ln even with --force cannot replace it if it's a regular file
 rm --force "$AUTOSTART_FILE"
 
-if [ "$DELETE" != "True" ]; then
+if [ "$ADD" = "True" ]; then
 
   echo "Adding $PROGRAM to autostart directory"
 
