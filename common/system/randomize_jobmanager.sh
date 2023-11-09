@@ -72,7 +72,8 @@ do
 done
 echo "$CRON_COMMAND"
 
-
+# Note: The PATH below is inherited by the scripts jobmanager runs. Fx. they can't find scripts in /usr/local/bin without it
 cat <<EOF > "$CRON_PATH"
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 $CRON_COMMAND
 EOF
