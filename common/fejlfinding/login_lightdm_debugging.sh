@@ -29,6 +29,9 @@ groups user
 text "The installed version of lightdm"
 lightdm --version
 
+text "List the running sessions, via dm-tool"
+dm-tool list-seats
+
 
 header "LIGHTDM MAIN CONFIG FILE CONTAINS THE FOLLOWING"
 cat /etc/lightdm/lightdm.conf
