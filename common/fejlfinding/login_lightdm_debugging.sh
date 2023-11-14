@@ -17,6 +17,9 @@ header "ASSORTED DEBUGGING INFORMATION RELATED TO LIGHTDM:"
 text "To eliminate it as a cause: Check if the HDD is full"
 df -h
 
+text "To eliminate it as a cause: Check mutability status of /home/user/"
+lsattr -a /home/user/
+
 text "CHECK IF USER (BORGER) IS EXPIRED OR NOT"
 chage -l user
 
