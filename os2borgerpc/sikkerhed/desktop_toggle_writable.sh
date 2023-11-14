@@ -39,9 +39,9 @@ make_desktop_writable() {
 	# All of the matched lines are deleted. This function thus serves to undo write access removal
 	# shellcheck disable=SC2016
 	sed --in-place --expression "/chattr [-+]i/d" --expression "/chown -R root:/d" \
-		  --expression "/$COMMENT/d" --expression '/runuser/d' --expression '/export/d' $USER_CLEANUP \
+		  --expression "/$COMMENT/d" --expression '/runuser/d' --expression '/export/d' \
 		  --expression "/chown \$USERNAME/d" --expression "/.config/d" --expression "/The exact cause/d" \
-		  --expression "/The lines below/d" --expression "/login issues/d"
+		  --expression "/The lines below/d" --expression "/login issues/d" $USER_CLEANUP
 	chattr -i "$DESKTOP"
 }
 
