@@ -39,7 +39,9 @@ make_desktop_writable() {
 	# All of the matched lines are deleted. This function thus serves to undo write access removal
 	# shellcheck disable=SC2016
 	sed --in-place --expression "/chattr [-+]i/d" --expression "/chown -R root:/d" \
-		  --expression "/$COMMENT/d" --expression '/runuser/d' --expression '/export/d' $USER_CLEANUP
+		  --expression "/$COMMENT/d" --expression '/runuser/d' --expression '/export/d' $USER_CLEANUP \
+		  --expression "/chown \$USERNAME/d" --expression "/.config/d" --expression "/The exact cause/d" \
+		  --expression "/The lines below/d" --expression "/login issues/d"
 	chattr -i "$DESKTOP"
 }
 
@@ -63,5 +65,13 @@ chattr -i \$DESKTOP" $USER_CLEANUP
 		$COMMENT
 		chown -R root:\$USERNAME \$DESKTOP
 		chattr +i \$DESKTOP
+		# The exact cause is unclear, but xdg-user-dir will rarely fail in such
+		# a way that DESKTOP=/home/user. The lines below prevent this error
+		# from causing login issues.
+		chattr -i /home/user/
+		chown \$USERNAME:\$USERNAME /home/\$USERNAME
+		chown -R \$USERNAME:\$USERNAME /home/\$USERNAME/.config /home/\$USERNAME/.local
 	EOF
+	# Make sure that DESKTOP is immutable immediately after running this script
+	chattr +i "$DESKTOP"
 fi
