@@ -79,6 +79,9 @@ crontab -u $USER -l
 text "Check the inactive logout file"
 cat /usr/share/os2borgerpc/bin/inactive_logout.sh
 
+text "Info about Apt sources"
+find /etc/apt/sources.list.d/ -mindepth 1 -print -exec cat {} \; -printf "\n"
+
 
 header "Info about kernel, devices and drivers"
 
