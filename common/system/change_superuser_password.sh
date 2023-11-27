@@ -1,8 +1,8 @@
-#!/usr/bin/env sh 
+#!/usr/bin/env sh
 
 # This script will change the superuser password on a OS2borgerPC machine.
 #
-# Expect exactly two input parameters
+# Expects exactly two input parameters
 
 if [ $# -ne 2 ]
 then
@@ -15,9 +15,7 @@ then
     # change password
     TARGET_USER=superuser
     PASSWORD="$1"
-    CRYPTPASS=$(perl -e 'print crypt($ARGV[0], "password")' "$PASSWORD")
-    # Done calculating, now do it.
-    /usr/sbin/usermod "$TARGET_USER" -p "$CRYPTPASS"
+    echo "$TARGET_USER:$PASSWORD" | /usr/sbin/chpasswd
 else
     printf '%s\n' "Passwords didn't match!"
     exit 1
