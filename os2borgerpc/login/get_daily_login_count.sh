@@ -25,7 +25,7 @@ if [ "$ACTIVATE" = "False" ]; then
   exit 0
 fi
 
-echo "* 4 * * * $LOGIN_COUNT_SCRIPT" >> $ROOTCRON_TMP
+echo "0 * * * * $LOGIN_COUNT_SCRIPT" >> $ROOTCRON_TMP
 
 crontab $ROOTCRON_TMP
 
@@ -42,7 +42,6 @@ LAST_ON_DATE_FULL=\$(cat $DATE_FILE)
 # Convert to the date format used in auth.log
 LAST_ON_DATE=\$(LANG=en_US.UTF-8 date -d "\$LAST_ON_DATE_FULL" "+%b %_d")
 TODAY_DATE_FULL=\$(date -d "today" +%F)
-echo \$TODAY_DATE_FULL > $DATE_FILE
 
 # Stop if the date to be checked is today
 if [ "\$LAST_ON_DATE_FULL" = "\$TODAY_DATE_FULL" ]; then
@@ -51,7 +50,7 @@ fi
 
 LOG_FILE="/var/log/auth.log"
 
-OLD_LOGIN_COUNTS=\$(get_os2borgerpc_config "$CONFIG_NAME")
+OLD_LOGIN_COUNTS=\$(/usr/local/bin/get_os2borgerpc_config "$CONFIG_NAME")
 
 if ! grep --quiet "\$LAST_ON_DATE" \$LOG_FILE; then
   LOG_FILE="/var/log/auth.log.1"
@@ -70,9 +69,18 @@ else
   CONFIG_VALUE=\$(echo "\$OLD_LOGIN_COUNTS, \$LAST_ON_DATE_FULL: \$LOGIN_COUNT")
 fi
 
-if ! grep --quiet "\$LAST_ON_DATE_FULL" <<< "\$OLD_LOGIN_COUNTS"; then
-  set_os2borgerpc_config "$CONFIG_NAME" "\$CONFIG_VALUE"
-  os2borgerpc_push_config_keys "$CONFIG_NAME"
+if grep --quiet "\$LAST_ON_DATE_FULL" <<< "\$OLD_LOGIN_COUNTS"; then
+  echo \$TODAY_DATE_FULL > $DATE_FILE
+  exit 0
+fi
+
+OLD_CONFIG_VALUE=\$(/usr/local/bin/get_os2borgerpc_config "$CONFIG_NAME")
+/usr/local/bin/set_os2borgerpc_config "$CONFIG_NAME" "\$CONFIG_VALUE"
+PUSH_OUTPUT=\$(/usr/local/bin/os2borgerpc_push_config_keys "$CONFIG_NAME")
+if grep --quiet "The following keys were pushed to the admin system:" <<< "\$PUSH_OUTPUT"; then
+  echo \$TODAY_DATE_FULL > $DATE_FILE
+else
+  /usr/local/bin/set_os2borgerpc_config "$CONFIG_NAME" "\$OLD_CONFIG_VALUE"
 fi
 EOF
 
