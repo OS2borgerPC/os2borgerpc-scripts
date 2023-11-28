@@ -72,6 +72,9 @@ def sms_validate(phone_number, password):
     country_code = "+467" # +467 is for Swedish numbers, Danish numbers should start with +45
     phone_number = country_code + phone_number
 
+    # Make the message for the sms
+    message = f"Engångslösenordet för den här MedborgarPC är {password}"
+
     host_address = (
         check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
     )
@@ -101,7 +104,7 @@ def sms_validate(phone_number, password):
     #   time > 0: The user is allowed r minutes of login time.
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     try:
-        time, citizen_hash = admin.sms_login(phone_number, password, site, require_booking, pc_name)
+        time, citizen_hash = admin.sms_login(phone_number, message, site, require_booking, pc_name)
     except (socket.gaierror, TimeoutError, ConnectionError):
         time = ""
         citizen_hash = ""
