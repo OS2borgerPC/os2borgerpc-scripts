@@ -68,6 +68,10 @@ def sms_validate(phone_number, password):
     if not re.fullmatch(f"^\d+$", phone_number):
         return 0, "invalid_number"
 
+    # Add the country code to the phone number
+    country_code = "+467" # +467 is for Swedish numbers, Danish numbers should start with +45
+    phone_number = country_code + phone_number
+
     host_address = (
         check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
     )
