@@ -32,6 +32,7 @@ SMS_LOGOUT_SCRIPT="/etc/lightdm/greeter-setup-scripts/sms_logout.py"
 SMS_LOGOUT_SERVICE="/etc/systemd/system/sms_logout.service"
 GREETER_SETUP_SCRIPT="/etc/lightdm/greeter_setup_script.sh"
 GREETER_SETUP_DIR="/etc/lightdm/greeter-setup-scripts"
+LIGHTDM_CONFIG="/etc/lightdm/lightdm.conf"
 
 if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
@@ -49,6 +50,10 @@ if [ "$ACTIVATE" = 'True' ]; then
     # 2. All other users use regular login and conversely skip Cicero
     sed -i "/include common-account/i# OS2borgerPC SMS login\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
   fi
+
+  # Disable automatic login
+  deluser user nopasswdlogin
+  sed --in-place "/autologin-user/d" $LIGHTDM_CONFIG
 
 # Separated out because the pam module cannot run if you import the admin_client or re
 cat << EOF > $SMS_LOGIN_INTERFACE_PYTHON3
@@ -70,7 +75,7 @@ def sms_validate(phone_number, password):
 
     # Add the country code to the phone number
     country_code = "+467" # +467 is for Swedish numbers, Danish numbers should start with +45
-    phone_number = country_code + phone_number
+    phone_number = country_code + phone_number[-8:]
 
     # Make the message for the sms
     message = f"Engångslösenordet för den här MedborgarPC är {password}"
@@ -106,8 +111,7 @@ def sms_validate(phone_number, password):
     try:
         time, citizen_hash = admin.sms_login(phone_number, message, site, require_booking, pc_name)
     except (socket.gaierror, TimeoutError, ConnectionError):
-        time = ""
-        citizen_hash = ""
+        return ""
 
     # Time is received in minutes
     return time, citizen_hash
@@ -256,13 +260,13 @@ def generate_password(length):
 def pam_sm_authenticate(pamh, flags, argv):
     # print(pamh.fail_delay)
     # http://pam-python.sourceforge.net/doc/html/
-    phone_number_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Skriv in telefonnummer")
+    phone_number_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_ON, "Skriv in telefonnummer")
     phone_number_response = pamh.conversation(phone_number_msg)
     phone_number = phone_number_response.resp
 
-    if not len(phone_number) == 8:
+    if not len(phone_number) == 10:
         result_msg = pamh.Message(
-            pamh.PAM_ERROR_MSG, "Ogiltigt nummer. Ange 8 siffror."
+            pamh.PAM_ERROR_MSG, "Ogiltigt nummer. Ange 10 siffror."
         )
         pamh.conversation(result_msg)
 
@@ -431,6 +435,9 @@ else # Cleanup and remove the SMS/booking integration
   sed -i "\@auth required pam_python.so@d" $LIGHTDM_PAM
 
   systemctl disable "$(basename $SMS_LOGOUT_SERVICE)"
+
+  # Allow login without password
+  adduser user nopasswdlogin
 
   rm --force $SMS_LOGIN_INTERFACE_PYTHON3 $PAM_PYTHON_MODULE \
   $SMS_LOGOUT_SCRIPT $CITIZEN_HASH_FILE $SMS_LOGOUT_SERVICE \
