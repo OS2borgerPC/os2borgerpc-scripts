@@ -79,8 +79,7 @@ def cicero_validate(cicero_user, cicero_pass):
     try:
         time, citizen_hash = admin.citizen_login(cicero_user, cicero_pass, site, prevent_dual_login=True)
     except (socket.gaierror, TimeoutError, ConnectionError):
-        time = ""
-        citizen_hash = ""
+        return ""
 
     # Time is received in minutes
     return time, citizen_hash
