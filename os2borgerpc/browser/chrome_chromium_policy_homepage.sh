@@ -42,10 +42,10 @@ fi
 POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-homepage.json"
 
 if [ "$1" = "" ]; then
-    rm -f "$POLICY"
+    rm --force "$POLICY"
 else
     if [ ! -d "$(dirname "$POLICY")" ]; then
-        mkdir -p "$(dirname "$POLICY")"
+        mkdir --parents "$(dirname "$POLICY")"
     fi
 
     cat > "$POLICY" <<END
