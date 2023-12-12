@@ -14,12 +14,13 @@ The top level categories are as follows:
 Below `common` we have the following categories
 
 
-| Category          | Description                                                                 |
-| ------------------| ----------------------------------------------------------------------------|
-| hooks             | Scripts that add hooks to jobmanager                                        |
-| security          | Security scripts                                                            |
-| sikkerhed         | Scripts that enhance or weaken security (OS2borgerPC and OS2borgerPC Kiosk) |
-| system            | Scripts that work on Ubuntu generally (OS2borgerPC and OS2borgerPC Kiosk)   |
+| Category          | Description                                                                               |
+| ------------------| ------------------------------------------------------------------------------------------|
+| hooks             | Scripts that add hooks to jobmanager                                                      |
+| lyd               | Related to sound                                                                          |
+| security          | Security scripts                                                                          |
+| sikkerhed         | Scripts that enhance or weaken security (OS2borgerPC and OS2borgerPC Kiosk)               |
+| system            | Uncategorized scripts that work on Ubuntu generally (OS2borgerPC and OS2borgerPC Kiosk)   |
 
 Below `os2borgerpc` we have the following categories
 
