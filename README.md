@@ -26,10 +26,9 @@ Below `os2borgerpc` we have the following categories
 | Category      | Description                                                                |
 | ------------- | ---------------------------------------------------------------------------|
 | bluetooth     | Related to bluetooth                                                       |
-| chrome        | Related to Chrome                                                          |
+| browser       | Related to assorted web browsers                                           |
 | custom        | Local scripts for customers                                                |
 | desktop       | Desktop related scripts                                                    |
-| firefox       | Related to Firefox                                                         |
 | libreoffice   | Related to LibreOffice                                                     |
 | login         | Related to login                                                           |
 | os2borgerpc   | Uncategorized scripts that are only designed to work on OS2BorgerPC        |
