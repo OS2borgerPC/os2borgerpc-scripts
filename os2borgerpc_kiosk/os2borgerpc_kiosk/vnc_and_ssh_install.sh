@@ -4,6 +4,8 @@
 
 VNC_PASSWORD=$1
 
+XINETD_FILE=/etc/xinetd.d/x11vnc
+
 if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
   exit 1
@@ -11,7 +13,7 @@ fi
 
 apt install -y ssh x11vnc xinetd
 
-cat << EOF > /etc/xinetd.d/x11vnc
+cat << EOF > $XINETD_FILE
 service x11vncservice
 {
        port            = 5900
@@ -19,15 +21,15 @@ service x11vncservice
        socket_type     = stream
        protocol        = tcp
        wait            = no
-       user            = root
+       user            = chrome
        server          = /usr/bin/x11vnc
-       server_args     = -inetd -o /var/log/x11vnc.log -noxdamage -display :0 -auth /home/chrome/.Xauthority -passwdfile /etc/os2borgerpc/vncpasswd
+       server_args     = -inetd -o /home/chrome/x11vnc.log -noxdamage -display :0 -auth /home/chrome/.Xauthority -passwd $VNC_PASSWORD
        disable         = no
 }
 EOF
 
-cat << EOF > /etc/os2borgerpc/vncpasswd
-$VNC_PASSWORD
-EOF
+chmod 640 $XINETD_FILE
+
+rm --force /etc/os2borgerpc/vncpasswd /var/log/x11vnc.log
 
 service xinetd restart
