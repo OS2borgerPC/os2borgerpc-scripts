@@ -16,6 +16,7 @@ fi
 INSTALL="$1"
 
 export DEBIAN_FRONTEND=noninteractive
+POLICY="/etc/opt/edge/policies/managed/os2borgerpc-defaults.json"
 
 setup_policies() {
   # DEVELOPER NOTES:
@@ -56,7 +57,6 @@ setup_policies() {
   # edge://flags: Experimental features can be enabled/disabled here.
 
   # Create the new policies
-  POLICY="/etc/opt/edge/policies/managed/os2borgerpc-defaults.json"
 
   mkdir --parents "$(dirname "$POLICY")"
 
@@ -121,6 +121,7 @@ if [ "$INSTALL" = "True" ]; then
   # TODO: Haven't added the same "don't check for updates" because ideally the policy AutoUpdateCheckPeriodMinutes
   # should handle that: https://learn.microsoft.com/en-us/deployedge/microsoft-edge-update-policies#autoupdatecheckperiodminutes
 else
-  # Remove the browser, leave the policies as they may be used by other browsers. Leave the desktop files?
+  # Remove the browser. Leave the desktop files?
   apt-get remove --assume-yes $PACKAGE
+  rm $POLICY
 fi
