@@ -24,7 +24,9 @@ sessions-directory=/usr/share/wayland-sessions:/usr/share/lightdm/sessions
 EOF
 
   # Stop launching Xorg-specific display-setup-script
-  sed --in-place "\@/usr/share/os2borgerpc/bin/xset.sh@d" $LIGHTDM_CONF
+  if [ -f "/usr/share/os2borgerpc/bin/xset.sh" ]; then
+    sed --in-place "\@/usr/share/os2borgerpc/bin/xset.sh@d" $LIGHTDM_CONF
+  fi
 
 else
   rm $DISABLE_XORG_FILE
@@ -37,7 +39,7 @@ sessions-directory=/usr/share/xsessions:/usr/share/lightdm/sessions
 EOF
 
   # Start launching Xorg-specific display-setup-script, if it isn't already there
-  if ! grep --quiet "/usr/share/os2borgerpc/bin/xset.sh" $LIGHTDM_CONF; then
+  if [ -f "/usr/share/os2borgerpc/bin/xset.sh" ] && ! grep --quiet "/usr/share/os2borgerpc/bin/xset.sh" $LIGHTDM_CONF; then
     echo "display-setup-script=/usr/share/os2borgerpc/bin/xset.sh" >> $LIGHTDM_CONF
   fi
 fi
