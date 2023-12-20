@@ -76,4 +76,5 @@ sed --in-place "\@$GIO_LAUNCHER@d" $USER_CLEANUP
 
 # Make sure to insert this line before the desktop is made immutable
 # in case desktop_toggle_writable has already been run
-sed -i "/chown -R \$USERNAME:\$USERNAME \/home\/\$USERNAME/a $GIO_LAUNCHER" $USER_CLEANUP
+# Also make sure to only insert the line once
+sed -i "0,\@chown -R \$USERNAME:\$USERNAME /home/\$USERNAME@ s@@&\n$GIO_LAUNCHER@" $USER_CLEANUP
