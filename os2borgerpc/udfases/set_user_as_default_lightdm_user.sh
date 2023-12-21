@@ -11,11 +11,14 @@ ACTIVATE=$1
 USER=user
 FILE=/var/lib/lightdm/.cache/unity-greeter/state
 
+mkdir --parents "$(dirname "$FILE")"
+
 if [ "$ACTIVATE" = 'True' ]; then
   cat <<- EOF > "$FILE"
-    [greeter]
-    last-user=$USER
+[greeter]
+last-user=$USER
 EOF
+  chown --recursive lightdm:lightdm /var/lib/lightdm/
   chattr +i $FILE
 else
   chattr -i $FILE
