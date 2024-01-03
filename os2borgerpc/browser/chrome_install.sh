@@ -117,10 +117,10 @@ add_to_desktop_files() {
     # Only continue if the particular file exists
     if [ -f "$FILE" ]; then
       # Don't add the parameter multiple times (idempotency)
-      if ! grep -q -- "$PARAMETER" "$FILE"; then
+      if ! grep --quiet -- "$PARAMETER" "$FILE"; then
         # Note: Using a different delimiter here than in the maximized script,
         # as "," is part of the string
-        sed -i "s@\(Exec=/usr/bin/google-chrome-stable\)\(.*\)@\1 $PARAMETER\2@" "$FILE"
+        sed --in-place "s@\(Exec=/usr/bin/google-chrome-stable\)\(.*\)@\1 $PARAMETER\2@" "$FILE"
       fi
     fi
   done

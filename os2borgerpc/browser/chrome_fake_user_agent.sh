@@ -24,8 +24,8 @@ add_to_desktop_files() {
     # Only continue if the particular file exists
     if [ -f "$FILE" ]; then
       # Don't add the parameter multiple times
-      if ! grep -q -- "$PARAMETER" "$FILE"; then
-        sed -i "s,\(Exec=\S*\)\(.*\),\1 $PARAMETER\2," "$FILE"
+      if ! grep --quiet -- "$PARAMETER" "$FILE"; then
+        sed --in-place "s,\(Exec=\S*\)\(.*\),\1 $PARAMETER\2," "$FILE"
       fi
     fi
   done
@@ -38,7 +38,7 @@ remove_from_desktop_files() {
   for FILE in "$@"; do
     # Only continue if the particular file exists
     if [ -f "$FILE" ]; then
-      sed -i "s/ $PARAMETER//g" "$FILE"
+      sed --in-place "s/ $PARAMETER//g" "$FILE"
     fi
   done
 }

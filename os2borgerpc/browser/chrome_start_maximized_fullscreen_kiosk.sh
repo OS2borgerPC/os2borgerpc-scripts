@@ -47,7 +47,7 @@ FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3"
 # Delete this superfluous .desktop file if it exists (Solrød had it)
 rm --force /home/$USER/.local/share/applications/google-chrome.desktop
 
-# Takes a parameter to add to Chrome and a list of .desktop files to add it to
+# Takes a parameter to add to the Exec lines of the desktop files passed as the subsequent arguments
 add_to_desktop_files() {
   PARAMETER="$1"
   shift # Now remove the parameter so we can loop over what remains: The files
@@ -55,8 +55,8 @@ add_to_desktop_files() {
     # Only continue if the particular file exists
     if [ -f "$FILE" ]; then
       # Don't add the parameter multiple times
-      if ! grep -q -- "$PARAMETER" "$FILE"; then
-        sed -i "s,\(Exec=\S*\)\(.*\),\1 $PARAMETER\2," "$FILE"
+      if ! grep --quiet -- "$PARAMETER" "$FILE"; then
+        sed --in-place "s,\(Exec=\S*\)\(.*\),\1 $PARAMETER\2," "$FILE"
       fi
     fi
   done
@@ -69,7 +69,7 @@ remove_from_desktop_files() {
   for FILE in "$@"; do
     # Only continue if the particular file exists
     if [ -f "$FILE" ]; then
-      sed -i "s/ $PARAMETER//g" "$FILE"
+      sed --in-place "s/ $PARAMETER//g" "$FILE"
     fi
   done
 }
