@@ -89,9 +89,9 @@ def sms_validate(phone_number, password):
     # For local testing with VirtualBox
     # host_address = "http://10.0.2.2:9999"
 
-    # Obtain the site and convert from bytes to regular string
+    # Obtain the pc_uid and convert from bytes to regular string
     # and remove the trailing newline
-    site = check_output(["get_os2borgerpc_config", "site"]).decode().strip()
+    pc_uid = check_output(["get_os2borgerpc_config", "uid"]).decode().strip()
 
     # If booking a specific PC is required, obtain the name of this PC,
     # convert from bytes to regular string and remove the trailing newline
@@ -109,7 +109,7 @@ def sms_validate(phone_number, password):
     #   time > 0: The user is allowed r minutes of login time.
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     try:
-        time, citizen_hash = admin.sms_login(phone_number, message, site, require_booking, pc_name)
+        time, citizen_hash = admin.sms_login(phone_number, message, pc_uid, require_booking, pc_name)
     except (socket.gaierror, TimeoutError, ConnectionError):
         return ""
 
@@ -146,13 +146,13 @@ def sms_login_finalize(phone_number):
     # For local testing with VirtualBox
     # host_address = "http://10.0.2.2:9999"
 
-    # Obtain the site and convert from bytes to regular string
+    # Obtain the pc_uid and convert from bytes to regular string
     # and remove the trailing newline
-    site = check_output(["get_os2borgerpc_config", "site"]).decode().strip()
+    pc_uid = check_output(["get_os2borgerpc_config", "uid"]).decode().strip()
 
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     try:
-        log_id = admin.sms_login_finalize(phone_number, site, require_booking, save_log)
+        log_id = admin.sms_login_finalize(phone_number, pc_uid, require_booking, save_log)
     except (socket.gaierror, TimeoutError, ConnectionError):
         log_id = ""
 
