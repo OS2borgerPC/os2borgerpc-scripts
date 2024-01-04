@@ -10,42 +10,13 @@
 # Authors: Carsten Agger, Heini Leander Ovason, Marcus Funch Mogensen
 #
 # DEVELOPER NOTES:
-#
-# > POLICIES:
-#
-# The policies we set and why
-#
-# Lockdown:
-# BrowserAddPersonAvailable: Make it impossible to add a new Profile. Doesn't lock down editing a Profile, but it gets some of the way.
-# BrowserSignin: Disable sync/login with own google account
-# DeveloperToolsAvailable: Disables access to developer tools, where someone could make changes to a website
-# EnableMediaRouter: Disable Chrome Cast support
-# ExtensionInstallBlocklist: With the argument * it blocks installing any extension
-# ForceEphemeralProfiles: Clear Profiles on browser close automatically, for privacy reasons
-#
-# Start page:
-# HomepageIsNewTabPage: Don't allow someone to override the homepage with the new tab page
-# HomepageLocation: Sets the page the HomeButton links to, if visible. Confusingly this does not set the homepage that Chrome opens on startup!
-# RestoreOnStartup: Controls what happens on startup. Also prevents users from changing the startup URLs when reopening the browser without logging out of the OS first. Possibly not needed with Guest mode, incognito or ephemeral.
-# RestoreOnStartupURLs: This is, confusingly, what can actually control the homepage, but only if RestoreOnStartup is set to "4".
-#
-# Various:
-# BrowserGuestModeEnabled: Allow people to start a guest session, if they want, so history isn't even temporarily recorded. Not crucial.
-# DefaultBrowserSettingEnabled: Don't check if it's default browser. Irrelevant for visitors, and maybe you want Firefox as default.
-# MetricsReportingEnabled: Disable some of Googles metrics, for privacy reasons
-# PasswordManagerEnabled: Don't try to save passwords on a public machine used by many people
-# ShowHomeButton: A button to go back to the home page. Not crucial.
-
-# Additional info on the many policies that can be set:
-# https://support.google.com/chrome/a/answer/187202?hl=en
-#
-# Blocked URLs
-#
-# chrome://accessibility: It seems to have what's essentially a builtin keylogger?!
-# chrome://extensions: Extension settings can be changed here, and extensions enabled/disabled
-# chrome://flags: Experimental features can be enabled/disabled here.
 
 set -ex
+
+if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
+  echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
+  exit 1
+fi
 
 ACTIVATE=$1
 
@@ -55,56 +26,113 @@ CHROMIUM_POLICIES_PATH="/var/snap/chromium/current/policies"
 
 mkdir --parents "$(dirname $CHROMIUM_POLICIES_PATH)"
 
-# This function is shared between chrome_install.sh and chromium_install.sh
+### START SHARED BLOCK BETWEEN CHROMIUM BROWSERS: CHROMIUM, CHROME ###
 setup_policies() {
+  #
+  # DEVELOPER NOTES:
+  #
+  # > POLICIES:
+  #
+  # The policies we set and why
+  #
+  # Lockdown:
+  # AutofillAddressEnabled: Disable Autofill of addresses
+  # AutofillCreditCardEnabled: Disable Autofill of payment methods
+  # BrowserAddPersonEnabled: Make it impossible to add a new Profile. Doesn't lock down editing a Profile, but it gets some of the way.
+  # BrowserSignin: Disable sync/login with own google account
+  # DeveloperToolsAvailability: Disables access to developer tools, where someone could make changes to a website
+  # EnableMediaRouter: Disable Chrome Cast support
+  # ExtensionInstallBlocklist: With the argument * it blocks installing any extension
+  # ForceEphemeralProfiles: Clear Profiles on browser close automatically, for privacy reasons
+  # PaymentMethodQueryEnabled: Prevent websites from checking if the user has saved payment methods
+  #
+  # Various:
+  # BrowserGuestModeEnabled: Allow people to start a guest session, if they want, so history isn't even temporarily recorded. Not crucial.
+  # BrowsingDataLifetime: Continuously remove all browsing data after 1 hour (the minimum possible),
+  # except "cookies_and_other_site_data" and "password_signin",
+  # because the visitor might be at the computer and still signed in to something.
+  # DefaultBrowserSettingEnabled: Don't check if it's default browser. Irrelevant for visitors, and maybe you want Firefox as default.
+  # MetricsReportingEnabled: Disable some of Googles metrics, for privacy reasons
+  # PasswordManagerEnabled: Don't try to save passwords on a public machine used by many people
+  # PrivacySandboxPromptEnabled: Don't prompt about enabling (some) ad tracking
+  # PrivacySandboxSiteEnabledAdsEnabled: Disable (some) ad tracking
+
+  # Additional info on the many policies that can be set:
+  # https://support.google.com/chrome/a/answer/187202?hl=en
+  #
+  # Blocked URLs
+  #
+  # chrome://accessibility: It seems to have what's essentially a builtin keylogger?!
+  # chrome://extensions: Extension settings can be changed here, and extensions enabled/disabled
+  # chrome://flags: Experimental features can be enabled/disabled here.
+
   # Cleanup our previous policies if they're around (except the homepage)
   rm --force /etc/opt/chrome/policies/managed/os2borgerpc-default-hp.json /etc/opt/chrome/policies/managed/os2borgerpc-login.json
 
   # Create the new policies
-  MAIN_POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-defaults.json"
-  HOMEPAGE_POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-homepage.json"
+  POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-defaults.json"
 
-  if [ ! -d "$(dirname "$MAIN_POLICY")" ]; then
-      mkdir --parents "$(dirname "$MAIN_POLICY")"
-  fi
+  mkdir --parents "$(dirname "$POLICY")"
 
-	cat > "$MAIN_POLICY" <<- END
-		{
-		    "BrowserAddPersonEnabled": false,
-		    "BrowserGuestModeEnabled": true,
-		    "BrowserSignin": 0,
-		    "DefaultBrowserSettingEnabled": false,
-		    "DeveloperToolsAvailability": 2,
-		    "EnableMediaRouter": false,
-		    "ExtensionInstallBlocklist": [
-		      "*"
-		    ],
-		    "ForceEphemeralProfiles": true,
-		    "MetricsReportingEnabled": false,
-		    "PasswordManagerEnabled": false,
-		    "URLBlocklist": [
-		      "chrome://accessibility",
-		      "chrome://extensions",
-		      "chrome://flags"
-		    ]
-		}
-	END
+  cat > "$POLICY" << END
+{
+    "AutofillAddressEnabled": false,
+    "AutofillCreditCardEnabled": false,
+    "BrowserAddPersonEnabled": false,
+    "BrowserGuestModeEnabled": true,
+    "BrowserSignin": 0,
+    "BrowsingDataLifetime": [
+      {
+        "data_types": [
+          "autofill",
+          "browsing_history",
+          "cached_images_and_files",
+          "download_history",
+          "hosted_app_data",
+          "site_settings"
+        ],
+        "time_to_live_in_hours": 1
+      }
+    ],
+    "DefaultBrowserSettingEnabled": false,
+    "DeveloperToolsAvailability": 2,
+    "EnableMediaRouter": false,
+    "ExtensionInstallBlocklist": [
+      "*"
+    ],
+    "ForceEphemeralProfiles": true,
+    "MetricsReportingEnabled": false,
+    "PasswordManagerEnabled": false,
+    "PaymentMethodQueryEnabled": false,
+    "PrivacySandboxPromptEnabled": false,
+    "PrivacySandboxSiteEnabledAdsEnabled": false,
+    "URLBlocklist": [
+      "chrome://accessibility",
+      "chrome://extensions",
+      "chrome://flags"
+    ]
+}
+END
 
   # This entire policy file is overwritten if you later run the script to change the homepage
   # We set it here too so all machines have a startpage set, to prevent someone from manually setting the homepage to
   # some malicious site
-	cat > "$HOMEPAGE_POLICY" <<- END
-		{
-		    "HomepageLocation": "https://borger.dk",
-		    "RestoreOnStartup": 4,
-		    "ShowHomeButton": true,
-		    "HomepageIsNewTabPage": false,
-		    "RestoreOnStartupURLs": [
-		        "https://borger.dk"
-		    ]
-		}
-	END
+  HOMEPAGE_POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-homepage.json"
+  if [ ! -f $HOMEPAGE_POLICY ]; then
+cat > "$HOMEPAGE_POLICY" <<- END
+{
+    "HomepageLocation": "https://borger.dk",
+    "RestoreOnStartup": 4,
+    "ShowHomeButton": true,
+    "HomepageIsNewTabPage": false,
+    "RestoreOnStartupURLs": [
+        "https://borger.dk"
+    ]
 }
+END
+  fi
+}
+### END SHARED BLOCK BETWEEN CHROMIUM BROWSERS: CHROMIUM, CHROME ###
 
 if [ "$ACTIVATE" = "True" ]; then
   # Fails if /var/snap/chromium/current already exists, which it will be if it's already installed.

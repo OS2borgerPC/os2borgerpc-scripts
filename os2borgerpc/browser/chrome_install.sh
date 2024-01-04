@@ -10,7 +10,6 @@
 
 set -ex
 
-### START SHARED BLOCK BETWEEN CHROMIUM BROWSERS: CHROMIUM, CHROME ###
 if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
   exit 1
@@ -20,6 +19,7 @@ INSTALL="$1"
 
 export DEBIAN_FRONTEND=noninteractive
 
+### START SHARED BLOCK BETWEEN CHROMIUM BROWSERS: CHROMIUM, CHROME ###
 setup_policies() {
   #
   # DEVELOPER NOTES:
@@ -106,6 +106,24 @@ setup_policies() {
     ]
 }
 END
+
+  # This entire policy file is overwritten if you later run the script to change the homepage
+  # We set it here too so all machines have a startpage set, to prevent someone from manually setting the homepage to
+  # some malicious site
+  HOMEPAGE_POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-homepage.json"
+  if [ ! -f $HOMEPAGE_POLICY ]; then
+cat > "$HOMEPAGE_POLICY" <<- END
+{
+    "HomepageLocation": "https://borger.dk",
+    "RestoreOnStartup": 4,
+    "ShowHomeButton": true,
+    "HomepageIsNewTabPage": false,
+    "RestoreOnStartupURLs": [
+        "https://borger.dk"
+    ]
+}
+END
+  fi
 }
 ### END SHARED BLOCK BETWEEN CHROMIUM BROWSERS: CHROMIUM, CHROME ###
 

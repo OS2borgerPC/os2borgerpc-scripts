@@ -39,16 +39,13 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
-POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-homepage.json"
+HOMEPAGE_POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-homepage.json"
+mkdir --parents "$(dirname "$HOMEPAGE_POLICY")"
 
 if [ "$1" = "" ]; then
-    rm --force "$POLICY"
+    rm --force "$HOMEPAGE_POLICY"
 else
-    if [ ! -d "$(dirname "$POLICY")" ]; then
-        mkdir --parents "$(dirname "$POLICY")"
-    fi
-
-    cat > "$POLICY" <<END
+    cat > "$HOMEPAGE_POLICY" <<END
 {
     "ShowHomeButton": true,
     "HomepageIsNewTabPage": false,
