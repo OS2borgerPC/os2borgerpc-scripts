@@ -1,12 +1,15 @@
 #! /usr/bin/env sh
 
 # This script:
-# 1. Installs google-chrome
-# 2. Adds assorted policies listed below
-# 3. Adds a launch option that prevents it
-#    from checking for updates and showing it's out of date to whoever
+# 1. Install Chromium
+# 2. Add a Chromium policy that:
+#    - prevents Chromium from asking if it should be default browser and about browser metrics
+#    - prevents the user logging in to the browser
+#    - disables the remember password prompt feature.
 
 # Authors: Carsten Agger, Heini Leander Ovason, Marcus Funch Mogensen
+#
+# DEVELOPER NOTES:
 
 set -ex
 
@@ -15,9 +18,13 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
-INSTALL="$1"
+ACTIVATE=$1
 
-export DEBIAN_FRONTEND=noninteractive
+# We refer to Chrome policies here because we're trying to share the policies between Chrome and Chromium
+CHROME_POLICIES_PATH="/etc/opt/chrome/policies"
+CHROMIUM_POLICIES_PATH="/var/snap/chromium/current/policies"
+
+mkdir --parents "$(dirname $CHROMIUM_POLICIES_PATH)"
 
 ### START SHARED BLOCK BETWEEN CHROMIUM BROWSERS: CHROMIUM, CHROME ###
 setup_policies() {
@@ -127,61 +134,16 @@ END
 }
 ### END SHARED BLOCK BETWEEN CHROMIUM BROWSERS: CHROMIUM, CHROME ###
 
-# Takes a parameter to add to Chrome and a list of .desktop files to add it to
-add_to_desktop_files() {
-  PARAMETER="$1"
-  shift # Now remove the parameter so we can loop over what remains: The files
-  for FILE in "$@"; do
-    # Only continue if the particular file exists
-    if [ -f "$FILE" ]; then
-      # Don't add the parameter multiple times (idempotency)
-      if ! grep --quiet -- "$PARAMETER" "$FILE"; then
-        # Note: Using a different delimiter here than in the maximized script,
-        # as "," is part of the string
-        sed --in-place "s@\(Exec=/usr/bin/google-chrome-stable\)\(.*\)@\1 $PARAMETER\2@" "$FILE"
-      fi
-    fi
-  done
-}
-
-# Determine the name of the user desktop directory. This is done via xdg-user-dir,
-# which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
-# we run xdg-user-dirs-update, which generates it based on the environment variable
-# LANG. This variable is empty in lightdm so we first export it
-# based on the value stored in /etc/default/locale
-export "$(grep LANG= /etc/default/locale | tr -d '"')"
-runuser -u user xdg-user-dirs-update
-DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
-
-DESKTOP_FILE_PATH_1=/usr/share/applications/google-chrome.desktop
-# In case a Chrome shortcut has been added to the desktop
-DESKTOP_FILE_PATH_2=/home/$USER/$DESKTOP/google-chrome.desktop
-# In case chrome_autostart.sh has been executed
-DESKTOP_FILE_PATH_3=/home/$USER/.config/autostart/chrome.desktop
-FILES="$DESKTOP_FILE_PATH_1 $DESKTOP_FILE_PATH_2 $DESKTOP_FILE_PATH_3"
-
-PACKAGE="google-chrome-stable"
-
-if [ "$INSTALL" = "True" ]; then
-
-  wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-  echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
-  apt-get update --assume-yes
-  # If the package manager is in an inconsistent state fix that first
-  apt-get install --assume-yes --fix-broken
-  apt-get install --assume-yes $PACKAGE
+if [ "$ACTIVATE" = "True" ]; then
+  # Fails if /var/snap/chromium/current already exists, which it will be if it's already installed.
+  if ! which chromium > /dev/null; then
+    snap install chromium
+  fi
+  ln --symbolic --force $CHROME_POLICIES_PATH $CHROMIUM_POLICIES_PATH
 
   setup_policies
-
-  # Chrome: Disable its own check for updates
-  # It would be more elegant to control this via a policy, but unfortunately that does not seem to be possible currently
-  # Add this launch argument to all desktop files in case the customer's
-  # already have e.g. a desktop shortcut for it, which would otherwise launch
-  # Chrome without disabling its check for updates
-  # shellcheck disable=SC2086 # We want to split the files back into separate arguments
-  add_to_desktop_files "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'" $FILES
-  dconf update # Extra insurance that the change takes effect
 else
-  # Not removing the policies because Chromium may use them, and rerunning Chrome - Install overwrites them anyway.
-  apt-get remove --assume-yes $PACKAGE
+  snap remove chromium
+  # Remove chromium symlink
+  rm $CHROMIUM_POLICIES_PATH
 fi
