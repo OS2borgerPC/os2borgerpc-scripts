@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /usr/bin/env sh
 
 # Reference: https://chromeenterprise.google/policies/#IncognitoModeAvailability
 
@@ -30,13 +30,9 @@ case $INPUT_MODE in
 esac
 
 
-if [ "$ACTIVATE" = "True" ]
-then
-    
-    if [ ! -d "$(dirname "$POLICY")" ]
-    then
-        mkdir -p "$(dirname "$POLICY")"
-    fi
+if [ "$ACTIVATE" = "True" ]; then
+
+    mkdir --parents "$(dirname "$POLICY")"
 
     cat << EOF > "$POLICY"
 {
