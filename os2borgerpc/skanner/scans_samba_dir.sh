@@ -1,9 +1,15 @@
 #! /usr/bin/env sh
 
+# Test it like this, preferably from another machine:
+# smbclient '\\<IP_ADDRESS_HERE>\<SHARE_NAME>' -U <USER>
+# ...so more specifically:
+# smbclient '\\IP_ADDRESS_HERE\scan' -U samba
+
 set -x
 
 ACTIVATE="$1"
 DIRECTORY_NAME_ON_DESKTOP="${2-scan}" # Set a default argument so rm --recursive below doesn't attempt to delete the desktop if no argument was passed
+SAMBA_USER_PASSWORD="$3"
 
 SCAN_DIRECTORY_SOURCE="/home/.skjult/Skrivebord/$DIRECTORY_NAME_ON_DESKTOP"
 SCAN_DIRECTORY_DESTINATION=$(echo "$SCAN_DIRECTORY_SOURCE" | sed 's/.skjult/user/')
@@ -12,34 +18,41 @@ SAMBA_CONFIG=/etc/samba/smb.conf
 SHARE_NAME="scan"
 SAMBA_SERVICE="smbd"
 OUR_USER="user"
-OUR_SAMBA_USER="samba"
+# This name can be anything
+SAMBA_USER="samba"
 
 if [ "$ACTIVATE" != "True" ]; then
 	apt-get purge --assume-yes samba samba-common-bin
-	rm --recursive "$SCAN_DIRECTORY_SOURCE" "$SCAN_DIRECTORY_DESTINATION"
-	userdel $OUR_SAMBA_USER
-	groupdel $OUR_SAMBA_USER
+	rm --recursive "$SCAN_DIRECTORY_SOURCE"
+	userdel $SAMBA_USER
+	groupdel $SAMBA_USER
 	exit 0
 fi
+
+# A provided password is required when activating this script
+[ -z "$SAMBA_USER_PASSWORD" ] && echo "Error: You need to choose a password for the samba user, which is then used to access the share. Exiting." && exit 1
 
 apt-get update --assume-yes
 # Note: This installation also creates a group named "sambashare". Not currently using that for anything
 apt-get install samba samba-common-bin --assume-yes
 
 # Don't create home dir, add the user fully noninteractively, and don't allow login to the user
-groupadd --system $OUR_SAMBA_USER
-adduser --system --no-create-home --disabled-password --disabled-login --group --shell /bin/false $OUR_SAMBA_USER
-# Do we need these?
-#smbpasswd -a samba
-#smbpasswd -e samba
-# TODO: Shouldn't be necessary due to --disabled-password above.
-#usermod smbusr -p borger1234
+groupadd --system $SAMBA_USER
+adduser --system --no-create-home --disabled-password --disabled-login --group --shell /bin/false $SAMBA_USER
+# Set the provided password for the samba user
+#echo "$SAMBA_USER:$SAMBA_USER_PASSWORD" | /usr/sbin/chpasswd
+
+# Create the user in samba and set the password for it:
+printf "%s\n%s" "$SAMBA_USER_PASSWORD" "$SAMBA_USER_PASSWORD" | smbpasswd -a -s samba
+
+# Enable the user
+smbpasswd -e $SAMBA_USER
 
 # Create the directory and user and group for the share
 # shellcheck disable=SC2174  # --parents is just there to ignore errors if it already exists
 mkdir --parents --mode 0777 "$SCAN_DIRECTORY_SOURCE"
 # User and group will be overwritten and set to root:user if desktop_toggle_writable.sh has been run, therefore we give the dir 777 access so samba can access and write to it
-chown $OUR_USER:$OUR_SAMBA_USER "$SCAN_DIRECTORY_SOURCE"
+chown $OUR_USER:$SAMBA_USER "$SCAN_DIRECTORY_SOURCE"
 
 # This is most of the default config, with inactive sections, and print sections removed and only a few changes made (user shares are disabled)
 # This was mostly done to disable the default printer sharing
@@ -105,8 +118,8 @@ cat <<- EOF > $SAMBA_CONFIG
 	   pam password change = yes
 
 	# This option controls how unsuccessful authentication attempts are mapped
-	# to anonymous connections
-	   map to guest = bad user
+	# to anonymous connections # never is the default.
+	   map to guest = never
 
 	############ Misc ############
 
@@ -141,18 +154,21 @@ if ! grep "Scanned documents" $SAMBA_CONFIG; then # Idempotency check
 		[$SHARE_NAME]
 		  comment = Scanned documents
 		  path = $SCAN_DIRECTORY_DESTINATION
-		  force user = $OUR_SAMBA_USER
-		  force group = $OUR_SAMBA_USER
+		  force user = $SAMBA_USER
+		  force group = $SAMBA_USER
 		  create mask = 0664
 		  force create mode = 0664
 		  directory mask = 0775
 		  force directory mode = 0775
 		  browseable = yes
 		  writeable = yes
-		  guest ok = yes
+		  guest ok = no
 	EOF
 fi
 
-# Now restart samba after the configuration changes. If it starts up successfully, the settings should be syntactically valid
+# Now restart samba after the configuration changes. If it starts up successfully, the settings should be at least syntactically valid.
 systemctl restart $SAMBA_SERVICE
 systemctl status $SAMBA_SERVICE
+
+# Check samba status + version info
+smbstatus
