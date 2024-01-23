@@ -31,7 +31,7 @@ if  [ "$PRINCH_VERSION_AVAILABLE" != "$PRINCH_VERSION_INSTALLED" ]; then
    dpkg --install $FILE
 
 else
-    printf '%s\n' "Princh er allerede installeret og nyeste version."
+    printf '%s\n' "Princh is already installed and in the most recent version."
 fi
 
 # Create Princh autostart

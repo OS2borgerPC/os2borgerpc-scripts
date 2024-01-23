@@ -3,7 +3,7 @@
 # Check required parameters
 if [ $# -ne 1 ]
 then
-    echo "Dette script kræver 1 input-parameter"
+    echo "This script takes 1 required argument."
     exit 1
 fi
 
