@@ -2,14 +2,13 @@
 
 """
 Security Script for finding USB keyboard attachment events
-which happened within the last 300 seconds.
 """
 
 import sys
 from datetime import datetime, timedelta
 import re
 
-__copyright__ = "Copyright 2017-2022 Magenta ApS"
+__copyright__ = "Copyright 2017-2024 Magenta ApS"
 __license__ = "GPL"
 
 
@@ -48,16 +47,20 @@ def csv_writer(security_events):
 
 
 def filter_security_events(security_events):
-    """Temporary function that filters security events older than 8 hours.
+    """Temporary function that filters security events older than <HOURS> hours.
 
-    TODO: remove this in the future.
+    Consider adjusting or removing this in the future.
+    If wanting to make this permanent remove this function and take the most
+    recent timestamp of last_security_check OR cut_off_for_oldest_event
+    when calculating delta_sec
     """
+    HOURS = 32
     now = datetime.now()
     filtered_events = [
         security_event
         for security_event in security_events
         if datetime.strptime(security_event[0], "%Y%m%d%H%M%S")
-        > now - timedelta(hours=8)
+        > now - timedelta(hours=HOURS)
     ]
     return filtered_events
 
