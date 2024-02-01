@@ -39,6 +39,10 @@ sleep 20
 
 lpadmin -p "$NAME" -v "$PROTOCOL://$IP_ADDRESS" -P $PPD_FILE -E
 
+# One of the packages/scripts installs the following desktop files, but they are added with nonstandard permissions (too
+# permissive), which makes Ubuntu refuse to start them, if they're added to the desktop
+chmod 644 /usr/share/applications/epsonscan2.desktop /usr/share/applications/epson-printer-utility.desktop
+
 # Cleanup
 rm $FILE1 $FILE2 $FILE3
 rm -R $SCANNER_FOLDER
