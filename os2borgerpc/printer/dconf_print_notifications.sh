@@ -9,7 +9,7 @@
 #
 #    It takes one optional parameter: whether or not to enforce this policy.
 #    Use a boolean to decide whether or not to enforce this policy, a checked box
-#	   will enable the script, an unchecked box will remove it.
+#    will enable the script, an unchecked box will remove it.
 #
 # IMPLEMENTATION
 #    copyright       Copyright 2022, Magenta ApS
@@ -27,7 +27,7 @@ POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-$POLICY"
 ACTIVATE=$1
 
 if [ "$ACTIVATE" = 'True' ]; then
-	mkdir --parents "$(dirname "$POLICY")" "$(dirname "$POLICY_LOCK")"
+	mkdir --parents "$(dirname "$POLICY_FILE")" "$(dirname "$POLICY_LOCK_FILE")"
 
 	# dconf does not, by default, require the use of a system database, so
 	# add one (called "os2borgerpc") to store our system-wide settings in
