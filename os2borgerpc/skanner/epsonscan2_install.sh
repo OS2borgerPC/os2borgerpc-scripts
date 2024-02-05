@@ -6,7 +6,7 @@ set -x
 
 FILE1="epsonscan2.deb.tar.gz"
 
-SCANNER_FOLDER="epsonscan2-scanner-driver"
+SCANNER_FOLDER="epsonscan2-scanner-software"
 
 # Download the scanner software
 wget -T 10 -nd --no-cache "https://download.ebz.epson.net/dsc/du/02/DriverDownloadInfo.do?LG2=JA&CN2=US&CTI=171&PRN=Linux%20deb%2064bit%20package&OSC=LX&DL" -O $FILE1
@@ -18,6 +18,10 @@ tar -xzf $FILE1 --transform "s:^[^/]*:$SCANNER_FOLDER:"
 ./$SCANNER_FOLDER/install.sh
 
 sleep 20
+
+# The built-in install script installs the following desktop file, but it is added with nonstandard permissions (too
+# permissive), which makes Ubuntu refuse to start it, if it is added to the desktop
+chmod 644 /usr/share/applications/epsonscan2.desktop
 
 # Cleanup
 rm $FILE1
