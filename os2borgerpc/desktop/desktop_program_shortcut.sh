@@ -38,13 +38,28 @@ APT_DESKTOP_FILE_PATH="/usr/share/applications"
 
 mkdir --parents "$SHADOW_DESKTOP"
 
+# They can type in chrome, but the desktop file is called google-chrome
+# They can type in edge, but the desktop file is called microsoft-edge
+# They can also type in okular, but the desktop file is called okularApplication_kimgio
+if [ "$PROGRAM" = "chrome" ]; then
+  PROGRAM="google-chrome"
+elif [ "$PROGRAM" = "edge" ]; then
+  PROGRAM="microsoft-edge"
+elif [ "$PROGRAM" = "okular" ]; then
+  PROGRAM="okularApplication_kimgio"
+fi
+
 if [ "$ADD" = 'True' ]; then
   if [ -f "$SNAP_DESKTOP_FILE_PATH/${PROGRAM}_$PROGRAM.desktop" ]; then
     DESKTOP_FILE=$SNAP_DESKTOP_FILE_PATH/${PROGRAM}_$PROGRAM.desktop
   else
     DESKTOP_FILE=$APT_DESKTOP_FILE_PATH/$PROGRAM.desktop
   fi
-
+  # Check that the program actually exists and exit if it doesn't
+  if [ ! -f "$DESKTOP_FILE" ]; then
+    echo "The chosen program name did not match any installed programs. Exiting."
+    exit 1
+  fi
   # Remove it first as it may be a copy and not symlink (ln --force can't overwrite regular files)
   rm --force "$SHADOW_DESKTOP/$PROGRAM.desktop"
 
