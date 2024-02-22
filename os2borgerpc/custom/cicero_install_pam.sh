@@ -65,9 +65,9 @@ def cicero_validate(cicero_user, cicero_pass):
     # For local testing with VirtualBox
     # host_address = "http://10.0.2.2:9999/admin-xml/"
 
-    # Obtain the site and convert from bytes to regular string
+    # Obtain the pc_uid and convert from bytes to regular string
     # and remove the trailing newline
-    site = check_output(["get_os2borgerpc_config", "site"]).decode().strip()
+    pc_uid = check_output(["get_os2borgerpc_config", "uid"]).decode().strip()
 
     # Values it can return - see cicero_login here:
     # https://github.com/OS2borgerPC/admin-site/blob/master/admin_site/system/rpc.py
@@ -77,7 +77,7 @@ def cicero_validate(cicero_user, cicero_pass):
     #   r > 0: The user is allowed r minutes of login time.
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     try:
-        time, citizen_hash = admin.citizen_login(cicero_user, cicero_pass, site, prevent_dual_login=True)
+        time, citizen_hash = admin.citizen_login(cicero_user, cicero_pass, pc_uid, prevent_dual_login=True)
     except (socket.gaierror, TimeoutError, ConnectionError):
         return ""
 
