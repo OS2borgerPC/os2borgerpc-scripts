@@ -69,13 +69,21 @@ book_specific_pc = $BOOK_SPECIFIC_PC
 require_booking = $REQUIRE_BOOKING
 
 def sms_validate(phone_number, password):
+    # Remove possible initial "+" so we can check that the phone number only contains digits
+    if phone_number[0] == "+":
+        phone_number = phone_number[1:]
+
     # The phone number should only contain digits
     if not re.fullmatch(f"^\d+$", phone_number):
         return 0, "invalid_number"
 
-    # Add the country code to the phone number
-    country_code = "+467" # +467 is for Swedish numbers, Danish numbers should start with +45
-    phone_number = country_code + phone_number[-8:]
+    if phone_number[:2] == "07" and len(phone_number) == 10: # Swedish mobile number
+        # Add the country code to swedish mobile numbers
+        country_code = "+467" # +467 is for Swedish numbers, Danish numbers should start with +45
+        phone_number = country_code + phone_number[-8:]
+    else: # Non-swedish mobile number
+        # Add initial "+"
+        phone_number = "+" + phone_number
 
     # Make the message for the sms
     message = f"Engångslösenordet för den här MedborgarPC är {password}"
@@ -260,13 +268,13 @@ def generate_password(length):
 def pam_sm_authenticate(pamh, flags, argv):
     # print(pamh.fail_delay)
     # http://pam-python.sourceforge.net/doc/html/
-    phone_number_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_ON, "Skriv in telefonnummer")
+    phone_number_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_ON, "Skriv in mobilnummer")
     phone_number_response = pamh.conversation(phone_number_msg)
     phone_number = phone_number_response.resp
 
-    if not len(phone_number) == 10:
+    if len(phone_number) < 8:
         result_msg = pamh.Message(
-            pamh.PAM_ERROR_MSG, "Ogiltigt nummer. Ange 10 siffror."
+            pamh.PAM_ERROR_MSG, "Ogiltigt nummer."
         )
         pamh.conversation(result_msg)
 
