@@ -1,5 +1,5 @@
 #! /usr/bin/env sh
-
+# 
 # Chrome launch maximized, fullscreen or kiosk by default
 # Applies to both the general .desktop file,
 # the .desktop file that may have been added to the desktop
@@ -42,7 +42,11 @@ DESKTOP_FILE_2=/home/$USER/$DESKTOP/google-chrome.desktop
 # TODO: Delete DESKTOP_FILE_3 later on as its now a symlink to DESKTOP_FILE_1 - as it should be
 # In case they've run chrome_autostart.sh.
 DESKTOP_FILE_3=/home/$USER/.config/autostart/google-chrome.desktop
-FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3"
+
+# SNAP FILE 
+SNAP_FILE=/var/lib/snapd/desktop/applications/chromium_chromium.desktop
+
+FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3 $SNAP_FILE"
 
 # Ensure that the local copy exists
 mkdir --parents "$(dirname "$DESKTOP_FILE_1")"
@@ -51,6 +55,8 @@ if [ ! -f "$DESKTOP_FILE_1" ]; then
 fi
 
 # Takes a parameter to add to the Exec lines of the desktop files passed as the subsequent arguments
+# The chromium Snap desktop file is quite differently formatted compared to a its non-Snap Exec line. Example:
+# Exec=env BAMF_DESKTOP_FILE_HINT=/var/lib/snapd/desktop/applications/chromium_chromium.desktop /snap/bin/chromium --temp-profile
 add_to_desktop_files() {
   PARAMETER="$1"
   shift # Now remove the parameter so we can loop over what remains: The files
@@ -59,11 +65,16 @@ add_to_desktop_files() {
     if [ -f "$FILE" ]; then
       # Don't add the parameter multiple times
       if ! grep --quiet -- "$PARAMETER" "$FILE"; then
-        sed --in-place "s,\(Exec=\S*\)\(.*\),\1 $PARAMETER\2," "$FILE"
+        if [ -f $SNAP_FILE ]; then
+          sed --in-place "s,\(.*/snap/bin/chromium\)\(.*\),\1 $PARAMETER\2," "$FILE"
+        else
+          sed --in-place "s,\(Exec=\S*\)\(.*\),\1 $PARAMETER\2," "$FILE"
+        fi
       fi
     fi
   done
 }
+
 
 # Takes a parameter to remove and a list of .desktop files to remove it from
 remove_from_desktop_files() {
@@ -76,6 +87,7 @@ remove_from_desktop_files() {
     fi
   done
 }
+
 
 # Old versions of Chrome autostart had this .desktop-file-name instead
 OLD_DESKTOP_FILE="/home/.skjult/.config/autostart/chrome.desktop"
