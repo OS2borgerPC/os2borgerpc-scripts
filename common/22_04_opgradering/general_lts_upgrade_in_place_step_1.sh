@@ -35,7 +35,7 @@ pip install --upgrade os2borgerpc-client
 
 # Patch jobmanager and config to avoid early stoppage.
 
-set_os2borgerpc_config job_timeout 800000
+set_os2borgerpc_config job_timeout 80000
 
 os2borgerpc_push_config_keys job_timeout
 
