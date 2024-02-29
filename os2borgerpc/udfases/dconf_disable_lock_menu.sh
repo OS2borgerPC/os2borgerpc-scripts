@@ -1,6 +1,6 @@
 #! /usr/bin/env sh
 
-# Removes user switching from the menu
+# Removes lock screen from the menu - also removes the related keybind as an intended side effect
 
 set -x
 
@@ -11,7 +11,7 @@ fi
 
 # Change these three to set a different policy to another value
 POLICY_PATH="org/gnome/desktop/lockdown"
-POLICY="disable-user-switching"
+POLICY="disable-lock-screen"
 POLICY_VALUE="true"
 
 POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
