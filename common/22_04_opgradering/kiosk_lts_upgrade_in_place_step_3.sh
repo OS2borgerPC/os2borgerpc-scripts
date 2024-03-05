@@ -38,6 +38,12 @@ if [ ! -f "$PREVIOUS_STEP_DONE" ]; then
   exit 1
 fi
 
+REBOOT_REQUIRED_FILE="/var/run/reboot-required"
+if [ -f "$REBOOT_REQUIRED_FILE" ]; then
+  echo "Computeren skal genstartes før kørsel af dette script. Genstart computeren og kør scriptet igen."
+  exit 1
+fi
+
 # Make double sure that the crontab has been emptied
 TMP_ROOTCRON=/etc/os2borgerpc/tmp_rootcronfile
 if [ -f "$TMP_ROOTCRON" ]; then
