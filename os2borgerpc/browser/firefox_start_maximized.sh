@@ -9,6 +9,7 @@ ACTIVATE="$1"
 
 FIREFOX_DESKTOP_SNAP="/var/lib/snapd/desktop/applications/firefox_firefox.desktop"
 FIREFOX_DESKTOP_APT="/usr/share/applications/firefox.desktop"
+LOCAL_COPY_DIR="/home/.skjult/.local/share/applications"
 # Set to be a 16:9 resolution that's hopefully at or above the monitor resolution. GNOME should automatically resize it to fit.
 LAUNCH_ARGS="-width 7680 -height 4320"
 
@@ -45,19 +46,27 @@ add_to_desktop_files_ff_snap() {
 }
 
 if [ -d "/snap/firefox" ]; then
-  FIREFOX_DESKTOP=$FIREFOX_DESKTOP_SNAP
+  ORIGINAL_FILE=$FIREFOX_DESKTOP_SNAP
+  FIREFOX_DESKTOP_LOCAL_COPY="$LOCAL_COPY_DIR/firefox_firefox.desktop"
 else
-  FIREFOX_DESKTOP=$FIREFOX_DESKTOP_APT
+  ORIGINAL_FILE=$FIREFOX_DESKTOP_APT
+  FIREFOX_DESKTOP_LOCAL_COPY="$LOCAL_COPY_DIR/firefox.desktop"
+fi
+
+# Ensure that the local copy exists
+mkdir --parents "$LOCAL_COPY_DIR"
+if [ ! -f "$FIREFOX_DESKTOP_LOCAL_COPY" ]; then
+  cp "$ORIGINAL_FILE" "$FIREFOX_DESKTOP_LOCAL_COPY"
 fi
 
 if [ "$ACTIVATE" = "True" ]; then
   if [ -d "/snap/firefox" ]; then
-    add_to_desktop_files_ff_snap "$LAUNCH_ARGS" $FIREFOX_DESKTOP
+    add_to_desktop_files_ff_snap "$LAUNCH_ARGS" $FIREFOX_DESKTOP_LOCAL_COPY
   else
-    add_to_desktop_files "$LAUNCH_ARGS" $FIREFOX_DESKTOP
+    add_to_desktop_files "$LAUNCH_ARGS" $FIREFOX_DESKTOP_LOCAL_COPY
   fi
 else
-  sed --in-place "s/$LAUNCH_ARGS //" $FIREFOX_DESKTOP
+  sed --in-place "s/$LAUNCH_ARGS //" $FIREFOX_DESKTOP_LOCAL_COPY
 fi
 
 # This step doesn't seem necessary on 22.04, but it is on 20.04

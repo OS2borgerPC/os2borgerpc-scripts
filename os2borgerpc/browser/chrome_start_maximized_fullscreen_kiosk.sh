@@ -27,7 +27,8 @@ fi
 SETTING="$1"
 
 USER=".skjult"
-DESKTOP_FILE_1=/usr/share/applications/google-chrome.desktop
+ORIGINAL_FILE=/usr/share/applications/google-chrome.desktop
+DESKTOP_FILE_1=/home/$USER/.local/share/applications/google-chrome.desktop
 # In case they've also added Chrome to their desktop
 # Determine the name of the user desktop directory. This is done via xdg-user-dir,
 # which checks the /home/user/.config/user-dirs.dirs file. To ensure this file exists,
@@ -40,12 +41,14 @@ DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
 DESKTOP_FILE_2=/home/$USER/$DESKTOP/google-chrome.desktop
 # TODO: Delete DESKTOP_FILE_3 later on as its now a symlink to DESKTOP_FILE_1 - as it should be
 # In case they've run chrome_autostart.sh.
-# The name is no mistake, that one is not called google-chrome.desktop
 DESKTOP_FILE_3=/home/$USER/.config/autostart/google-chrome.desktop
 FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3"
 
-# Delete this superfluous .desktop file if it exists (Solrød had it)
-rm --force /home/$USER/.local/share/applications/google-chrome.desktop
+# Ensure that the local copy exists
+mkdir --parents "$(dirname "$DESKTOP_FILE_1")"
+if [ ! -f "$DESKTOP_FILE_1" ]; then
+  cp "$ORIGINAL_FILE" "$DESKTOP_FILE_1"
+fi
 
 # Takes a parameter to add to the Exec lines of the desktop files passed as the subsequent arguments
 add_to_desktop_files() {

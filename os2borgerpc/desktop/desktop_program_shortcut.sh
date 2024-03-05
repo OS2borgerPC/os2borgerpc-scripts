@@ -51,19 +51,26 @@ fi
 
 if [ "$ADD" = 'True' ]; then
   if [ -f "$SNAP_DESKTOP_FILE_PATH/${PROGRAM}_$PROGRAM.desktop" ]; then
-    DESKTOP_FILE=$SNAP_DESKTOP_FILE_PATH/${PROGRAM}_$PROGRAM.desktop
+    ORIGINAL_FILE=$SNAP_DESKTOP_FILE_PATH/${PROGRAM}_$PROGRAM.desktop
   else
-    DESKTOP_FILE=$APT_DESKTOP_FILE_PATH/$PROGRAM.desktop
+    ORIGINAL_FILE=$APT_DESKTOP_FILE_PATH/$PROGRAM.desktop
   fi
   # Check that the program actually exists and exit if it doesn't
-  if [ ! -f "$DESKTOP_FILE" ]; then
+  if [ ! -f "$ORIGINAL_FILE" ]; then
     echo "The chosen program name did not match any installed programs. Exiting."
     exit 1
   fi
   # Remove it first as it may be a copy and not symlink (ln --force can't overwrite regular files)
-  rm --force "$SHADOW_DESKTOP/$PROGRAM.desktop"
+  rm --force "$SHADOW_DESKTOP/$(basename "$ORIGINAL_FILE")"
 
-  ln --symbolic --force "$DESKTOP_FILE" "$SHADOW_DESKTOP"/
+  # Ensure that the local copy exists
+  LOCAL_FILE_COPY="/home/.skjult/.local/share/applications/$(basename "$ORIGINAL_FILE")"
+  mkdir --parents "$(dirname "$LOCAL_FILE_COPY")"
+  if [ ! -f "$LOCAL_FILE_COPY" ]; then
+    cp "$ORIGINAL_FILE" "$LOCAL_FILE_COPY"
+  fi
+
+  ln --symbolic --force "$LOCAL_FILE_COPY" "$SHADOW_DESKTOP"/
 else
   if [ -f "$SHADOW_DESKTOP/${PROGRAM}_$PROGRAM.desktop" ]; then
     PROGRAM=${PROGRAM}_$PROGRAM

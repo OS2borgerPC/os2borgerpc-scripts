@@ -21,6 +21,7 @@ PROGRAM="$1"
 ADD="$2"
 
 AUTOSTART_DIR="/home/.skjult/.config/autostart"
+LOCAL_COPY_DIR="/home.skjult/.local/share/applications"
 
 if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en kiosk-maskine."
@@ -31,12 +32,19 @@ if [ -f "/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop" ]; the
 
   INSTALLED_APP_FILE="/var/lib/snapd/desktop/applications/${PROGRAM}_$PROGRAM.desktop"
   AUTOSTART_FILE="$AUTOSTART_DIR/${PROGRAM}_$PROGRAM.desktop"
+  LOCAL_COPY_FILE="$LOCAL_COPY_DIR/${PROGRAM}_$PROGRAM.desktop"
 else
   INSTALLED_APP_FILE="/usr/share/applications/$PROGRAM.desktop"
   AUTOSTART_FILE="$AUTOSTART_DIR/$PROGRAM.desktop"
+  LOCAL_COPY_FILE="$LOCAL_COPY_DIR/$PROGRAM.desktop"
 fi
 
-mkdir --parents $AUTOSTART_DIR
+mkdir --parents $AUTOSTART_DIR $LOCAL_COPY_DIR
+
+# Ensure that the local copy exists
+if [ ! -f "$LOCAL_COPY_FILE" ]; then
+  cp "$INSTALLED_APP_FILE" "$LOCAL_COPY_FILE"
+fi
 
 # Remove it first, partially because ln even with --force cannot replace it if it's a regular file
 rm --force "$AUTOSTART_FILE"
@@ -45,7 +53,7 @@ if [ "$ADD" = "True" ]; then
 
   echo "Adding $PROGRAM to autostart directory"
 
-  ln --symbolic --force "$INSTALLED_APP_FILE" "$AUTOSTART_FILE"
+  ln --symbolic --force "$LOCAL_COPY_FILE" "$AUTOSTART_FILE"
 
   exit "$?"
 fi
