@@ -42,19 +42,28 @@ fi
 HOMEPAGE_POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-homepage.json"
 mkdir --parents "$(dirname "$HOMEPAGE_POLICY")"
 
-if [ "$1" = "" ]; then
-    rm --force "$HOMEPAGE_POLICY"
-else
-    cat > "$HOMEPAGE_POLICY" <<END
+STARTPAGE="$1"
+ADDITIONAL_PAGES="$2"
+
+PAGES_STRING=""
+if [ -n "$ADDITIONAL_PAGES" ]; then
+  IFS='|' read -ra PAGES_ARRAY <<< "$ADDITIONAL_PAGES"
+
+  for PAGE in "${PAGES_ARRAY[@]}"
+  do
+      PAGES_STRING+="\"$PAGE\","
+  done
+fi
+
+cat > "$HOMEPAGE_POLICY" <<END
 {
     "ShowHomeButton": true,
     "HomepageIsNewTabPage": false,
-    "HomepageLocation": "$1",
+    "HomepageLocation": "$STARTPAGE",
 
     "RestoreOnStartup": 4,
     "RestoreOnStartupURLs": [
-        "$1"
+        "$STARTPAGE",$PAGES_STRING
     ]
 }
 END
-fi

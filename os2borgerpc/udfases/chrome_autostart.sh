@@ -21,10 +21,11 @@ AUTOSTART_ENABLE=$1
 
 DESKTOP_SYMLINK="/home/.skjult/.config/autostart/google-chrome.desktop"
 DESKTOP_FILE="/usr/share/applications/google-chrome.desktop"
+OLD_AUTOSTART_FILE="/home/.skjult/.config/autostart/chrome.desktop"
 
 if [ "$AUTOSTART_ENABLE" = "True" ]; then
   printf "%s\n" "Adding Chrome to autostart"
-  rm --force $DESKTOP_SYMLINK # First delete the old file if it exists, which may be a regular file or a symlink
+  rm --force $DESKTOP_SYMLINK $OLD_AUTOSTART_FILE # First delete the old file if it exists, which may be a regular file or a symlink
   mkdir --parents /home/.skjult/.config/autostart
   ln -s  "$DESKTOP_FILE" "$DESKTOP_SYMLINK"
 else
