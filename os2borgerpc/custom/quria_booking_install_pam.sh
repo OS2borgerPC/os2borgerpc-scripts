@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
 
 # Arguments:
-#   1: Whether to enable or disable SMS login. 'yes' enables, 'no' disables.
+#   1: Whether to enable or disable Quria login. 'yes' enables, 'no' disables.
 #
 #
 # You may need to restart for it to take effect.
@@ -20,6 +20,9 @@ if [ "$BOOK_SPECIFIC_PC" = "False" ]; then
   ALLOW_IDLE_LOGIN=False
 fi
 
+LOANER_NUMBER_MIN_LENGTH=8
+LOANER_PIN_LENGTH=4
+
 export DEBIAN_FRONTEND=noninteractive
 LIGHTDM_PAM=/etc/pam.d/lightdm
 # Put our module where PAM modules normally are
@@ -29,8 +32,7 @@ PAM_PYTHON_MODULE=/usr/lib/x86_64-linux-gnu/security/os2borgerpc-custom-login-pa
 EXTENSION_NAME='logout-timer@os2borgerpc.magenta.dk'
 # shellcheck disable=SC2034   # It exists in an included file
 LOGOUT_TIMER_CONF="/usr/share/gnome-shell/extensions/$EXTENSION_NAME/config.json"
-SMS_LOGIN_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/sms_login_interface_python3.py
-LOGIN_FINALIZE_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/sms_login_finalize_python3.py
+QURIA_LOGIN_INTERFACE_PYTHON3=/usr/share/os2borgerpc/bin/quria_login_interface_python3.py
 CITIZEN_HASH_FILE="/etc/os2borgerpc/citizen_hash.txt"
 LOG_ID_FILE="/etc/os2borgerpc/login_log_id.txt"
 LOGOUT_SCRIPT="/etc/lightdm/greeter-setup-scripts/general_citizen_logout.py"
@@ -38,17 +40,6 @@ LOGOUT_SERVICE="/etc/systemd/system/general_citizen_logout.service"
 GREETER_SETUP_SCRIPT="/etc/lightdm/greeter_setup_script.sh"
 GREETER_SETUP_DIR="/etc/lightdm/greeter-setup-scripts"
 LIGHTDM_CONFIG="/etc/lightdm/lightdm.conf"
-
-# For backwards compatibility with a previous version of the script
-if grep -q "sms-booking-pam-module" "$LIGHTDM_PAM"; then
-  sed -i '/pam_succeed_if.so user = user/d' $LIGHTDM_PAM
-  sed -i '/# OS2borgerPC SMS login/d' $LIGHTDM_PAM
-  sed -i '/pam_succeed_if.so user != user/d' $LIGHTDM_PAM
-  sed -i "\@auth required pam_python.so@d" $LIGHTDM_PAM
-  systemctl disable "sms_logout.service"
-  rm --force /usr/lib/x86_64-linux-gnu/security/os2borgerpc-sms-booking-pam-module.py \
-  /etc/systemd/system/sms_logout.service /etc/lightdm/greeter-setup-scripts/sms_logout.py
-fi
 
 if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
@@ -60,10 +51,10 @@ if [ "$ACTIVATE" = 'True' ]; then
   # Two blocks to ensure:
   # Idempotency: Don't add it multiple times if run multiple times
   if ! grep -q "pam_python" "$LIGHTDM_PAM"; then
-    # 1. User skips regular login and only uses Cicero.
+    # 1. User skips regular login and only uses Quria.
     sed -i '/common-auth/i# OS2borgerPC custom login\nauth [success=4 default=ignore] pam_succeed_if.so user = user' $LIGHTDM_PAM
 
-    # 2. All other users use regular login and conversely skip Cicero
+    # 2. All other users use regular login and conversely skip Quria
     sed -i "/include common-account/i# OS2borgerPC custom login\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
   fi
 
@@ -72,7 +63,7 @@ if [ "$ACTIVATE" = 'True' ]; then
   sed --in-place "/autologin-user/d" $LIGHTDM_CONFIG
 
 # Separated out because the pam module cannot run if you import the admin_client or re
-cat << EOF > $SMS_LOGIN_INTERFACE_PYTHON3
+cat << EOF > $QURIA_LOGIN_INTERFACE_PYTHON3
 #! /usr/bin/env python3
 
 import sys
@@ -86,26 +77,13 @@ require_booking = $REQUIRE_BOOKING
 allow_idle_login = $ALLOW_IDLE_LOGIN
 login_duration = $LOGIN_DURATION
 quarantine_duration = $QUARANTINE_DURATION
+save_log = $SAVE_LOG
 
-def sms_validate(phone_number, password):
-    # Remove possible initial "+" so we can check that the phone number only contains digits
-    if phone_number[0] == "+":
-        phone_number = phone_number[1:]
+def quria_validate(loaner_number, pincode):
 
-    # The phone number should only contain digits
-    if not re.fullmatch(f"^\d+$", phone_number):
-        return 0, "invalid_number"
-
-    if phone_number[:2] == "07" and len(phone_number) == 10: # Swedish mobile number
-        # Add the country code to swedish mobile numbers
-        country_code = "+467" # +467 is for Swedish numbers, Danish numbers should start with +45
-        phone_number = country_code + phone_number[-8:]
-    else: # Non-swedish mobile number
-        # Add initial "+"
-        phone_number = "+" + phone_number
-
-    # Make the message for the sms
-    message = f"Engångslösenordet för den här MedborgarPC är {password}"
+    # The pincode should only contain digits
+    if not re.fullmatch(f"^\d+$", pincode):
+        return 0, "invalid_pin", ""
 
     host_address = (
         check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
@@ -127,75 +105,42 @@ def sms_validate(phone_number, password):
     else:
         pc_name = None
 
-    # Values it can return - see sms_login here:
+    value_dict = {"citizen_identifier":loaner_number,"pincode":pincode,"pc_name":pc_name}
+    # For some values, it only matters whether they are present in the dictionary or not
+    # When present, these values are simply set to 1 to indicate True in a minimal way
+    if require_booking:
+        value_dict["require_booking"] = 1
+    if allow_idle_login:
+        value_dict["allow_idle_login"] = 1
+    if login_duration:
+        value_dict["login_duration"] = login_duration
+    if quarantine_duration:
+        value_dict["quarantine_duration"] = quarantine_duration
+    if save_log:
+        value_dict["save_log"] = 1
+
+    # Values it can return - see general_citizen_login here:
     # https://github.com/OS2borgerPC/admin-site/blob/master/admin_site/system/rpc.py
     # For reference:
     #   time < 0: User is quarantined and may login in -time minutes. Alternatively,
-    #             the next matching booking starts in -time minutes
+    #             the next booking starts in -time minutes (theirs or anothers)
     #   time = 0: Unable to authenticate.
     #   time > 0: The user is allowed r minutes of login time.
     admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
     try:
-        time, citizen_hash_note = admin.sms_login(phone_number, message, pc_uid, require_booking, pc_name,
-                                             allow_idle_login, login_duration, quarantine_duration)
+        time, citizen_hash_note, log_id = admin.general_citizen_login(pc_uid, "quria", value_dict)
     except (socket.gaierror, TimeoutError, ConnectionError):
         return ""
 
     # Time is received in minutes
-    return time, citizen_hash_note
+    return time, citizen_hash_note, log_id
 
 
 if __name__ == "__main__":
-    print(sms_validate(sys.argv[1], sys.argv[2]))
+    print(quria_validate(sys.argv[1], sys.argv[2]))
 EOF
 
-  chmod u+x $SMS_LOGIN_INTERFACE_PYTHON3
-
-# Separated out because the pam module cannot run if you import the admin_client
-cat << EOF > $LOGIN_FINALIZE_INTERFACE_PYTHON3
-#! /usr/bin/env python3
-
-import sys
-from subprocess import check_output
-import os2borgerpc.client.admin_client as admin_client
-import socket
-
-require_booking = $REQUIRE_BOOKING
-save_log = $SAVE_LOG
-allow_idle_login = $ALLOW_IDLE_LOGIN
-login_duration = $LOGIN_DURATION
-quarantine_duration = $QUARANTINE_DURATION
-
-def sms_login_finalize(phone_number):
-
-    host_address = (
-        check_output(["get_os2borgerpc_config", "admin_url"]).decode().strip()
-    )
-    # Example URL:
-    # host_address = "https://os2borgerpc-admin.magenta.dk"
-
-    # For local testing with VirtualBox
-    # host_address = "http://10.0.2.2:9999"
-
-    # Obtain the pc_uid and convert from bytes to regular string
-    # and remove the trailing newline
-    pc_uid = check_output(["get_os2borgerpc_config", "uid"]).decode().strip()
-
-    admin = admin_client.OS2borgerPCAdmin(host_address + "/admin-xml/")
-    try:
-        log_id = admin.sms_login_finalize(phone_number, pc_uid, require_booking, save_log,
-                                          allow_idle_login, login_duration, quarantine_duration)
-    except (socket.gaierror, TimeoutError, ConnectionError):
-        log_id = ""
-
-    return log_id
-
-
-if __name__ == "__main__":
-    print(sms_login_finalize(sys.argv[1]))
-EOF
-
-  chmod u+x $LOGIN_FINALIZE_INTERFACE_PYTHON3
+  chmod u+x $QURIA_LOGIN_INTERFACE_PYTHON3
 
 # Ensure that the greeter_setup_script has the correct form
 # and that the relevant directory exists
@@ -220,7 +165,7 @@ from os.path import exists
 from os import remove
 import socket
 
-def sms_logout():
+def quria_logout():
     if exists("$CITIZEN_HASH_FILE") or exists("$LOG_ID_FILE"):
         citizen_hash = ""
         log_id = ""
@@ -243,7 +188,7 @@ def sms_logout():
 
 
 if __name__ == "__main__":
-    sms_logout()
+    quria_logout()
 EOF
 
   chmod 700 "$LOGOUT_SCRIPT"
@@ -281,38 +226,40 @@ CONF_TIME_VALUE = "timeMinutes"
 book_specific_pc = $BOOK_SPECIFIC_PC
 require_booking = $REQUIRE_BOOKING
 allow_idle_login = $ALLOW_IDLE_LOGIN
-save_log = $SAVE_LOG
-
-def generate_password(length):
-    # Generate a pseudo-random password with a desired length
-    numbers = string.digits
-    password = "".join(random.choice(numbers) for n in range(length))
-    return password
 
 
 def pam_sm_authenticate(pamh, flags, argv):
     # print(pamh.fail_delay)
     # http://pam-python.sourceforge.net/doc/html/
-    phone_number_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_ON, "Skriv in mobilnummer")
-    phone_number_response = pamh.conversation(phone_number_msg)
-    phone_number = phone_number_response.resp
+    loaner_number_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_ON, "Person- eller låntkortsnummer")
+    loaner_number_response = pamh.conversation(loaner_number_msg)
+    loaner_number = loaner_number_response.resp
 
-    if len(phone_number) < 8:
+    if len(loaner_number) < $LOANER_NUMBER_MIN_LENGTH:
         result_msg = pamh.Message(
-            pamh.PAM_ERROR_MSG, "Ogiltigt nummer."
+            pamh.PAM_ERROR_MSG, "Ogiltigt värde."
         )
         pamh.conversation(result_msg)
 
         return pamh.PAM_AUTH_ERR
 
-    # Generate a six-digit password
-    current_password = generate_password(6)
+    pincode_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Pinkod")
+    pincode_response = pamh.conversation(pincode_msg)
+    pincode = pincode_response.resp
 
-    sms_booking_response = check_output(
-        ["$SMS_LOGIN_INTERFACE_PYTHON3", phone_number, current_password]
+    if len(pincode) != $LOANER_PIN_LENGTH:
+        result_msg = pamh.Message(
+            pamh.PAM_ERROR_MSG, "Ogiltig pinkod."
+        )
+        pamh.conversation(result_msg)
+
+        return pamh.PAM_AUTH_ERR
+
+    quria_booking_response = check_output(
+        ["$QURIA_LOGIN_INTERFACE_PYTHON3", loaner_number, pincode]
     ).strip()
 
-    if not sms_booking_response:
+    if not quria_booking_response:
         result_msg = pamh.Message(
             pamh.PAM_ERROR_MSG, "Anslutningen misslyckades. Försök senare."
         )
@@ -320,40 +267,32 @@ def pam_sm_authenticate(pamh, flags, argv):
 
         return pamh.PAM_AUTH_ERR
 
-    # sms_booking_response is a binary string containing (time, 'citizen_hash_note')
-    # This format determines the necessary commands to extract time and citizen_hash_note
-    time = int(sms_booking_response.split(b", ")[0][1:])
-    citizen_hash_note = str(sms_booking_response.split(b", ")[1][:-1])[1:-1]
+    # quria_booking_response is a binary string containing (time, 'citizen_hash_note', log_id)
+    # This format determines the necessary commands to extract time, citizen_hash_note and log_id
+    time, citizen_hash_note, log_id = quria_booking_response.split(b", ")
+    time = int(time[1:])
+    citizen_hash_note = str(citizen_hash_note)[1:-1]
+    log_id = str(log_id[:-1])
 
-    if citizen_hash_note == "sms_failed":
+    if citizen_hash_note == "invalid_pin":
         result_msg = pamh.Message(
-            pamh.PAM_ERROR_MSG, "SMS kunde inte skickas. Försök senare."
+            pamh.PAM_ERROR_MSG, "Felaktig pinkod. Ange endast siffror."
         )
         pamh.conversation(result_msg)
 
         return pamh.PAM_AUTH_ERR
 
-    if citizen_hash_note == "invalid_number":
-        result_msg = pamh.Message(
-            pamh.PAM_ERROR_MSG, "Felaktig input. Ange endast siffror."
-        )
-        pamh.conversation(result_msg)
-
-        return pamh.PAM_AUTH_ERR
-
-    if citizen_hash_note == "no_booking" and book_specific_pc:
-        result_msg = pamh.Message(
-            pamh.PAM_ERROR_MSG,
-            "Ingen matchande bokning för den här datorn."
-        )
-        pamh.conversation(result_msg)
-
-        return pamh.PAM_AUTH_ERR
-    elif citizen_hash_note == "no_booking" and not book_specific_pc:
-        result_msg = pamh.Message(
-            pamh.PAM_ERROR_MSG,
-            "Du har inte bokat en dator under den här tiden."
-        )
+    if citizen_hash_note == "no_booking":
+        if book_specific_pc:
+            result_msg = pamh.Message(
+                pamh.PAM_ERROR_MSG,
+                "Ingen matchande bokning för den här datorn."
+            )
+        else:
+            result_msg = pamh.Message(
+                pamh.PAM_ERROR_MSG,
+                "Du har inte bokat en dator under den här tiden."
+            )
         pamh.conversation(result_msg)
 
         return pamh.PAM_AUTH_ERR
@@ -376,48 +315,28 @@ def pam_sm_authenticate(pamh, flags, argv):
 
         return pamh.PAM_AUTH_ERR
 
+    if citizen_hash_note == "blocked":
+        result_msg = pamh.Message(
+            pamh.PAM_ERROR_MSG,
+            "Ditt bibliotekskonto är blockerat."
+        )
+        pamh.conversation(result_msg)
+
+        return pamh.PAM_AUTH_ERR
+
     if time > 0:
 
-        password_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Engångslösenord")
-        # Note: Response object also contains a ret_code
-        password_response = pamh.conversation(password_msg)
-        password = password_response.resp
-
-        # Three attempts to enter the correct password
-        if password != current_password:
-            result_msg = pamh.Message(pamh.PAM_ERROR_MSG, "Fel lösenord. Två försök kvar.")
-            pamh.conversation(result_msg)
-            password_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Engångslösenord")
-            # Note: Response object also contains a ret_code
-            password_response = pamh.conversation(password_msg)
-            password = password_response.resp
-            if password != current_password:
-                result_msg = pamh.Message(pamh.PAM_ERROR_MSG, "Fel lösenord. Ett försök kvar.")
-                pamh.conversation(result_msg)
-                password_msg = pamh.Message(pamh.PAM_PROMPT_ECHO_OFF, "Engångslösenord")
-                # Note: Response object also contains a ret_code
-                password_response = pamh.conversation(password_msg)
-                password = password_response.resp
-                if password != current_password:
-                    result_msg = pamh.Message(pamh.PAM_ERROR_MSG, "Fel lösenord. Inga försök kvar.")
-                    pamh.conversation(result_msg)
-
-                    return pamh.PAM_AUTH_ERR
-
-        # We only need the finalize function if we are not using booking,
-        # if idle login is allowed or if a log should be saved
-        if not require_booking or allow_idle_login or save_log:
-            log_id = check_output(
-                ["$LOGIN_FINALIZE_INTERFACE_PYTHON3", phone_number]
-            ).strip()
-            if log_id:
-                with open("$LOG_ID_FILE", "w") as f:
-                    f.write(log_id)
+        # If a log should be saved
+        # Due to a quirk related to receiving multiple values
+        # from a single check_output, log_id will be the string "''"
+        # rather than an empty string when no log should be saved
+        if log_id != "''":
+            with open("$LOG_ID_FILE", "w") as f:
+                f.write(log_id)
 
         # Only remember the logged in citizen if login succeeds, i.e. time > 0
-        # No need to remember the citizen if booking is required, as the
-        # quarantine system is not used in that case unless idle login
-        # is allowed
+        # No need to remember the citizen if booking is required and idle login
+        # is not allowed, as the quarantine system is not used in that case
         if not require_booking or allow_idle_login:
             with open("$CITIZEN_HASH_FILE", "w") as f:
                 f.write(citizen_hash_note)
@@ -480,8 +399,8 @@ EOF
 # Make sure they have a sufficiently updated version of the client
 pip install --upgrade os2borgerpc-client
 
-else # Cleanup and remove the SMS/booking integration
-  # Remove SMS/booking integration from /etc/pam.d/ files
+else # Cleanup and remove the Quria/booking integration
+  # Remove Quria/booking integration from /etc/pam.d/ files
   sed -i '/pam_succeed_if.so user = user/d' $LIGHTDM_PAM
   sed -i '/# OS2borgerPC custom login/d' $LIGHTDM_PAM
   sed -i '/pam_succeed_if.so user != user/d' $LIGHTDM_PAM
@@ -492,7 +411,7 @@ else # Cleanup and remove the SMS/booking integration
   # Allow login without password
   adduser user nopasswdlogin
 
-  rm --force $SMS_LOGIN_INTERFACE_PYTHON3 $PAM_PYTHON_MODULE \
+  rm --force $QURIA_LOGIN_INTERFACE_PYTHON3 $PAM_PYTHON_MODULE \
   $LOGOUT_SCRIPT $CITIZEN_HASH_FILE $LOGOUT_SERVICE \
   $LOG_ID_FILE
 fi
