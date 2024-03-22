@@ -11,10 +11,17 @@ runuser -u user xdg-user-dirs-update
 DESKTOP=$(basename "$(runuser -u user xdg-user-dir DESKTOP)")
 
 USER_AGENT="Mozilla\/5.0 (Windows NT 10.0\; Win64\; x64) AppleWebKit\/537.36 (KHTML\, like Gecko) Chrome\/119.0.0.0 Safari\/537.36"
-DESKTOP_FILE_1="/usr/share/applications/google-chrome.desktop"
+ORIGINAL_FILE="/usr/share/applications/google-chrome.desktop"
+DESKTOP_FILE_1="/home/$SHADOW/.local/share/applications/google-chrome.desktop"
 DESKTOP_FILE_2="/home/$SHADOW/$DESKTOP/google-chrome.desktop"
 DESKTOP_FILE_3="/home/$SHADOW/.config/autostart/google-chrome.desktop"
 FILES="$DESKTOP_FILE_1 $DESKTOP_FILE_2 $DESKTOP_FILE_3"
+
+# Ensure that the local copy exists
+mkdir --parents "$(dirname "$DESKTOP_FILE_1")"
+if [ ! -f "$DESKTOP_FILE_1" ]; then
+  cp "$ORIGINAL_FILE" "$DESKTOP_FILE_1"
+fi
 
 # Takes a parameter to add to Chrome and a list of .desktop files to add it to
 add_to_desktop_files() {
