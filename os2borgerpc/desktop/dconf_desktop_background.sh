@@ -7,7 +7,9 @@
 #    This script changes and locks the desktop background for all users on the
 #    system using a dconf lock.
 #
-#    It takes one parameter: the path to the desktop background.
+#    It requires one parameter: the path to the desktop background.
+#	 The second parameter is optional and relates to picture option, it defaults to "zoom".
+#	 Picture options accept: zoom, centered, stretched, spanned, wallpaper, scaled
 #
 # IMPLEMENTATION
 #    copyright       Copyright 2022, Magenta ApS
@@ -20,21 +22,36 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+lower() {
+	echo "$@" | tr '[:upper:]' '[:lower:]'
+}
+
 IMAGE_FILE=$1
-
+OPTION_VALUE=$(lower "$2")
 POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-background"
-POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/background"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-background"
 
+# Delete the previous lock file (its name has changed)
+rm --force /etc/dconf/db/os2borgerpc.d/locks/background
 
 if [ -n "$IMAGE_FILE" ]; then
 	mkdir --parents "$(dirname "$POLICY_FILE")" "$(dirname "$POLICY_LOCK_FILE")"
 
 	# dconf does not, by default, require the use of a system database, so
 	# add one (called "os2borgerpc") to store our system-wide settings in
-  cat > "/etc/dconf/profile/user" <<-END
+  	cat > "/etc/dconf/profile/user" <<-END
 		user-db:user
 		system-db:os2borgerpc
 	END
+
+	if [ -n "$OPTION_VALUE" ]; then
+		if ! echo "$OPTION_VALUE" | grep --ignore-case --extended-regexp "^(zoom|centered|stretched|wallpaper|scaled|none)$"; then
+			echo "The second parameter must be one of: zoom, centered, stretched, wallpaper, scaled, none"
+			exit 1
+		fi
+	else
+		OPTION_VALUE="zoom"
+	fi
 
 	# Copy the new desktop background into the appropriate folder
 	LOCAL_PATH="/usr/share/backgrounds/$(basename "$IMAGE_FILE")"
@@ -43,7 +60,7 @@ if [ -n "$IMAGE_FILE" ]; then
 	cat > "$POLICY_FILE" <<-END
 		[org/gnome/desktop/background]
 		picture-uri='file://$LOCAL_PATH'
-		picture-options='zoom'
+		picture-options='$OPTION_VALUE'
 	END
 	# "dconf update" will only act if the content of the keyfile folder has
 	# changed: individual files changing are of no consequence. Force an update
