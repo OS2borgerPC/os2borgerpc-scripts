@@ -27,9 +27,12 @@ POLICY="always-show-universal-access-status"
 POLICY_VALUE="true"
 
 POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-accessibility"
-POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/accessibility"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-accessibility"
 
 ACTIVATE=$1
+
+# Delete the previous lock file (its name has changed)
+rm --force /etc/dconf/db/os2borgerpc.d/locks/accessibility
 
 if [ "$ACTIVATE" = 'True' ]; then
 	mkdir --parents "$(dirname "$POLICY_FILE")" "$(dirname "$POLICY_LOCK_FILE")"

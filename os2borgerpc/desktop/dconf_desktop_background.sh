@@ -8,7 +8,7 @@
 #    system using a dconf lock.
 #
 #    It requires one parameter: the path to the desktop background.
-#	 The second parameter is optional and relates to picture option, it defaults to "zoom". 
+#	 The second parameter is optional and relates to picture option, it defaults to "zoom".
 #	 Picture options accept: zoom, centered, stretched, spanned, wallpaper, scaled
 #
 # IMPLEMENTATION
@@ -29,7 +29,10 @@ lower() {
 IMAGE_FILE=$1
 OPTION_VALUE=$(lower "$2")
 POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-background"
-POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/background"
+POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-background"
+
+# Delete the previous lock file (its name has changed)
+rm --force /etc/dconf/db/os2borgerpc.d/locks/background
 
 if [ -n "$IMAGE_FILE" ]; then
 	mkdir --parents "$(dirname "$POLICY_FILE")" "$(dirname "$POLICY_LOCK_FILE")"
