@@ -33,3 +33,6 @@ for printer in $(lpstat -a | cut  --delimiter ' ' --fields 1); do
   lpoptions -l -p "$printer"
   echo ""
 done
+
+header "Print contents of /etc/cups/printers.conf"
+cat /etc/cups/printers.conf
