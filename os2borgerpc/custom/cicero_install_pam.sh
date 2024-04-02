@@ -27,6 +27,7 @@ CICERO_LOGOUT_SCRIPT="/etc/lightdm/greeter-setup-scripts/cicero_logout.py"
 CICERO_LOGOUT_SERVICE="/etc/systemd/system/cicero_logout.service"
 GREETER_SETUP_SCRIPT="/etc/lightdm/greeter_setup_script.sh"
 GREETER_SETUP_DIR="/etc/lightdm/greeter-setup-scripts"
+LIGHTDM_CONFIG="/etc/lightdm/lightdm.conf"
 
 if [ "$ACTIVATE" = 'True' ]; then
   apt-get update --assume-yes
@@ -44,6 +45,10 @@ if [ "$ACTIVATE" = 'True' ]; then
     # 2. All other users use regular login and conversely skip Cicero
     sed -i "/include common-account/i# OS2borgerPC Cicero\nauth [success=1 default=ignore] pam_succeed_if.so user != user\nauth required pam_python.so $PAM_PYTHON_MODULE" $LIGHTDM_PAM
   fi
+
+  # Disable automatic login
+  deluser user nopasswdlogin
+  sed --in-place "/autologin-user/d" $LIGHTDM_CONFIG
 
 # Separated out because the pam module cannot run if you import the admin_client
 cat << EOF > $CICERO_INTERFACE_PYTHON3
@@ -252,6 +257,9 @@ else # Cleanup and remove the Cicero integration
   sed -i "\@auth required pam_python.so@d" $LIGHTDM_PAM
 
   systemctl disable "$(basename $CICERO_LOGOUT_SERVICE)"
+
+  # Allow login without password
+  adduser user nopasswdlogin
 
   rm --force $CICERO_INTERFACE_PYTHON3 $PAM_PYTHON_MODULE \
   $CICERO_LOGOUT_SCRIPT $CITIZEN_HASH_FILE $CICERO_LOGOUT_SERVICE
