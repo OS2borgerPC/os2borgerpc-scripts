@@ -12,8 +12,9 @@ __copyright__ = "Copyright 2017-2024 Magenta ApS"
 __license__ = "GPL"
 
 
-def log_read(sec, log_name):
-    """Search a (system) log from within the last "sec" seconds to now."""
+def log_read(last_security_check, log_name):
+    """Search a (system) log for events that occurred
+    between "last_security_check" and now."""
     log_event_tuples = []
     now = datetime.now()
 
@@ -30,7 +31,7 @@ def log_read(sec, log_name):
                 log_event_datetime, "%Y%m%d%H%M%S"
             )
             # Detect lines from within the last x seconds to now.
-            if (datetime.now() - timedelta(seconds=sec)) <= log_event_datetime <= now:
+            if last_security_check <= log_event_datetime <= now:
                 log_event_tuples.append((security_event_log_timestamp, log_event))
 
     return log_event_tuples
@@ -39,30 +40,9 @@ def log_read(sec, log_name):
 def csv_writer(security_events):
     """Write security events to security events file."""
     with open("/etc/os2borgerpc/security/securityevent.csv", "at") as csvfile:
-        for timestamp, security_problem_uid, log_event, complete_log in security_events:
+        for timestamp, security_problem_uid, log_event in security_events:
             event_line = log_event.replace("\n", " ").replace("\r", "").replace(",", "")
-            csvfile.write(
-                f"{timestamp},{security_problem_uid},{event_line},{complete_log}\n"
-            )
-
-
-def filter_security_events(security_events):
-    """Temporary function that filters security events older than <HOURS> hours.
-
-    Consider adjusting or removing this in the future.
-    If wanting to make this permanent remove this function and take the most
-    recent timestamp of last_security_check OR cut_off_for_oldest_event
-    when calculating delta_sec
-    """
-    HOURS = 32
-    now = datetime.now()
-    filtered_events = [
-        security_event
-        for security_event in security_events
-        if datetime.strptime(security_event[0], "%Y%m%d%H%M%S")
-        > now - timedelta(hours=HOURS)
-    ]
-    return filtered_events
+            csvfile.write(f"{timestamp},{security_problem_uid},{event_line}\n")
 
 
 # The file to inspect for events
@@ -79,8 +59,7 @@ try:
 except IOError:
     pass
 
-delta_sec = (now - last_security_check).total_seconds()
-log_event_tuples = log_read(delta_sec, log_name)
+log_event_tuples = log_read(last_security_check, log_name)
 
 security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 
@@ -100,14 +79,12 @@ regexes = [
 
 # Filter log_event_tuples based on regex matches and put them
 # on the form the admin site expects:
-# (timestamp, security_problem_uid, summary, complete_log) (which we don't use.)
+# (timestamp, security_problem_uid, summary)
 log_event_tuples = [
-    (log_timestamp, security_problem_uid_template_var, log_event, " ")
+    (log_timestamp, security_problem_uid_template_var, log_event)
     for (log_timestamp, log_event) in log_event_tuples
     if any([re.search(regex, log_event, flags=re.IGNORECASE) for regex in regexes])
 ]
-
-log_event_tuples = filter_security_events(log_event_tuples)
 
 if not log_event_tuples:
     sys.exit()
