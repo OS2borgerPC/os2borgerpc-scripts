@@ -10,6 +10,7 @@ set -x
 ACTIVATE="$1"
 DIRECTORY_NAME_ON_DESKTOP="${2-scan}" # Set a default argument so rm --recursive below doesn't attempt to delete the desktop if no argument was passed
 SAMBA_USER_PASSWORD="$3"
+AUTH_ALLOW_NTLM_V1="$4"
 
 SCAN_DIRECTORY_SOURCE="/home/.skjult/Skrivebord/$DIRECTORY_NAME_ON_DESKTOP"
 SCAN_DIRECTORY_DESTINATION=$(echo "$SCAN_DIRECTORY_SOURCE" | sed 's/.skjult/user/')
@@ -31,6 +32,16 @@ fi
 
 # A provided password is required when activating this script
 [ -z "$SAMBA_USER_PASSWORD" ] && echo "Error: You need to choose a password for the samba user, which is then used to access the share. Exiting." && exit 1
+
+if [ "$AUTH_ALLOW_NTLM_V1" = "True" ]; then
+  AUTH_ALLOW_NTLM_V1_TEXT="
+	# Better support for old devices by allowing older auth protocols
+	# Newer versions default to: ntlm auth = ntlmv2-only
+	# https://wiki.archlinux.org/title/Samba#Enable_access_for_old_clients/devices
+		server min protocol = NT1
+		ntlm auth = yes
+"
+fi
 
 apt-get update --assume-yes
 # Note: This installation also creates a group named "sambashare". Not currently using that for anything
@@ -85,6 +96,14 @@ cat <<- EOF > $SAMBA_CONFIG
 	# Do something sensible when Samba crashes: mail the admin a backtrace
 	   panic action = /usr/share/samba/panic-action %d
 
+	### Don't share printers ###
+	# https://wiki.archlinux.org/title/Samba#Disable_printer_sharing
+	   load printers = no
+	   printing = bsd
+	   printcap name = /dev/null
+	   disable spoolss = yes
+	   show add printer wizard = no
+
 
 	####### Authentication #######
 
@@ -120,6 +139,8 @@ cat <<- EOF > $SAMBA_CONFIG
 	# This option controls how unsuccessful authentication attempts are mapped
 	# to anonymous connections # never is the default.
 	   map to guest = never
+
+	$AUTH_ALLOW_NTLM_V1_TEXT
 
 	############ Misc ############
 
@@ -172,3 +193,12 @@ systemctl status $SAMBA_SERVICE
 
 # Check samba status + version info
 smbstatus
+
+# Test configuration file correctness
+testparm --suppress-prompt
+
+echo "Listing processes listening on TCP, matching smbd"
+lsof -nP -iTCP -sTCP:LISTEN | grep smbd
+
+echo "Listing processes using UDP, matching nmbd (netbios)"
+lsof -nP -iUDP | grep nmbd
