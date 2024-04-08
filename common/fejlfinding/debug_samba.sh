@@ -1,33 +1,25 @@
 #! /usr/bin/env sh
-#
-# Takes to params: IP address and password
-#
-# To access the share interface, run:
-# smbclient '//<IP_ADDRESS_HERE>/<SHARE_NAME>' -U <USER>%<PASSWORD>
-# ...so more specifically:
-# smbclient '//<IP_ADDRESS_HERE>/scan' -U samba%<PASSWORD>
 
-# TODO: Write contents of the samba log file if there is one
+SMB_LOG_1="/var/log/samba/log.smbd"
+SMB_LOG_2="/var/log/samba/log.nmbd" # For samba over netbios?
 
-export DEBIAN_FRONTEND=noninteractive
-PKG="smbclient"
-USER_NAME="samba"
-SHARE_NAME="scan"
+echo "Check samba status + version info:"
+smbstatus
 
-# Quiet output from apt so it doesn't massively populate the script log
-apt-get update -qq
-apt-get install --assume-yes -qq $PKG
+echo "Test configuration file correctness:"
+testparm --suppress-prompt
 
-# Connect to the server and exit again
-if smbclient //"$1"/$SHARE_NAME -U $USER_NAME%"$2" -c exit; then
-    SUCCESS=1
-    echo "Connection successful"
-else
-    echo "Connection failed"
-fi
+echo "Listing processes listening on TCP, which should include smbd:"
+lsof -nP -iTCP -sTCP:LISTEN
 
-apt-get remove --assume-yes -qq $PKG
+echo "Listing processes using UDP ports, which should include nmbd (netbios)"
+lsof -nP -iUDP
 
-if [ -z "$SUCCESS" ]; then
-    exit 1
-fi
+echo "What's in the Samba log dir?:"
+ls -l "$(dirname $SMB_LOG_1)"
+
+echo "Anything in the main log file?:"
+[ -f $SMB_LOG_1 ] && tail --lines 200 $SMB_LOG_1
+
+echo "Anything in the samba netbios log file?:"
+[ -f $SMB_LOG_2 ] && tail --lines 200 $SMB_LOG_2
