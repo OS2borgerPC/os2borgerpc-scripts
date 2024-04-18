@@ -76,7 +76,7 @@ DIALOG_TIME_MS=$(( DIALOG_TIME_MINS * 60 * 1000 ))
 # Older versions of this script used sh, but our lightdm suspend script uses
 # bash specifics. Change it to run the script directly with whatever interpreter it has.
 # This requires ensuring that lightdm has execute permissions on all those scripts.
-chmod --rescursive 700 $LIGHTDM_GREETER_SCRIPTS_DIR
+chmod --recursive 700 $LIGHTDM_GREETER_SCRIPTS_DIR
 cat << EOF > $LIGHTDM_GREETER_SETUP_SCRIPT
 #!/bin/sh
 greeter_setup_scripts=\$(find $LIGHTDM_GREETER_SCRIPTS_DIR -mindepth 1)

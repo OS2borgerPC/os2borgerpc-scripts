@@ -10,6 +10,7 @@ fi
 NAME="$(echo "$1" | tr ' ' '_')"
 PRINCH_ID="$2"
 DESCRIPTION="$3"
+SET_STANDARD="$4"
 
 # Delete the printer if a printer already exists by that NAME
 lpadmin -x "$NAME" || true
@@ -20,4 +21,9 @@ if which princh-setup > /dev/null; then
 else
    echo "Princh is not installed. Please run the script that installs Princh before this one."
    exit 1
+fi
+
+if [ "$SET_STANDARD" = "True" ]; then
+  # Set the printer as standard printer
+  lpadmin -d "$NAME" && lpstat -d
 fi
