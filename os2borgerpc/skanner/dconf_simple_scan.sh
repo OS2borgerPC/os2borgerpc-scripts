@@ -1,91 +1,63 @@
 #! /usr/bin/env sh
 #
-# 
 # SYNOPSIS
 #    dconf_simple_scanner.sh page_size picture_dpi text_dpi
-# 
-# 
+#
 # DESCRIPTION
-#    This script sets up the simple scanner settings 
-#    
+#    This script sets up the simple scanner settings
 #
 # IMPLEMENTATION
 #    copyright       Copyright 2024, Magenta ApS
 #    license         GNU General Public License
 
+# NOTE: This script does not set a dconf lock as people are free to temporarily change the settings from the defaults.
+
 set -x
 
-# Policy
 POLICY_PATH="org/gnome/simple-scan"
 POLICY="simple_scan_settings"
+POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
+
+PAPER_SIZE_NAME=$1
+
+# DPI for photos default is 300
+# Value must be 75, 150, 200, 300, 600, 1200 or 2400.
+PHOTO_DPI=${2:-300}
+
+# DPI for text default is 150
+# Value must be 75, 150, 200, 300, 600, 1200 or 2400.
+TEXT_DPI=${3:-150}
 
 # A page is defined as height and width instead of A4 or A3 ect.
-#Page height 0 = automatic
-POLICY_1="paper-height"
-POLICY_VALUE_1=0
-
-#Page width, 0 = automatic 
-POLICY_2="paper-width"
-POLICY_VALUE_2=0
-
-
-#dpi for pictures, default is 300
-POLICY_3="photo-dpi"
-POLICY_VALUE_3=300
-
-#dpi for text, default is 150
-POLICY_4="text-dpi"
-POLICY_VALUE_4=150
-
-# Setting the page size
-case "$1" in
+# Convert paper size names to width and height
+# Page height 0 = automatic
+# Page width 0 = automatic
+case "$PAPER_SIZE_NAME" in
 	"A3")
-		POLICY_VALUE_1=4200
-		POLICY_VALUE_2=2970
+		PAPER_HEIGHT=4200
+		PAPER_WIDTH=2970
 		;;
 	"A4")
-		POLICY_VALUE_1=2970
-		POLICY_VALUE_2=2100
+		PAPER_HEIGHT=2970
+		PAPER_WIDTH=2100
 		;;
 	"A5")
-		POLICY_VALUE_1=2100
-		POLICY_VALUE_2=1480
+		PAPER_HEIGHT=2100
+		PAPER_WIDTH=1480
 		;;
 	"A6")
-		POLICY_VALUE_1=1480
-		POLICY_VALUE_2=1050
+		PAPER_HEIGHT=1480
+		PAPER_WIDTH=1050
 		;;
 	"Auto")
-		POLICY_VALUE_1=0
-		POLICY_VALUE_2=0
+		PAPER_HEIGHT=0
+		PAPER_WIDTH=0
 		;;
 	*)
-		echo "Invalid option. Please choose between A3 to A6."
+		echo "Invalid option. Please choose A3-A6 or Auto."
+		exit 1
 		;;
 esac
-
-# Setting the pictures dpi
-if [ "$2" ]; then 
-	if [ "$2" -gt 75 ] && [ "$2" -le 2400 ]; then
-		POLICY_VALUE_3="$2"
-	else
-		echo "Invalid option. Please choose between 75 to 2400."
-	fi
-fi
-
-
-# Setting the text dpi
-if [ "$3" ]; then 
-	if [ "$3" -gt 75 ] && [ "$3" -le 2400 ]; then
-		POLICY_VALUE_4="$3"
-	else
-		echo "Invalid option. Please choose between 75 to 2400."
-	fi
-fi
-
-	
-# Policyfiles
-POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-$POLICY"
 
 mkdir --parents "$(dirname "$POLICY_FILE")"
 
@@ -96,13 +68,13 @@ cat > "/etc/dconf/profile/user" <<- END
 	system-db:os2borgerpc
 END
 
-#Changeing the values
+# Setting the policies
 cat > "$POLICY_FILE" <<- END
 	[$POLICY_PATH]
-	$POLICY_1=$POLICY_VALUE_1
-	$POLICY_2=$POLICY_VALUE_2
-	$POLICY_3=$POLICY_VALUE_3
-	$POLICY_4=$POLICY_VALUE_4
+	paper-height=$PAPER_HEIGHT
+	paper-width=$PAPER_WIDTH
+	photo-dpi=$PHOTO_DPI
+	text-dpi=$TEXT_DPI
 END
 
 # "dconf update" will only act if the content of the keyfile folder has
