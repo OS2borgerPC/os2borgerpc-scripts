@@ -10,7 +10,8 @@ set -x
 ACTIVATE="$1"
 DIRECTORY_NAME_ON_DESKTOP="${2-scan}" # Set a default argument so rm --recursive below doesn't attempt to delete the desktop if no argument was passed
 SAMBA_USER_PASSWORD="$3"
-AUTH_ALLOW_NTLM_V1="$4"
+AUTH_DISALLOW_NTLM_V1="$4"
+ALLOW_NETBIOS="$5"
 
 SCAN_DIRECTORY_SOURCE="/home/.skjult/Skrivebord/$DIRECTORY_NAME_ON_DESKTOP"
 SCAN_DIRECTORY_DESTINATION=$(echo "$SCAN_DIRECTORY_SOURCE" | sed 's/.skjult/user/')
@@ -33,14 +34,23 @@ fi
 # A provided password is required when activating this script
 [ -z "$SAMBA_USER_PASSWORD" ] && echo "Error: You need to choose a password for the samba user, which is then used to access the share. Exiting." && exit 1
 
-if [ "$AUTH_ALLOW_NTLM_V1" = "True" ]; then
-  AUTH_ALLOW_NTLM_V1_TEXT="
-	# Better support for old devices by allowing older auth protocols
-	# Newer versions default to: ntlm auth = ntlmv2-only
-	# https://wiki.archlinux.org/title/Samba#Enable_access_for_old_clients/devices
-		server min protocol = NT1
-		ntlm auth = yes
-"
+if [ "$AUTH_DISALLOW_NTLM_V1" = "False" ]; then
+  AUTH_NTLM_V1_TEXT="
+# Better support for old devices by allowing older auth protocols
+# Newer versions default to: ntlm auth = ntlmv2-only
+# https://wiki.archlinux.org/title/Samba#Enable_access_for_old_clients/devices
+   server min protocol = NT1
+   ntlm auth = yes"
+fi
+
+# Defaults are:
+#   disable netbios = no
+#   smb ports 445 139
+if [ "$ALLOW_NETBIOS" = "False" ]; then
+  NETBIOS_TEXT="
+# Disabling netbios + stop listening on its TCP port
+   disable netbios = yes
+   smb ports = 445"
 fi
 
 apt-get update --assume-yes
@@ -140,7 +150,7 @@ cat <<- EOF > $SAMBA_CONFIG
 	# to anonymous connections # never is the default.
 	   map to guest = never
 
-	$AUTH_ALLOW_NTLM_V1_TEXT
+	$AUTH_NTLM_V1_TEXT
 
 	############ Misc ############
 
@@ -150,6 +160,8 @@ cat <<- EOF > $SAMBA_CONFIG
 	# Allow users who've been granted usershare privileges to create
 	# public shares, not just authenticated ones
 	usershare allow guests = no
+
+	$NETBIOS_TEXT
 
 	#======================= Share Definitions =======================
 	#
