@@ -146,6 +146,13 @@ fi
 
 # Start X upon login
 PROFILE="/home/$CUSER/.profile"
-if ! grep --quiet -- 'startx' $PROFILE; then # Ensure idempotency
-  echo "startx" >> $PROFILE
+if ! grep --quiet -- 'for i in' $PROFILE; then # Ensure idempotency
+  # This first line cleans up after the previous version of the script
+  sed --in-place "/startx/d" $PROFILE
+  cat << EOF >> $PROFILE
+for i in 1 2 3; do
+  startx
+  sleep 10
+done
+EOF
 fi
