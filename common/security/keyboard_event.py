@@ -45,6 +45,27 @@ def csv_writer(security_events):
             csvfile.write(f"{timestamp},{security_problem_uid},{event_line}\n")
 
 
+def filter_duplicate_events(security_events):
+    """This function filters duplicate events related to the same keyboard
+    and the same USB-port"""
+
+    unique_tuples = []
+    unique_keyboards = []
+
+    for security_event in security_events:
+        # This identifier contains the name of the keyboard and the part
+        # of the path to its location in the system that will always
+        # be the same for the same keyboard and USB-port.
+        # If the same keyboard is inserted in a different USB-port,
+        # the identifier will be different.
+        keyboard_identifier = security_event[2].split("input")[1][1:-6]
+        if keyboard_identifier not in unique_keyboards:
+            unique_tuples.append(security_event)
+            unique_keyboards.append(keyboard_identifier)
+
+    return unique_tuples
+
+
 # The file to inspect for events
 log_name = "/var/log/syslog"
 
@@ -85,6 +106,8 @@ log_event_tuples = [
     for (log_timestamp, log_event) in log_event_tuples
     if any([re.search(regex, log_event, flags=re.IGNORECASE) for regex in regexes])
 ]
+
+log_event_tuples = filter_duplicate_events(log_event_tuples)
 
 if not log_event_tuples:
     sys.exit()
