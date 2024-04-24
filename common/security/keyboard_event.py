@@ -46,22 +46,32 @@ def csv_writer(security_events):
 
 
 def filter_duplicate_events(security_events):
-    """This function filters duplicate events related to the same keyboard
-    and the same USB-port"""
+    """This function filters duplicate events related to
+    the same keyboard"""
 
     unique_tuples = []
     unique_keyboards = []
 
     for security_event in security_events:
-        # This identifier contains the name of the keyboard and the part
-        # of the path to its location in the system that will always
-        # be the same for the same keyboard and USB-port.
-        # If the same keyboard is inserted in a different USB-port,
-        # the identifier will be different.
-        keyboard_identifier = security_event[2].split("input")[1][1:-6]
-        if keyboard_identifier not in unique_keyboards:
+        # This identifier is based on the ID of the USB device.
+        # The ID is identical for identical USB devices so
+        # if two identical keyboards are inserted simultaneously,
+        # only one event will be generated.
+        regex = (
+            r"[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4}"
+            r"(?!.*/[0-9a-z]{4}:[0-9a-z]{4}:[0-9a-z]{4})"
+        )
+        match = re.search(regex, security_event[2], flags=re.IGNORECASE)
+        # Keyboard event lines should always contain a match, but in order
+        # to prevent possibly overlooking a relevant event, we always include
+        # events with no match
+        if match:
+            keyboard_identifier = match.group(0)
+            if keyboard_identifier not in unique_keyboards:
+                unique_tuples.append(security_event)
+                unique_keyboards.append(keyboard_identifier)
+        else:  # This part should never be relevant, but it is here just in case
             unique_tuples.append(security_event)
-            unique_keyboards.append(keyboard_identifier)
 
     return unique_tuples
 
@@ -93,9 +103,13 @@ security_problem_uid_template_var = "%SECURITY_PROBLEM_UID%"
 # Jun 28 14:24:43 kbh-nuc-venstre kernel: [ 1948.264053] input: Logitech HID compliant keyboard System Control as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.1/0003:046D:C30E.000B/input/input27
 # Jun 28 14:24:43 kbh-nuc-venstre kernel: [ 1948.204460] input: Logitech HID compliant keyboard Consumer Control as /devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.1/0003:046D:C30E.000B/input/input26
 # Fortunately it seems Consumer Control and System Control aren't Logitech specific, as we've seen the exact same with Lenovo keyboards.
+# The second regex matches certain keyboards that do not generate a log line with "input:" and "Keyboard"
+# Most regular keyboards also generate a log line that matches the second regex, but
+# the duplicate events are removed by the filtering
 regexes = [
     r".*\[[ ]{0,3}[0-9]{2,}\..*\] input: .*Keyboard "
-    r"(?!(system control))(?!(consumer control)).*"
+    r"(?!((mouse )?system control))(?!((mouse )?consumer control)).*",
+    r".*\[[ ]{0,3}[0-9]{2,}\..*\].*input,hidraw.*keyboard (?!mouse)",
 ]
 
 # Filter log_event_tuples based on regex matches and put them
