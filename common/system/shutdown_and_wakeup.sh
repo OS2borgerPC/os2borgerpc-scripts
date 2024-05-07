@@ -31,6 +31,7 @@ set -x
 
 WAKE_PLAN_FILE=/etc/os2borgerpc/plan.json
 SCHEDULED_OFF_SCRIPT="/usr/local/lib/os2borgerpc/scheduled_off.sh"
+USER_CLEANUP="/usr/share/os2borgerpc/bin/user-cleanup.bash"
 
 if [ -f $WAKE_PLAN_FILE ]; then
   echo "Dette script kan ikke anvendes på en PC, der er tilknyttet en tænd/sluk tidsplan."
@@ -38,7 +39,7 @@ if [ -f $WAKE_PLAN_FILE ]; then
 fi
 
 ROOTCRON_TMP=/tmp/oldcron
-USERCRON_TMP=/tmp/usercron
+USERCRON=/etc/os2borgerpc/usercron
 if grep "LANG=" /etc/default/locale | grep "sv"; then
   MESSAGE="Den här datorn stängs av om fem minuter"
 elif grep "LANG=" /etc/default/locale | grep "en"; then
@@ -51,11 +52,14 @@ mkdir --parents "$(dirname $SCHEDULED_OFF_SCRIPT)"
 
 # Read and save current cron settings first
 crontab -l > $ROOTCRON_TMP
-crontab -u user -l > $USERCRON_TMP
+
+# Ensure that the usercron-file exists and has the correct permissions
+touch $USERCRON
+chmod 700 $USERCRON
 
 # Delete current crontab entries related to this script AND shutdown_at_time
 sed --in-place --expression "/rtcwake/d" --expression "/scheduled_off/d" --expression "/shutdown/d" $ROOTCRON_TMP
-sed --in-place "/notify-send/d" $USERCRON_TMP
+sed --in-place "/notify-send/d" $USERCRON
 
 if [ "$1" == "--off" ]; then
     rm --force $SCHEDULED_OFF_SCRIPT
@@ -92,7 +96,7 @@ EOF
         HRS=$(( HOURS - HRCORR))
         HRS=$(( $(( HRS + 24)) % 24))
         # Now output to user's crontab as well
-        echo "$MINS $HRS * * * XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON_TMP
+        echo "$MINS $HRS * * * XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON
     else
         echo "Usage: shutdown_and_wakeup.sh [--off] [hours minutes] [hours]"
     fi
@@ -100,6 +104,11 @@ fi
 
 # Update crontabs accordingly - either with an empty crontab or updated ones
 crontab $ROOTCRON_TMP
-crontab -u user $USERCRON_TMP
+crontab -u user $USERCRON
 
-rm --force $ROOTCRON_TMP $USERCRON_TMP
+# Ensure that user-cleanup resets the user crontab
+if [ -f "$USER_CLEANUP" ] && ! grep --quiet "crontab" $USER_CLEANUP; then
+  echo "crontab -u -user $USERCRON" >> $USER_CLEANUP
+fi
+
+rm --force $ROOTCRON_TMP

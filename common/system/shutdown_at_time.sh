@@ -29,7 +29,7 @@ if [ -f $WAKE_PLAN_FILE ]; then
 fi
 
 ROOTCRON_TMP=/tmp/oldcron
-USERCRON_TMP=/tmp/usercron
+USERCRON=/etc/os2borgerpc/usercron
 if grep "LANG=" /etc/default/locale | grep "sv"; then
   MESSAGE="Den här datorn stängs av om fem minuter"
 elif grep "LANG=" /etc/default/locale | grep "en"; then
@@ -40,11 +40,14 @@ fi
 
 # Read and save current cron settings first
 crontab -l > $ROOTCRON_TMP
-crontab -u user -l > $USERCRON_TMP
+
+# Ensure that the usercron-file exists and has the correct permissions
+touch $USERCRON
+chmod 700 $USERCRON
 
 # Delete current crontab entries related to this script AND shutdown_and_wakeup.sh
 sed --in-place --expression "/shutdown/d" --expression "/rtcwake/d" --expression "/scheduled_off/d" $ROOTCRON_TMP
-sed --in-place "/notify-send/d" $USERCRON_TMP
+sed --in-place "/notify-send/d" $USERCRON
 
 # If not called with --off: Determine the new crontab contents
 if [ "$1" != "--off" ]; then
@@ -62,7 +65,7 @@ if [ "$1" != "--off" ]; then
         HRS=$(( HOURS - HRCORR))
         HRS=$(( $(( HRS + 24)) % 24))
         # Now output to user's crontab as well
-        echo "$MINS $HRS * * * XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON_TMP
+        echo "$MINS $HRS * * * XDG_RUNTIME_DIR=/run/user/\$(id -u) /usr/bin/notify-send \"$MESSAGE\"" >> $USERCRON
     else
         echo "Usage: shutdown_at_time.sh [--off] [hours minutes]"
     fi
@@ -70,6 +73,11 @@ fi
 
 # Update crontabs accordingly - either with an empty crontab or updated ones
 crontab $ROOTCRON_TMP
-crontab -u user $USERCRON_TMP
+crontab -u user $USERCRON
 
-rm --force $ROOTCRON_TMP $USERCRON_TMP
+# Ensure that user-cleanup resets the user crontab
+if [ -f "$USER_CLEANUP" ] && ! grep --quiet "crontab" "$USER_CLEANUP"; then
+  echo "crontab -u -user $USERCRON" >> "$USER_CLEANUP"
+fi
+
+rm --force $ROOTCRON_TMP
