@@ -55,8 +55,13 @@ SCHEDULE_CREATION_SCRIPT="/usr/local/lib/os2borgerpc/make_schedule_plan.py"
 ON_OFF_SCHEDULE_SERVICE="/etc/systemd/system/os2borgerpc-set_on-off_schedule.service"
 ON_OFF_SCHEDULE_SCRIPT="/usr/local/lib/os2borgerpc/set_on-off_schedule.py"
 SCHEDULED_OFF_SCRIPT="/usr/local/lib/os2borgerpc/scheduled_off.sh"
+USERCRON="/etc/os2borgerpc/usercron"
 
 mkdir -p /usr/local/lib/os2borgerpc
+
+# Ensure that the usercron-file exists and has the correct permissions
+touch $USERCRON
+chmod 700 $USERCRON
 
 # Make the schedule plan.json
 cat <<EOF > $SCHEDULE_CREATION_SCRIPT
@@ -333,9 +338,7 @@ def main():
         # Find the time 5 minutes before shutdown
         notify_time = shutdown - datetime.timedelta(minutes=5)
         # Get current entries
-        USERCRON = "/tmp/usercron"
-        with open(USERCRON, 'w') as cronfile:
-            subprocess.run(["crontab", "-u", "user", "-l"], stdout=cronfile)
+        USERCRON = "/etc/os2borgerpc/usercron"
         # Remove old entries
         with open(USERCRON, 'r') as cronfile:
             cronentries = cronfile.readlines()
@@ -348,8 +351,6 @@ def main():
             cronfile.write(f"{notify_time.minute} {notify_time.hour} {notify_time.day} {notify_time.month} *"
                            f" export DISPLAY=:0 && /usr/bin/zenity --warning --text '<big>{MESSAGE}</big>'\n")
         subprocess.run(["crontab", "-u", "user", USERCRON])
-        if os.path.exists(USERCRON):
-            os.remove(USERCRON)
 
 if __name__ == "__main__":
     main()
