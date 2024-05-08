@@ -30,11 +30,9 @@ rm --force $TCRON
 
 # Only clean up usercron if the machine is not a kiosk
 if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
-  USERCRON=/tmp/usercron
-  crontab -u user -l > $USERCRON
+  USERCRON=/etc/os2borgerpc/usercron
   if [ -f $USERCRON ]; then
     sed --in-place "/zenity/d" $USERCRON
     crontab -u user $USERCRON
   fi
-  rm --force $USERCRON
 fi
