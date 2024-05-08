@@ -36,6 +36,11 @@ cat /etc/os2borgerpc/os2borgerpc.conf
 text "OS2borgerPC client version"
 pip3 list installed | grep os2borgerpc-client
 
+text "Info on check-in minutes"
+cat /etc/cron.d/os2borgerpc-jobmanager
+
+text "Info on check-in seconds"
+cat /usr/share/os2borgerpc/bin/check-in.sh
 
 header "Chromium / Xorg info"
 
