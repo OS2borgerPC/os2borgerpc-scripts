@@ -68,7 +68,7 @@ when installing OS2borgerPC on new computers.
 
 If no image yet exists where the relevant scripts have been included or
 if a computer was installed using an older image, we instead strongly
-recommend running the scripts that are relevant for ensuring the security of
+recommend running the scripts that are relevant for improving the security of
 that image version after registration.
 
 The following lists indicate the relevant scripts for each currently supported
