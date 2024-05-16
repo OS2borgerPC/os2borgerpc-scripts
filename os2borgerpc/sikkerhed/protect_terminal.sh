@@ -27,7 +27,7 @@ if [ "$ACTIVATE" = 'True' ]; then
     # Remove the shell script that prints the error message
     rm "$PROGRAM_OLD_PATH"
     # Remove location override and restore gnome-terminal.real back to gnome-terminal
-    dpkg-divert --remove "$PROGRAM_OLD_PATH"
+    dpkg-divert --remove --no-rename "$PROGRAM_OLD_PATH"
     # dpkg-divert can --rename it itself, but the problem with doing that is that in some images
     # dpkg-divert is not used, it was simply moved/copied, so that won't restore it, leaving you
     # with no gnome-control-center
