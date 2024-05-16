@@ -5,14 +5,14 @@ CITIZEN="user"
 DESKTOP=$(basename "$(runuser -u $SUPERUSER xdg-user-dir DESKTOP)")
 SHORTCUT_PATH="/home/$SUPERUSER/$DESKTOP/os2borgerpc-reenable-user-login.desktop"
 
-cat << EOF > "$SHORTCUT_PATH"
-  [Desktop Entry]
-  Name=Unlock logins to the Citizen account
-  Name[da]=Lås op for login til Borger-konto
-  Name[sv]=Låsa upp inloggning till medborgarkonto
-  Type=Application
-  Exec=gnome-terminal -- sudo usermod -e '' $CITIZEN
-  Icon=system-lock-screen
+cat <<- EOF > "$SHORTCUT_PATH"
+	[Desktop Entry]
+	Name=Unlock logins to the Citizen account
+	Name[da]=Lås op for login til Borger-konto
+	Name[sv]=Låsa upp inloggning till medborgarkonto
+	Type=Application
+	Exec=gnome-terminal -- sudo usermod -e '' $CITIZEN
+	Icon=system-lock-screen
 EOF
 
 # Adjust the shortcut's permissions and activate it

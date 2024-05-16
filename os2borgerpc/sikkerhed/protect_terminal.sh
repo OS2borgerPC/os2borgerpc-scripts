@@ -11,6 +11,9 @@ ACTIVATE=$1
 PROGRAM_OLD_PATH="/usr/bin/gnome-terminal"
 PROGRAM_NEW_PATH="$PROGRAM_OLD_PATH.real"
 
+# Also remove the gnome extension that can start gnome terminal
+apt-get remove --assume-yes nautilus-extension-gnome-terminal
+
 # Restore access
 if [ "$ACTIVATE" = 'True' ]; then
   # Making sure we're not removing the actual
@@ -55,12 +58,9 @@ fi
 if [ \$USER == "user" ]; then
   zenity --info --text="\$INFO"
 else
-  "$PROGRAM_NEW_PATH"
+  $PROGRAM_NEW_PATH "\$@"
 fi
 EOF
 
   chmod +x "$PROGRAM_OLD_PATH"
-
-  # Also remove the gnome extension that can start gnome terminal
-  apt-get remove --assume-yes nautilus-extension-gnome-terminal
 fi

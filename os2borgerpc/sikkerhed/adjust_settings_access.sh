@@ -53,7 +53,7 @@ fi
 if [ \$USER == "user" ]; then
   zenity --info --text="\$INFO"
 else
-  /usr/bin/gnome-control-center.real
+  /usr/bin/gnome-control-center.real "\$@"
 fi
 EOF
 
