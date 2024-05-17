@@ -23,7 +23,7 @@ if [ "$ACTIVATE" = 'True' ]; then
     # Remove the shell script that prints the error message
     rm /usr/bin/gnome-control-center
     # Remove location override and restore gnome-control-center.real back to gnome-control-center
-    dpkg-divert --remove /usr/bin/gnome-control-center
+    dpkg-divert --remove --no-rename /usr/bin/gnome-control-center
     # dpkg-divert can --rename it itself, but the problem with doing that is that in some images
     # dpkg-divert is not used, it was simply moved/copied, so that won't restore it, leaving you
     # with no gnome-control-center
@@ -53,7 +53,7 @@ fi
 if [ \$USER == "user" ]; then
   zenity --info --text="\$INFO"
 else
-  /usr/bin/gnome-control-center.real
+  /usr/bin/gnome-control-center.real "\$@"
 fi
 EOF
 

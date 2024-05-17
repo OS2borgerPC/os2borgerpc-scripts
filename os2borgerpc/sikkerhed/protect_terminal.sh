@@ -11,6 +11,9 @@ ACTIVATE=$1
 PROGRAM_OLD_PATH="/usr/bin/gnome-terminal"
 PROGRAM_NEW_PATH="$PROGRAM_OLD_PATH.real"
 
+# Also remove the gnome extension that can start gnome terminal
+apt-get remove --assume-yes nautilus-extension-gnome-terminal
+
 # Restore access
 if [ "$ACTIVATE" = 'True' ]; then
   # Making sure we're not removing the actual
@@ -24,7 +27,7 @@ if [ "$ACTIVATE" = 'True' ]; then
     # Remove the shell script that prints the error message
     rm "$PROGRAM_OLD_PATH"
     # Remove location override and restore gnome-terminal.real back to gnome-terminal
-    dpkg-divert --remove "$PROGRAM_OLD_PATH"
+    dpkg-divert --remove --no-rename "$PROGRAM_OLD_PATH"
     # dpkg-divert can --rename it itself, but the problem with doing that is that in some images
     # dpkg-divert is not used, it was simply moved/copied, so that won't restore it, leaving you
     # with no gnome-control-center
@@ -55,12 +58,9 @@ fi
 if [ \$USER == "user" ]; then
   zenity --info --text="\$INFO"
 else
-  "$PROGRAM_NEW_PATH"
+  $PROGRAM_NEW_PATH "\$@"
 fi
 EOF
 
   chmod +x "$PROGRAM_OLD_PATH"
-
-  # Also remove the gnome extension that can start gnome terminal
-  apt-get remove --assume-yes nautilus-extension-gnome-terminal
 fi
