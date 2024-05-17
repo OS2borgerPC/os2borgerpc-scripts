@@ -11,8 +11,8 @@ ACTIVATE=$1
 PROGRAM_OLD_PATH="/usr/bin/gnome-terminal"
 PROGRAM_NEW_PATH="$PROGRAM_OLD_PATH.real"
 
-# Also remove the gnome extension that can start gnome terminal
-apt-get remove --assume-yes nautilus-extension-gnome-terminal
+# Also remove the gnome extension that can start gnome terminal, suppress errors
+apt-get remove --assume-yes nautilus-extension-gnome-terminal || true
 
 # Restore access
 if [ "$ACTIVATE" = 'True' ]; then
@@ -35,7 +35,7 @@ if [ "$ACTIVATE" = 'True' ]; then
   fi
 else # Deny access
 
-  if [ !  -f "$PROGRAM_NEW_PATH" ] # Don't divert and statoverride if they've already been done (idempotency)
+  if [ ! -f "$PROGRAM_NEW_PATH" ] # Don't divert and statoverride if they've already been done (idempotency)
   then
       dpkg-divert --rename --divert  "$PROGRAM_NEW_PATH" --add "$PROGRAM_OLD_PATH"
       dpkg-statoverride --update --add superuser root 770 "$PROGRAM_OLD_PATH"
