@@ -29,6 +29,11 @@ if ! grep --quiet "crontab" $USER_CLEANUP; then
 
 # Restore user crontab
 crontab -u user $USERCRON
+EOF
+fi
+
+if ! grep --quiet "atq" $USER_CLEANUP; then
+  cat << EOF >> $USER_CLEANUP
 
 # Remove possible scheduled at commands
 if [ -f /usr/bin/at ]; then

@@ -77,7 +77,7 @@ crontab -u user $USERCRON
 
 # Ensure that user-cleanup resets the user crontab
 if [ -f "$USER_CLEANUP" ] && ! grep --quiet "crontab" "$USER_CLEANUP"; then
-  echo "crontab -u -user $USERCRON" >> "$USER_CLEANUP"
+  echo "crontab -u user $USERCRON" >> "$USER_CLEANUP"
 fi
 
 rm --force $ROOTCRON_TMP
