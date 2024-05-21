@@ -52,6 +52,6 @@ rm --force $ROOTCRON_TMP
 if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   crontab -u user $USERCRON
   if ! grep --quiet "crontab" $USER_CLEANUP; then
-    echo "crontab -u -user $USERCRON" >> $USER_CLEANUP
+    echo "crontab -u user $USERCRON" >> $USER_CLEANUP
   fi
 fi

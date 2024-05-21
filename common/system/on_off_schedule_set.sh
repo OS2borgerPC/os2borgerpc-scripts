@@ -56,12 +56,18 @@ ON_OFF_SCHEDULE_SERVICE="/etc/systemd/system/os2borgerpc-set_on-off_schedule.ser
 ON_OFF_SCHEDULE_SCRIPT="/usr/local/lib/os2borgerpc/set_on-off_schedule.py"
 SCHEDULED_OFF_SCRIPT="/usr/local/lib/os2borgerpc/scheduled_off.sh"
 USERCRON="/etc/os2borgerpc/usercron"
+USER_CLEANUP="/usr/share/os2borgerpc/bin/user-cleanup.bash"
 
 mkdir -p /usr/local/lib/os2borgerpc
 
 # Ensure that the usercron-file exists and has the correct permissions
 touch $USERCRON
 chmod 700 $USERCRON
+
+# Ensure that user-cleanup resets the user crontab
+if [ -f "$USER_CLEANUP" ] && ! grep --quiet "crontab" $USER_CLEANUP; then
+  echo "crontab -u user $USERCRON" >> $USER_CLEANUP
+fi
 
 # Make the schedule plan.json
 cat <<EOF > $SCHEDULE_CREATION_SCRIPT
