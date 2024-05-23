@@ -226,6 +226,24 @@ cat > "$POLICY_LOCK_FILE2" <<-END
 /$POLICY_PATH/$POLICY2
 END
 
+# Block gnome-remote-desktop
+GRD_POLICY_FILE="/etc/dconf/db/os2borgerpc.d/00-remote-desktop"
+GRD_POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-remote-desktop"
+cat << EOF > $GRD_POLICY_FILE
+[org/gnome/desktop/remote-desktop/rdp]
+enable=false
+view-only=true
+[org/gnome/desktop/remote-desktop/vnc]
+enable=false
+view-only=true
+EOF
+cat << EOF > $GRD_POLICY_LOCK_FILE
+/org/gnome/desktop/remote-desktop/rdp/enable
+/org/gnome/desktop/remote-desktop/vnc/enable
+/org/gnome/desktop/remote-desktop/rdp/view-only
+/org/gnome/desktop/remote-desktop/vnc/view-only
+EOF
+
 # Setup a script to activate the desktop shortcuts for user on login
 USERNAME="user"
 SHADOW=.skjult
