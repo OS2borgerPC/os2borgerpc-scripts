@@ -59,15 +59,6 @@ case "$PAPER_SIZE_NAME" in
 		;;
 esac
 
-mkdir --parents "$(dirname "$POLICY_FILE")"
-
-# dconf does not, by default, require the use of a system database, so
-# add one (called "os2borgerpc") to store our system-wide settings in
-cat > "/etc/dconf/profile/user" <<- END
-	user-db:user
-	system-db:os2borgerpc
-END
-
 # Setting the policies
 cat > "$POLICY_FILE" <<- END
 	[$POLICY_PATH]

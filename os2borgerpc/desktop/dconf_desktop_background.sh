@@ -35,14 +35,6 @@ POLICY_LOCK_FILE="/etc/dconf/db/os2borgerpc.d/locks/00-background"
 rm --force /etc/dconf/db/os2borgerpc.d/locks/background
 
 if [ -n "$IMAGE_FILE" ]; then
-	mkdir --parents "$(dirname "$POLICY_FILE")" "$(dirname "$POLICY_LOCK_FILE")"
-
-	# dconf does not, by default, require the use of a system database, so
-	# add one (called "os2borgerpc") to store our system-wide settings in
-  	cat > "/etc/dconf/profile/user" <<-END
-		user-db:user
-		system-db:os2borgerpc
-	END
 
 	if [ -n "$OPTION_VALUE" ]; then
 		if ! echo "$OPTION_VALUE" | grep --ignore-case --extended-regexp "^(zoom|centered|stretched|wallpaper|scaled|none)$"; then
