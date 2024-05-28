@@ -68,10 +68,5 @@ cat > "$POLICY_FILE" <<- END
 	text-dpi=$TEXT_DPI
 END
 
-# "dconf update" will only act if the content of the keyfile folder has
-# changed: individual files changing are of no consequence. Force an update
-# by changing the folder's modification timestamp
-touch "$(dirname "$POLICY_FILE")"
-
 # Incorporate all of the text files we've just created into the system's dconf databases
 dconf update

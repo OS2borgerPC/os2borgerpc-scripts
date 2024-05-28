@@ -54,11 +54,6 @@ if [ -n "$IMAGE_FILE" ]; then
 		picture-uri='file://$LOCAL_PATH'
 		picture-options='$OPTION_VALUE'
 	END
-	# "dconf update" will only act if the content of the keyfile folder has
-	# changed: individual files changing are of no consequence. Force an update
-	# by changing the folder's modification timestamp
-	touch "$(dirname "$POLICY_FILE")"
-
 	# Tell the system that the values of the dconf keys we've just set can no
 	# longer be overridden by the user
 	cat > "$POLICY_LOCK_FILE" <<-END
