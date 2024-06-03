@@ -59,15 +59,6 @@ case "$PAPER_SIZE_NAME" in
 		;;
 esac
 
-mkdir --parents "$(dirname "$POLICY_FILE")"
-
-# dconf does not, by default, require the use of a system database, so
-# add one (called "os2borgerpc") to store our system-wide settings in
-cat > "/etc/dconf/profile/user" <<- END
-	user-db:user
-	system-db:os2borgerpc
-END
-
 # Setting the policies
 cat > "$POLICY_FILE" <<- END
 	[$POLICY_PATH]
@@ -76,11 +67,6 @@ cat > "$POLICY_FILE" <<- END
 	photo-dpi=$PHOTO_DPI
 	text-dpi=$TEXT_DPI
 END
-
-# "dconf update" will only act if the content of the keyfile folder has
-# changed: individual files changing are of no consequence. Force an update
-# by changing the folder's modification timestamp
-touch "$(dirname "$POLICY_FILE")"
 
 # Incorporate all of the text files we've just created into the system's dconf databases
 dconf update
