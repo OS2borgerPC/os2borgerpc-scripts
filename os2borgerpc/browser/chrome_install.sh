@@ -124,6 +124,20 @@ cat > "$HOMEPAGE_POLICY" <<- END
 }
 END
   fi
+
+  # Set the default search provider to Google so Chrome stops asking every time
+  # the browser is opened.
+  # Chrome will default to using Google if we leave DefaultSearchProviderSearchURL
+  # blank
+  SEARCH_POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-search-provider.json"
+  if [ ! -f "$SEARCH_POLICY" ]; then
+    cat > "$SEARCH_POLICY" <<- END
+{
+    "DefaultSearchProviderEnabled": true,
+    "DefaultSearchProviderSearchURL": ""
+}
+END
+  fi
 }
 ### END SHARED BLOCK BETWEEN CHROMIUM BROWSERS: CHROMIUM, CHROME ###
 
