@@ -1,5 +1,7 @@
 #! /usr/bin/env sh
 
-OS2BORGERPC_PULSEAUDIO_CONFIG="/etc/pulse/profile.pa.d/os2borgerpc.pa"
+OLD_OS2BORGERPC_PULSEAUDIO_CONFIG="/etc/pulse/profile.pa.d/os2borgerpc.pa"
+OS2BORGERPC_PULSEAUDIO_CONFIG="/etc/pulse/default.pa.d/os2borgerpc.pa"
 
-echo "" > $OS2BORGERPC_PULSEAUDIO_CONFIG
+[ -f $OLD_OS2BORGERPC_PULSEAUDIO_CONFIG ] && echo "" > $OLD_OS2BORGERPC_PULSEAUDIO_CONFIG
+[ -f $OS2BORGERPC_PULSEAUDIO_CONFIG ] && echo "" > $OS2BORGERPC_PULSEAUDIO_CONFIG
