@@ -43,11 +43,21 @@ fi
 if [ -n "$ORIENTATION" ]; then
     # Mapping the requested orientation to the number CUPS expect, which for some reason is 3-indexed.
     # Available orientations: https://www.cups.org/doc/options.html#ORIENTATION
-    ORIENTATION=$((ORIENTATION + 3))
-    if ! echo $ORIENTATION | grep --quiet "[3-6]"; then
-        echo "Invalid orientation. Exiting."
-        exit 1
-    fi
+
+    case $ORIENTATION in
+    "Portrait")
+        ORIENTATION="3"
+        ;;
+    "Landscape")
+        ORIENTATION="4"
+        ;;
+    "Reverse landscape")
+        ORIENTATION="5"
+        ;;
+    "Reverse portrait")
+        ORIENTATION="6"
+        ;;
+    esac
 
     # NOTE: This currently sets the orientation for ALL connected printers, which may not be ideal in all situations.
     # printers.conf says to not edit it while CUPS is running, so stop it first

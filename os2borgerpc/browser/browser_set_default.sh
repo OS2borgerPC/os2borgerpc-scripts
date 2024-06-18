@@ -12,20 +12,18 @@ if get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
+# Expected browsers are either firefox, google-chrome, microsoft-edge
+BROWSER=$1
+ALTERNATIVE_BROWSER=$2
+FILE="/etc/xdg/mimeapps.list"
+
 lower() {
     echo "$@" | tr '[:upper:]' '[:lower:]'
 }
 
-BROWSER="$(lower "$1")"
-
-FILE="/etc/xdg/mimeapps.list"
-
-# They can type in "chrome" but the desktop file is called google-chrome
-# They can type in "edge" but the desktop file is called microsoft-edge
-if [ "$BROWSER" = "chrome" ]; then
-  BROWSER=google-chrome
-elif [ "$BROWSER" = "edge" ]; then
-  BROWSER=microsoft-edge
+# If the alternative browser is set, use that instead
+if [ -n "$ALTERNATIVE_BROWSER" ]; then
+  BROWSER=$(lower "$ALTERNATIVE_BROWSER")
 fi
 
 # Handle snaps, which have names like firefox_firefox.desktop
