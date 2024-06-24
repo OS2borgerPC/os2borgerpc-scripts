@@ -102,7 +102,7 @@ def main():
     # Since we manually patch /etc/grub.d/10_linux (and we need that patch to
     # remain in place, or the system will become unbootable without the
     # password), instruct dpkg(1) to leave it alone!
-    diversion = run(["dpkg-divert", "--add", "/etc/grub.d/10_linux"])
+    diversion = run(["dpkg-divert", "--add", "--no-rename", "/etc/grub.d/10_linux"])
     if diversion.returncode != 0:
         print("diversion failed")
         exit(1)
