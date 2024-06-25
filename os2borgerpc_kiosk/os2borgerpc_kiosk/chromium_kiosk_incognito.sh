@@ -16,26 +16,37 @@ KIOSK=$1
 INCOG=$2
 
 LAUNCH_FILE="/usr/share/os2borgerpc/bin/start_chromium.sh"
-POLICY_FILE="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
-POLICY_NAME_INCOG="IncognitoModeAvailability"
+POLICY_FILE_DEFAULT="/var/snap/chromium/current/policies/managed/os2borgerpc-defaults.json"
+POLICY_FILE_INCOG="/var/snap/chromium/current/policies/managed/os2borgerpc-incognito.json"
+ENVIRONMENT_FILE="/etc/environment"
 
 if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
   exit 1
 fi
 
-# For removal or idempotency when adding
-# TODO: If kiosk becomes settable via a Policy, use that instead!
-sed --in-place 's/--kiosk//g' $LAUNCH_FILE
-
-if [ "$KIOSK" = 'True' ]; then
-  sed --in-place 's/KIOSK=""/KIOSK="--kiosk"/' $LAUNCH_FILE
+# Backwards compatibility
+if grep --quiet "KIOSK=" $LAUNCH_FILE; then
+  sed --in-place "/KIOSK=/d" $LAUNCH_FILE
+  sed --in-place "s/KIOSK/BPC_KIOSK/" $LAUNCH_FILE
+  echo 'BPC_KIOSK="--kiosk"' >> $ENVIRONMENT_FILE
 fi
 
-# For removal or idempotency when adding
-sed --in-place "/$POLICY_NAME_INCOG/d" $POLICY_FILE
+if [ "$KIOSK" = 'True' ]; then
+  sed --in-place 's/BPC_KIOSK=.*/BPC_KIOSK="--kiosk"/' $ENVIRONMENT_FILE
+else
+  sed --in-place 's/BPC_KIOSK=.*/BPC_KIOSK=""/' $ENVIRONMENT_FILE
+fi
+
+# Backwards compatibility
+sed --in-place "/IncognitoModeAvailability/d" $POLICY_FILE_DEFAULT
 
 if [ "$INCOG" = 'True' ]; then
-  # Insert this policy on line 2
-  sed --in-place "2i\"$POLICY_NAME_INCOG\": 2," $POLICY_FILE
+  cat << EOF > $POLICY_FILE_INCOG
+{
+  "IncognitoModeAvailability": 2
+}
+EOF
+else
+  rm --force $POLICY_FILE_INCOG
 fi

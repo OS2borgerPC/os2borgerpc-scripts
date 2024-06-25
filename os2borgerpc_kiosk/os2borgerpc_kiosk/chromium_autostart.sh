@@ -28,6 +28,7 @@ BSPWM_CONFIG="/home/$CUSER/.config/bspwm/bspwmrc"
 CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
 ROTATE_SCREEN_SCRIPT_PATH="/usr/share/os2borgerpc/bin/rotate_screen.sh"
 OLD_ROTATE_SCREEN_SCRIPT_PATH="/usr/local/bin/rotate_screen.sh"
+ENVIRONMENT_FILE="/etc/environment"
 
 if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
@@ -87,6 +88,13 @@ EOF
 
 chmod +x $ROTATE_SCREEN_SCRIPT_PATH
 
+# Kiosk mode cannot currently be set via policy
+# so we set the value in the environment file
+# To prevent overwriting changes made by other scripts
+# we only set the value if it does not exist
+if ! grep --quiet "BPC_KIOSK" $ENVIRONMENT_FILE; then
+  echo 'BPC_KIOSK="--kiosk"' >> $ENVIRONMENT_FILE
+fi
 
 # Create a script dedicated to launch chromium, which both xinit or any wm
 # launches, to avoid logic duplication, fx. having to update chromium settings
@@ -105,12 +113,11 @@ IURL="$URL"
 IWIDTH="$WIDTH"
 IHEIGHT="$HEIGHT"
 COMMON_SETTINGS="--password-store=basic --enable-offline-auto-reload"
-KIOSK="--kiosk"
 if [ "\$WM" == "wm" ]
 then
-  chromium-browser "\$KIOSK" "\$IURL" "\$COMMON_SETTINGS"
+  chromium-browser "\$BPC_KIOSK" "\$IURL" "\$COMMON_SETTINGS"
 else
-  exec chromium-browser "\$KIOSK" "\$IURL" --window-size="\$IWIDTH","\$IHEIGHT" --window-position=0,0 "\$COMMON_SETTINGS"
+  exec chromium-browser "\$BPC_KIOSK" "\$IURL" --window-size="\$IWIDTH","\$IHEIGHT" --window-position=0,0 "\$COMMON_SETTINGS"
 fi
 EOF
 chmod +x "$CHROMIUM_SCRIPT"
