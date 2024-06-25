@@ -96,6 +96,33 @@ if [ -f "/usr/bin/gnome-control-center.real" ] && ! grep --quiet "zenity" /usr/b
   rm /usr/bin/gnome-control-center.real
 fi
 
+# Remove user access to terminal
+PROGRAM_PATH="/usr/bin/gnome-terminal"
+
+SKEL=".skjult"
+SHORTCUT_NAME="org.gnome.Terminal.desktop"
+SHORTCUT_GLOBAL_PATH="/usr/share/applications/$SHORTCUT_NAME"
+SHORTCUT_LOCAL_PATH="/home/$SKEL/.local/share/applications/$SHORTCUT_NAME"
+
+# Also remove the gnome extension that can start gnome terminal, don't stop execution if it fails
+apt-get remove --assume-yes nautilus-extension-gnome-terminal || true
+
+if grep --quiet 'zenity' "$PROGRAM_PATH"; then
+  PROGRAM_HISTORICAL_PATH="$PROGRAM_PATH.real"
+  dpkg-statoverride --remove "$PROGRAM_PATH" || true
+  rm "$PROGRAM_PATH"
+  dpkg-divert --remove --no-rename "$PROGRAM_PATH"
+  mv "$PROGRAM_HISTORICAL_PATH" "$PROGRAM_PATH"
+fi
+
+# Deny access
+if ! dpkg-statoverride --list | grep --quiet "$PROGRAM_PATH"; then # Don't statoverride if it's already been done (idempotency)
+  dpkg-statoverride --update --add superuser root 770 "$PROGRAM_PATH"
+fi
+mkdir --parents "$(dirname $SHORTCUT_LOCAL_PATH)"
+cp $SHORTCUT_GLOBAL_PATH $SHORTCUT_LOCAL_PATH
+chmod o-r $SHORTCUT_LOCAL_PATH
+
 # Remove user access to settings
 if [ ! -f "/usr/bin/gnome-control-center.real" ]; then
     dpkg-divert --rename --divert  /usr/bin/gnome-control-center.real --add /usr/bin/gnome-control-center
