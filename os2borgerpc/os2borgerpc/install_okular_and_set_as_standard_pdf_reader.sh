@@ -39,7 +39,7 @@ apt-get update --assume-yes
 
 # Clean up from earlier versions of this script
 PREVIOUS_MIME_FILE="/home/.skjult/.config/mimeapps.list"
-cleanup_mime_file $PREVIOUS_MIME_FILE
+[ -f $PREVIOUS_MIME_FILE ] && cleanup_mime_file $PREVIOUS_MIME_FILE
 
 if [ "$ENABLE" = "True" ]; then
 
