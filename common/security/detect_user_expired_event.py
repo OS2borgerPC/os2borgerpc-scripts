@@ -49,6 +49,16 @@ def csv_writer(security_events):
             csvfile.write(f"{timestamp},{security_problem_uid},{event_line}\n")
 
 
+# Sync these dates with the dates set in hard_shutdown_lockdown, lockdown_usb or any future script that may use this expiry mechanism
+def annotate_event_type(event):
+    """Adds the type of the security event (USB/Hard shutdown) to the start of the event, as inferred from the expiry date"""
+    if event.endswith("'1970-01-05'"):
+        event = f"USB event detected: {event}"
+    if event.endswith("'1970-01-04'"):
+        event = f"Hard shutdown detected: {event}"
+    return event
+
+
 # The file to inspect for events
 log_name = "/var/log/auth.log"
 
@@ -77,7 +87,7 @@ regexes = [
 # on the form the admin site expects:
 # (timestamp, security_problem_uid, summary)
 log_event_tuples = [
-    (log_timestamp, security_problem_uid_template_var, log_event)
+    (log_timestamp, security_problem_uid_template_var, annotate_event_type(log_event))
     for (log_timestamp, log_event) in log_event_tuples
     if any([re.search(regex, log_event, flags=re.IGNORECASE) for regex in regexes])
 ]
