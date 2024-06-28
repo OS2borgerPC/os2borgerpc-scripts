@@ -3,11 +3,28 @@
 set -ex
 
 ACTIVATE=$1
-PROPERTY_VALUE=$2
+SINK=$2
+PROPERTY_VALUE=$3
 
 OS2BORGERPC_PULSEAUDIO_CONFIG="/etc/pulse/default.pa.d/os2borgerpc.pa"
 OLD_OS2BORGERPC_PULSEAUDIO_CONFIG="/etc/pulse/profile.pa.d/os2borgerpc.pa"
-PROPERTY="set-default-sink"
+PROPERTY_VOLUME="set-sink-volume"
+PROPERTY_MUTE="set-sink-mute"
+MAX_INT_VOLUME=65356
+
+  # 1 mutes, 0 unmutes
+if [ "$PROPERTY_VALUE" = 0 ]; then
+  MUTE_MAYBE=1
+else
+  MUTE_MAYBE=0
+fi
+
+VOLUME=$(( MAX_INT_VOLUME * PROPERTY_VALUE / 100 ))
+
+if [ "$PROPERTY_VALUE" -lt 0 ] || [ "$PROPERTY_VALUE" -gt 100 ]; then
+  echo "Volume percentage must be between 0 and 100 inclusive. Exiting."
+  exit 1
+fi
 
 # 20.04 backwards compatibility - in 22.04 the default.pa.d directory and the reference to it is already there
 # This function is shared between all the audio scripts
@@ -36,9 +53,12 @@ create_os2borgerpc_pulseaudio_config_dir() {
 
 create_os2borgerpc_pulseaudio_config_dir
 
-# Delete ANY default sink setting
-sed --in-place "/$PROPERTY/d" $OS2BORGERPC_PULSEAUDIO_CONFIG
+# Current setting for this particular property for this particular card?: Delete it first
+sed --in-place --expression "/$PROPERTY_VOLUME $SINK/d" --expression "/$PROPERTY_MUTE $SINK/d" $OS2BORGERPC_PULSEAUDIO_CONFIG
 
 if [ "$ACTIVATE" = "True" ]; then
-  echo "$PROPERTY $PROPERTY_VALUE" >> $OS2BORGERPC_PULSEAUDIO_CONFIG
+	cat <<- EOF >> $OS2BORGERPC_PULSEAUDIO_CONFIG
+		$PROPERTY_VOLUME $SINK $VOLUME
+		$PROPERTY_MUTE $SINK $MUTE_MAYBE
+	EOF
 fi
