@@ -81,6 +81,11 @@ if ! lsb_release -d | grep --quiet 22; then
   exit 1
 fi
 
+# Update the os_release config
+RELEASE=$(lsb_release --release --short)
+set_os2borgerpc_config os_release "$RELEASE"
+os2borgerpc_push_config_keys os_release
+
 rm --force $PREVIOUS_STEP_DONE
 
 touch /etc/os2borgerpc/third_upgrade_step_done
