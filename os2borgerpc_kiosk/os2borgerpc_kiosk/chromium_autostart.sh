@@ -29,6 +29,11 @@ CHROMIUM_SCRIPT='/usr/share/os2borgerpc/bin/start_chromium.sh'
 ROTATE_SCREEN_SCRIPT_PATH="/usr/share/os2borgerpc/bin/rotate_screen.sh"
 OLD_ROTATE_SCREEN_SCRIPT_PATH="/usr/local/bin/rotate_screen.sh"
 ENVIRONMENT_FILE="/etc/environment"
+AUTOLOGIN_SCRIPT="/usr/share/os2borgerpc/bin/autologin.sh"
+AUTOLOGIN_COUNTER="/etc/os2borgerpc/login_counter.txt"
+COUNTER_RESET_SERVICE="/etc/systemd/system/reset_login_counter.service"
+REBOOT_SCRIPT="/usr/share/os2borgerpc/bin/chromium_error_reboot.sh"
+MAXIMUM_CONSECUTIVE_AUTOLOGINS=3
 
 if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   echo "Dette script er ikke designet til at blive anvendt på en regulær OS2borgerPC-maskine."
@@ -47,20 +52,69 @@ mkdir --parents /etc/systemd/system/getty@tty1.service.d
 
 # Note: The empty ExecStart is not insignificant!
 # By default the value is appended, so the empty line changes it to an override
+# We make agetty use our own login-program instead of /bin/login
+# so we can customize the behavior
 cat << EOF > /etc/systemd/system/getty@tty1.service.d/override.conf
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --noissue --autologin $CUSER %I $TERM
+ExecStart=-/sbin/agetty --noissue --login-program $AUTOLOGIN_SCRIPT --autologin $CUSER %I $TERM
 Type=idle
 EOF
+
+# Create the autologin script
+
+# Ensure that the folder exists
+mkdir --parents "$(dirname $AUTOLOGIN_SCRIPT)"
+
+cat << EOF > $AUTOLOGIN_SCRIPT
+#! /usr/bin/env bash
+COUNTER=\$(cat $AUTOLOGIN_COUNTER)
+COUNTER=\$((COUNTER+1))
+echo \$COUNTER > $AUTOLOGIN_COUNTER
+if [ \$COUNTER -le $MAXIMUM_CONSECUTIVE_AUTOLOGINS ]; then
+  if [ \$COUNTER -gt 1 ]; then
+    # Sleep before autologin attempts other than the first
+    sleep 10
+  fi
+  # Autologin as $CUSER
+  /bin/login -f $CUSER
+else
+  # Regular login prompt
+  /bin/login
+fi
+EOF
+
+# To maintain the functionality of the error reboot script
+if [ -f "$REBOOT_SCRIPT" ]; then
+  sed --in-place --expression "\@else@{ n; n; s@/bin/login@$REBOOT_SCRIPT@ }" \
+      --expression "s/Regular login prompt/Reboot the computer/" $AUTOLOGIN_SCRIPT
+fi
+
+chmod 700 $AUTOLOGIN_SCRIPT
+
+# Create login counter
+echo "0" > $AUTOLOGIN_COUNTER
+
+# Create service to reset counter when
+# the computer is booted
+cat << EOF > $COUNTER_RESET_SERVICE
+[Unit]
+Description=Reset the autologin counter when the computer starts
+
+[Service]
+Type=oneshot
+ExecStart=sh -c 'echo "0" > $AUTOLOGIN_COUNTER'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable --now "$(basename $COUNTER_RESET_SERVICE)"
 
 # Create script to rotate screen
 
 # ...remove the rotate script from its previous location
 rm --force $OLD_ROTATE_SCREEN_SCRIPT_PATH
-
-# Make the new folder
-mkdir --parents "$(dirname $ROTATE_SCREEN_SCRIPT_PATH)"
 
 cat << EOF > $ROTATE_SCREEN_SCRIPT_PATH
 #!/usr/bin/env sh
@@ -153,13 +207,12 @@ fi
 
 # Start X upon login
 PROFILE="/home/$CUSER/.profile"
-if ! grep --quiet -- 'for i in' $PROFILE; then # Ensure idempotency
-  # This first line cleans up after the previous version of the script
-  sed --in-place "/startx/d" $PROFILE
+if ! grep --quiet -- 'exit' $PROFILE; then # Ensure idempotency
+  # This first line cleans up after previous versions of the script
+  sed --in-place --expression "/startx/d" --expression "/for i in/d" --expression "/sleep/d" \
+      --expression "/done/d" --expression "/chromium_error_reboot/d" $PROFILE
   cat << EOF >> $PROFILE
-for i in 1 2 3; do
-  startx
-  sleep 10
-done
+startx
+exit
 EOF
 fi
