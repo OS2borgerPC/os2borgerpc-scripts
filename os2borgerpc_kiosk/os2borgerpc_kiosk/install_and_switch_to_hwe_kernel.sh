@@ -9,9 +9,7 @@ if ! get_os2borgerpc_config os2_product | grep --quiet kiosk; then
   exit 1
 fi
 
-VERSION_NUMBER=$(lsb_release -d | cut --delimiter " " --fields 2 | cut --delimiter "." --fields "1 2")
-
-PKG="linux-generic-hwe-$VERSION_NUMBER"
+PKG="linux-generic-hwe-$(lsb_release --release --short)"
 
 if [ "$ACTIVATE" = 'True' ]; then
   apt-get install --assume-yes "$PKG"
