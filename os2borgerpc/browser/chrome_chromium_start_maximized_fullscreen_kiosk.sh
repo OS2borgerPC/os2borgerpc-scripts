@@ -7,10 +7,10 @@
 #
 # Arguments:
 # 1:
-#   0: Disable all three (default)
-#   1: Maximized
-#   2: Full screen
-#   3: Kiosk
+#   Disable
+#   Maximized
+#   Fullscreen
+#   Kiosk
 #
 # Takes effect after logout / restart.
 #
@@ -98,44 +98,22 @@ if [ -f $OLD_DESKTOP_FILE ]; then
   exit 1
 fi
 
-case "$SETTING" in
-  0) # Disable all three
-    # shellcheck disable=SC2086 # We want to split the files back into separate arguments
-    remove_from_desktop_files "--start-maximized" $FILES
-    # shellcheck disable=SC2086
-    remove_from_desktop_files "--start-fullscreen" $FILES
-    # shellcheck disable=SC2086
-    remove_from_desktop_files "--kiosk" $FILES
-    ;;
-  1) # MAXIMIZE
-    # shellcheck disable=SC2086
-    add_to_desktop_files "--start-maximized" $FILES
-    # shellcheck disable=SC2086
-    remove_from_desktop_files "--start-fullscreen" $FILES
-    # shellcheck disable=SC2086
-    remove_from_desktop_files "--kiosk" $FILES
-    ;;
-  2) # FULLSCREEN
-    # shellcheck disable=SC2086
-    remove_from_desktop_files "--start-maximized" $FILES
-    # shellcheck disable=SC2086
-    add_to_desktop_files "--start-fullscreen" $FILES
-    # shellcheck disable=SC2086
-    remove_from_desktop_files "--kiosk" $FILES
-    ;;
-  3) # KIOSK
-    # shellcheck disable=SC2086
-    remove_from_desktop_files "--start-maximized" $FILES
-    # shellcheck disable=SC2086
-    remove_from_desktop_files "--start-fullscreen" $FILES
-    # shellcheck disable=SC2086
-    add_to_desktop_files "--kiosk" $FILES
-    ;;
-  *)
-    printf "%s" "Invalid parameter: It needs to be either 0 (all disabled), 1 (maximized), 2 (full screen) or 3 (kiosk)."
-    exit 1
-    ;;
-esac
+# Removes the old settings
+# shellcheck disable=SC2086
+remove_from_desktop_files "--start-maximized" $FILES
+# shellcheck disable=SC2086
+remove_from_desktop_files "--start-fullscreen" $FILES
+# shellcheck disable=SC2086
+remove_from_desktop_files "--kiosk" $FILES
+
+# Setting the new setting, disable is handled above
+if [ "$SETTING" = "maximized" ] || [ "$SETTING" = "fullscreen" ]; then
+  # shellcheck disable=SC2086
+  add_to_desktop_files "--start-$SETTING" $FILES
+elif [ "$SETTING" = "kiosk" ]; then
+  # shellcheck disable=SC2086
+  add_to_desktop_files "--$SETTING" $FILES
+fi
 
 echo "For the changes to Chromium to take effect waiting a few seconds should be enough."
 echo "For the changes to Chrome to take effect, you must logout and login again."

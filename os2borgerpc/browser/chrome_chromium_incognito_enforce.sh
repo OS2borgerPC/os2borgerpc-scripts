@@ -14,18 +14,14 @@ INPUT_MODE=$2
 POLICY="/etc/opt/chrome/policies/managed/os2borgerpc-enforce-incognito.json"
 
 case $INPUT_MODE in
-0)
+"Incognito mode available")
     INCOGNITO_MODE=0
     ;;
-1)
+"Incognito mode disabled")
     INCOGNITO_MODE=1
     ;;
-2)
+"Incognito mode forced")
     INCOGNITO_MODE=2
-    ;;
-*)
-    echo "$INPUT_MODE IS NOT a valid option. Exiting ..."
-    exit 1
     ;;
 esac
 
