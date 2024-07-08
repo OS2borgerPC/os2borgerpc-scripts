@@ -78,9 +78,11 @@ image version after registration to improve the security of the computer.
 The lists indicate the name used on Magentas admin-site and the path to
 the script in this repository.
 
+### OS2borgerPC image 5.3.0
+All currently recommended scripts are included in this image.
+
 ### OS2borgerPC image 5.2.0, 5.1.0 and 5.0.0
-We recommend running the following scripts after registration
-(they will be included in the next image release):
+We recommend running the following scripts after registration:
 
 "Sikkerhed - Juster adgang til terminalen": [os2borgerpc-scripts/os2borgerpc/sikkerhed/protect_terminal.sh](https://github.com/OS2borgerPC/os2borgerpc-scripts/blob/master/os2borgerpc/sikkerhed/protect_terminal.sh)
 
@@ -89,6 +91,10 @@ The script should be run with the parameter `False` (empty checkbox)
 "Sikkerhed - Nulstil crontab ved logud": [os2borgerpc-scripts/os2borgerpc/sikkerhed/prevent_crontab_persistence.sh](https://github.com/OS2borgerPC/os2borgerpc-scripts/blob/master/os2borgerpc/sikkerhed/prevent_crontab_persistence.sh)
 
 The script takes no parameters
+
+"Sikkerhed - Bloker for GNOME Remote Desktop (Fjernskrivebord)": [os2borgerpc-scripts/os2borgerpc/sikkerhed/dconf_disable_gnome_remote_desktop.sh](https://github.com/OS2borgerPC/os2borgerpc-scripts/blob/master/os2borgerpc/sikkerhed/dconf_disable_gnome_remote_desktop.sh)
+
+The script should be run with the parameter `True` (checked checkbox)
 
 ### OS2borgerPC image 4.0.0
 We recommend running the following scripts after registration:
