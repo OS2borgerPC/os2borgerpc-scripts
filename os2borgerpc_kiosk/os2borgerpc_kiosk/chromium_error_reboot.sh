@@ -8,6 +8,7 @@ RESET_COUNTER_SERVICE="/etc/systemd/system/chromium_reboot_counter_reset.service
 PROFILE="/home/chrome/.profile"
 COUNTER_FILE="/home/chrome/reboot_counter.txt"
 MAXIMUM_CONSECUTIVE_REBOOTS=5
+AUTOLOGIN_SCRIPT="/usr/share/os2borgerpc/bin/autologin.sh"
 
 ACTIVATE=$1
 
@@ -20,25 +21,39 @@ mkdir --parents "$(dirname $REBOOT_SCRIPT)"
 
 # Ensure idempotency
 sed --in-place --expression "/startx/d" --expression "/for i in/d" --expression "/sleep/d" \
-    --expression "/done/d" --expression "/$(basename $REBOOT_SCRIPT)/d" $PROFILE
+    --expression "/done/d" --expression "/exit/d" --expression "/$(basename $REBOOT_SCRIPT)/d" $PROFILE
 
 if [ "$ACTIVATE" = "False" ]; then
   systemctl disable "$(basename $RESET_COUNTER_SERVICE)"
   rm --force $REBOOT_SCRIPT $RESET_COUNTER_SCRIPT $RESET_COUNTER_SERVICE $COUNTER_FILE
   echo "startx" >> $PROFILE
+  if [ -f "$AUTOLOGIN_SCRIPT" ]; then
+    echo "exit" >> $PROFILE
+    sed --in-place --expression "s/Reboot the computer/Regular login prompt/" \
+        --expression "s@$REBOOT_SCRIPT@/bin/login@" $AUTOLOGIN_SCRIPT
+  fi
   exit 0
 fi
 
 echo "0" > $COUNTER_FILE
 chmod 666 $COUNTER_FILE
 
-cat <<EOF >> $PROFILE
+if [ -f "$AUTOLOGIN_SCRIPT" ]; then
+  cat << EOF >> $PROFILE
+startx
+exit
+EOF
+sed --in-place --expression "\@else@{ n; n; s@/bin/login@$REBOOT_SCRIPT@ }" \
+    --expression "s/Regular login prompt/Reboot the computer/" $AUTOLOGIN_SCRIPT
+else
+  cat <<EOF >> $PROFILE
 for i in 1 2 3; do
   startx
   sleep 10
 done
 $REBOOT_SCRIPT
 EOF
+fi
 
 cat <<EOF > $REBOOT_SCRIPT
 #! /usr/bin/env bash
